@@ -9,6 +9,7 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
       createSoftDeleteExtension({
         models: {
           User: true,
+          AlternateEmail: true,
         },
         defaultConfig: {
           field: 'deletedAt',
