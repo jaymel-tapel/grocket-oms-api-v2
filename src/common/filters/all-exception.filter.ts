@@ -43,6 +43,11 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
           message = exception.message;
           break;
         }
+        case 'P2025': {
+          statusCode = HttpStatus.NOT_FOUND;
+          message = exception.message;
+          break;
+        }
         default:
           console.error(exception);
           break;
@@ -53,9 +58,12 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
       stack = exception.stack || stack; // Use the exception stack trace if available
     }
 
+    message =
+      typeof message === 'object' ? message : message.replace(/\n/g, '');
+
     response.status(statusCode).json({
       statusCode,
-      message: message.replace(/\n/g, ''),
+      message,
       stack,
       timestamp: new Date().toISOString(),
     });
