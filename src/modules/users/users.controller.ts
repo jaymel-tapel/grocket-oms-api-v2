@@ -8,7 +8,7 @@ import {
   Delete,
   ParseIntPipe,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService } from './services/users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -51,5 +51,11 @@ export class UsersController {
   @ApiOkResponse({ type: UserEntity })
   async remove(@Param('id', ParseIntPipe) id: number) {
     return new UserEntity(await this.usersService.remove(id));
+  }
+
+  @Patch('restore/:id')
+  @ApiOkResponse({ type: UserEntity })
+  async restore(@Param('id', ParseIntPipe) id: number) {
+    return new UserEntity(await this.usersService.restore(id));
   }
 }

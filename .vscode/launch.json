@@ -9,7 +9,6 @@
       "request": "attach",
       "name": "Nestjs Debugger",
       "skipFiles": ["<node_internals>/**"],
-      "preLaunchTask": "tsc: build - tsconfig.json",
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "port": 9229,
       "restart": true,

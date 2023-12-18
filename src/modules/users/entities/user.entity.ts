@@ -28,6 +28,9 @@ export class UserEntity implements User {
   @ApiPropertyOptional({ nullable: true, default: null })
   phone: string | null;
 
+  @ApiProperty({ enum: $Enums.StatusEnum })
+  status: $Enums.StatusEnum;
+
   @ApiProperty()
   createdAt: Date;
 
