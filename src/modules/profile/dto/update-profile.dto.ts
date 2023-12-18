@@ -8,5 +8,11 @@ export class UpdateProfileDto extends PartialType(ProfileDto) {
   name?: string;
 
   @ApiPropertyOptional()
+  phone?: string;
+
+  @ApiPropertyOptional()
+  contact_url?: string;
+
+  @ApiPropertyOptional()
   alternateEmails?: AlternateEmailDto[];
 }
