@@ -36,6 +36,11 @@ export class UsersService {
     });
   }
 
+  async findAllByCondition(args: Prisma.UserFindManyArgs) {
+    const database = await this.database.softDelete();
+    return await database.user.findMany(args);
+  }
+
   async findAllWithDeleted() {
     return await this.database.user.findMany({
       include: { alternateEmails: true },
