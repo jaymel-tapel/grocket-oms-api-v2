@@ -12,7 +12,7 @@ export class ProfileService {
   ) {}
 
   async fetchProfile(id: number) {
-    return await this.usersService.findByCondition({
+    return await this.usersService.findUniqueByCondition({
       where: { id },
       include: {
         alternateEmails: true,

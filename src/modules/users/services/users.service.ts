@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { DatabaseService } from '../../database/services/database.service';
 import { HashService } from '../../auth/services/hash.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, StatusEnum } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -15,6 +15,18 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
     const database = await this.database.softDelete();
     const result = await database.$transaction(async (tx) => {
+      const foundUser = await this.findOneWithDeleted({
+        email: createUserDto.email,
+      });
+
+      if (foundUser.status === StatusEnum.BLOCKED) {
+        throw new HttpException('User is blocked', 400);
+      } else if (foundUser.status === StatusEnum.DELETED) {
+        return await this.restore(foundUser.id);
+      } else if (foundUser) {
+        throw new HttpException('User already exists', 409);
+      }
+
       createUserDto.password = await this.hashService.hashPassword(
         createUserDto.password,
       );
@@ -55,20 +67,35 @@ export class UsersService {
   }
 
   async findUniqueWithDeleted(id: number) {
-    return await this.database.user.findUnique({
-      where: {
-        id,
-      },
-    });
-  }
-
-  async findOneWithDeleted(id: number) {
     return await this.database.user.findUnique({ where: { id } });
   }
 
-  async findByCondition(args: Prisma.UserFindUniqueArgs) {
+  async findUniqueByCondition(args: Prisma.UserFindUniqueArgs) {
     const database = await this.database.softDelete();
     return await database.user.findUnique(args);
+  }
+
+  async findOne(data: Prisma.UserWhereInput, args?: Prisma.UserFindFirstArgs) {
+    const database = await this.database.softDelete();
+    return await database.user.findFirst({
+      where: { ...data },
+      ...args,
+    });
+  }
+
+  async findOneWithDeleted(
+    data: Prisma.UserWhereInput,
+    args?: Prisma.UserFindFirstArgs,
+  ) {
+    return await this.database.user.findFirst({
+      where: {
+        ...data,
+        AND: {
+          OR: [{ deletedAt: null }, { deletedAt: { not: null } }],
+        },
+      },
+      ...args,
+    });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -87,6 +114,11 @@ export class UsersService {
         where: { id },
       });
 
+      await tx.user.update({
+        where: { id: user.id },
+        data: { status: 'DELETED' },
+      });
+
       await tx.alternateEmail.deleteMany({
         where: { userId: user.id, deletedAt: { not: null } },
       });
@@ -103,6 +135,7 @@ export class UsersService {
       where: { id: foundUser.id },
       data: {
         deletedAt: null,
+        status: 'ACTIVE',
       },
     });
 
