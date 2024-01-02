@@ -18,4 +18,4 @@ CREATE TABLE "User" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email") WHERE "deletedAt" IS NULL;
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
