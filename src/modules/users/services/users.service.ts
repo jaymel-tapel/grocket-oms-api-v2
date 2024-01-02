@@ -47,9 +47,16 @@ export class UsersService {
     });
   }
 
-  async findOne(id: number) {
+  async findUniqueOrThrow(id: number) {
     const database = await this.database.softDelete();
     return await database.user.findUniqueOrThrow({
+      where: { id },
+    });
+  }
+
+  async findUnique(id: number) {
+    const database = await this.database.softDelete();
+    return await database.user.findUnique({
       where: { id },
     });
   }
@@ -89,7 +96,7 @@ export class UsersService {
   async restore(id: number) {
     const database = await this.database.softDelete();
 
-    const foundUser = await this.findOne(id);
+    const foundUser = await this.findUnique(id);
 
     const user = await database.user.update({
       where: { id },

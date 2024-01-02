@@ -35,7 +35,7 @@ export class UsersController {
   @Get(':id')
   @ApiOkResponse({ type: UserEntity })
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    return new UserEntity(await this.usersService.findOne(id));
+    return new UserEntity(await this.usersService.findUniqueOrThrow(id));
   }
 
   @Patch(':id')
