@@ -54,10 +54,11 @@ export class UsersService {
     });
   }
 
-  async findUnique(id: number) {
-    const database = await this.database.softDelete();
-    return await database.user.findUnique({
-      where: { id },
+  async findUniqueWithDeleted(id: number) {
+    return await this.database.user.findUnique({
+      where: {
+        id,
+      },
     });
   }
 
@@ -81,6 +82,7 @@ export class UsersService {
     const database = await this.database.softDelete();
 
     return await database.$transaction(async (tx) => {
+      await tx.user.findUniqueOrThrow({ where: { id } });
       const user = await tx.user.delete({
         where: { id },
       });
@@ -95,17 +97,17 @@ export class UsersService {
 
   async restore(id: number) {
     const database = await this.database.softDelete();
-
-    const foundUser = await this.findUnique(id);
+    const foundUser = await this.findUniqueWithDeleted(id);
 
     const user = await database.user.update({
-      where: { id },
+      where: { id: foundUser.id },
       data: {
         deletedAt: null,
       },
     });
 
-    const emails = await database.alternateEmail.updateMany({
+    // ? Also restore all their alternate emails
+    await database.alternateEmail.updateMany({
       where: {
         userId: user.id,
         deletedAt: {
