@@ -24,7 +24,9 @@
     "prisma:generate": "npx prisma generate",
     "studio": "npx prisma studio",
     "prisma:push": "npx prisma db push",
-    "prisma:seed": "npx prisma db seed"
+    "prisma:seed": "npx prisma db seed",
+    "test-seed": "ts-node prisma/test-seed.ts",
+    "command-nest": "ts-node -r tsconfig-paths/register ./src/main-cli.ts"
   },
   "dependencies": {
     "@devoxa/prisma-relay-cursor-connection": "^3.1.1",
@@ -40,6 +42,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "config": "^3.3.9",
+    "nest-commander": "^3.12.5",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "prisma-extension-soft-delete": "^1.0.0",
