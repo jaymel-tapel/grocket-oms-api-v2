@@ -11,7 +11,7 @@ CREATE TABLE "AlternateEmail" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AlternateEmail_email_key" ON "AlternateEmail"("email") WHERE "deletedAt" IS NULL;
+CREATE UNIQUE INDEX "AlternateEmail_email_key" ON "AlternateEmail"("email");
 
 -- AddForeignKey
 ALTER TABLE "AlternateEmail" ADD CONSTRAINT "AlternateEmail_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

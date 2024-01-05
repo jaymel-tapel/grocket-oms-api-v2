@@ -4,6 +4,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AlternateEmailsModule } from './modules/alternate-emails/alternate-emails.module';
 import { ProfileModule } from './modules/profile/profile.module';
+import { ClientsModule } from './modules/clients/clients.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { ProfileModule } from './modules/profile/profile.module';
     AuthModule,
     AlternateEmailsModule,
     ProfileModule,
+    ClientsModule,
   ],
   controllers: [],
   providers: [],

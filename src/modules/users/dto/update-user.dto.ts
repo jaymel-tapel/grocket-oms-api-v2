@@ -1,11 +1,10 @@
-import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
 import { Prisma } from '@prisma/client';
-import { ApiHideProperty } from '@nestjs/swagger';
+import { ApiHideProperty, OmitType, PartialType } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 
 export class UpdateUserDto
-  extends PartialType(CreateUserDto)
+  extends PartialType(OmitType(CreateUserDto, ['password'] as const))
   implements Prisma.UserUpdateInput
 {
   @ApiHideProperty()

@@ -12,7 +12,7 @@ export class ProfileService {
   ) {}
 
   async fetchProfile(id: number) {
-    return await this.usersService.findByCondition({
+    return await this.usersService.findUniqueByCondition({
       where: { id },
       include: {
         alternateEmails: true,
@@ -22,7 +22,7 @@ export class ProfileService {
 
   async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
     const { alternateEmails, ...data } = updateProfileDto;
-    const user = await this.usersService.findOne(id);
+    const user = await this.usersService.findUniqueOrThrow(id);
     let alternateResult: AlternateEmailEntity[] =
       await this.alternateEmailService.findAllByCondition({
         where: { userId: user.id },
