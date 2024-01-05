@@ -66,11 +66,14 @@ export class ClientsController {
     );
   }
 
-  // @Post('transfer')
-  // @ApiOkResponse({ type: ClientEntity })
-  // async transferClients(@Body() transferClientsDto: TransferClientsDto) {
-  //   return await this.clientsService.transferClients(transferClientsDto);
-  // }
+  @Post('transfer')
+  @ApiOkResponse({ type: ClientEntity })
+  async transferClients(@Body() transferClientsDto: TransferClientsDto) {
+    const clients = await this.clientsService.transferClients(
+      transferClientsDto,
+    );
+    return clients.map((client) => new ClientEntity(client));
+  }
 
   @Delete(':id')
   @ApiOkResponse({ type: ClientEntity })

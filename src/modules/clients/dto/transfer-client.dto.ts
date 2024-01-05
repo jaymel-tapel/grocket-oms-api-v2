@@ -1,10 +1,12 @@
-import { IsArray, IsEmail } from 'class-validator';
+import { DoesExist } from '@src/common/validators/user.validation';
+import { IsArray, IsEmail, IsNumber } from 'class-validator';
 
 export class TransferClientsDto {
   @IsEmail()
+  @DoesExist({ tableName: 'user', column: 'email' })
   to_seller_email: string;
 
   @IsArray()
-  @IsEmail({}, { each: true })
-  emails: string[];
+  @IsNumber({}, { each: true })
+  ids: number[];
 }

@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AlternateEmailsModule } from './modules/alternate-emails/alternate-emails.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { ClientsModule } from './modules/clients/clients.module';
+import { DoesExistConstraint } from './common/validators/user.validation';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import { ClientsModule } from './modules/clients/clients.module';
     ClientsModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [DoesExistConstraint],
 })
 export class AppModule {}
