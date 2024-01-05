@@ -19,10 +19,10 @@ export class UsersService {
         email: createUserDto.email,
       });
 
-      if (foundUser.status === StatusEnum.BLOCKED) {
+      if (foundUser?.status === StatusEnum.BLOCKED) {
         throw new HttpException('User is blocked', 400);
-      } else if (foundUser.status === StatusEnum.DELETED) {
-        return await this.restore(foundUser.id);
+      } else if (foundUser?.status === StatusEnum.DELETED) {
+        return await this.restore(foundUser?.id);
       } else if (foundUser) {
         throw new HttpException('User already exists', 409);
       }
@@ -35,7 +35,7 @@ export class UsersService {
         data: createUserDto,
       });
 
-      return newUser;
+      return await newUser;
     });
 
     return result;
