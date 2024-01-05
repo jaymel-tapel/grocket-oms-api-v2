@@ -7,12 +7,14 @@ import { HashService } from 'src/modules/auth/services/hash.service';
 import { UserEntity } from 'src/modules/users/entities/user.entity';
 import { dd } from '@src/common/helpers/debug';
 import { TransferClientsDto } from '../dto/transfer-client.dto';
+import { UsersService } from '@modules/users/services/users.service';
 
 @Injectable()
 export class ClientsService {
   constructor(
     private readonly database: DatabaseService,
     private readonly hashService: HashService,
+    private readonly usersService: UsersService,
   ) {}
 
   async create(authUser: UserEntity, createClientDto: CreateClientDto) {
@@ -152,7 +154,28 @@ export class ClientsService {
     return client;
   }
 
-  // async transferClients({ emails }: TransferClientsDto) {
-  //   emails.map();
-  // }
+  async transferClients({ to_seller_email, ids }: TransferClientsDto) {
+    const seller = await this.usersService.findOne({ email: to_seller_email });
+
+    const clients = await Promise.all(
+      ids.map(async (id) => {
+        const client = await this.findOne({ id });
+
+        if (!client) {
+          return null;
+        }
+
+        // TODO: Update also their orders' sellerId
+
+        await this.database.client.update({
+          where: { id },
+          data: { sellerId: seller.id },
+        });
+
+        return client;
+      }),
+    );
+
+    return clients.filter(Boolean);
+  }
 }
