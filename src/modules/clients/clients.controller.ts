@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ClientsService } from './services/clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
@@ -15,6 +16,9 @@ import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from '../users/services/users.service';
 import { ClientEntity } from './entities/client.entity';
 import { TransferClientsDto } from './dto/transfer-client.dto';
+import { ApiPageResponse } from '@modules/page/api-page-response.decorator';
+import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
+import { FindManyClientsDto } from './dto/filter-client.dto';
 
 @ApiTags('clients')
 @Controller('clients')
@@ -38,10 +42,19 @@ export class ClientsController {
   }
 
   @Get()
-  @ApiOkResponse({ type: ClientEntity, isArray: true })
-  async findAll() {
-    const clients = await this.clientsService.findAll();
-    return clients.map((client) => new ClientEntity(client));
+  @ApiPageResponse(ClientEntity)
+  async findAll(
+    @Query() findManyArgs: FindManyClientsDto,
+    @Query() connectionArgs: ConnectionArgsDto,
+  ) {
+    // ! Temporary User for testing purposes
+    const user = await this.usersService.findUniqueOrThrow(3);
+
+    return await this.clientsService.findAllPagination(
+      user,
+      findManyArgs,
+      connectionArgs,
+    );
   }
 
   @Get(':id')
