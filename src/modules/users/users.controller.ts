@@ -7,12 +7,16 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './services/users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
+import { ApiPageResponse } from '@modules/page/api-page-response.decorator';
+import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
+import { FilterUsersDto } from './dto/filter-user.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -26,10 +30,15 @@ export class UsersController {
   }
 
   @Get()
-  @ApiOkResponse({ type: UserEntity, isArray: true })
-  async findAll() {
-    const users = await this.usersService.findAll();
-    return users.map((user) => new UserEntity(user));
+  @ApiPageResponse(UserEntity)
+  async findAll(
+    @Query() filterArgs: FilterUsersDto,
+    @Query() connectionArgs: ConnectionArgsDto,
+  ) {
+    return await this.usersService.findAllPagination(
+      filterArgs,
+      connectionArgs,
+    );
   }
 
   @Get(':id')

@@ -18,7 +18,7 @@ import { ClientEntity } from './entities/client.entity';
 import { TransferClientsDto } from './dto/transfer-client.dto';
 import { ApiPageResponse } from '@modules/page/api-page-response.decorator';
 import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
-import { FindManyClientsDto } from './dto/filter-client.dto';
+import { FilterClientsDto } from './dto/filter-client.dto';
 
 @ApiTags('clients')
 @Controller('clients')
@@ -44,7 +44,7 @@ export class ClientsController {
   @Get()
   @ApiPageResponse(ClientEntity)
   async findAll(
-    @Query() findManyArgs: FindManyClientsDto,
+    @Query() findManyArgs: FilterClientsDto,
     @Query() connectionArgs: ConnectionArgsDto,
   ) {
     // ! Temporary User for testing purposes

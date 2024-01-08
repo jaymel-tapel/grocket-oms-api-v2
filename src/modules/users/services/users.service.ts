@@ -4,6 +4,12 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { DatabaseService } from '../../database/services/database.service';
 import { HashService } from '../../auth/services/hash.service';
 import { Prisma, StatusEnum } from '@prisma/client';
+import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
+import { FilterUsersDto } from '../dto/filter-user.dto';
+import { PageEntity } from '@modules/page/page.entity';
+import { UserEntity } from '../entities/user.entity';
+import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
+import { findManyUsers } from '../helpers/find-many-users.helper';
 
 @Injectable()
 export class UsersService {
@@ -46,6 +52,39 @@ export class UsersService {
     return await database.user.findMany({
       include: { alternateEmails: true },
     });
+  }
+
+  async findAllPagination(
+    filterArgs: FilterUsersDto,
+    connectionArgs: ConnectionArgsDto,
+  ) {
+    const database = await this.database.softDelete();
+
+    let findManyQuery = await findManyUsers(filterArgs, this.database);
+
+    const page = await findManyCursorConnection(
+      // 👇 args contain take, skip and cursor
+      async (args) => {
+        const { cursor, ...data } = args;
+
+        const findManyArgs: Prisma.UserFindManyArgs = {
+          ...data,
+          ...(cursor ? { cursor: { id: parseInt(cursor.id, 10) } } : {}), // Convert id to number if cursor is defined
+          ...findManyQuery,
+        };
+
+        return await this.findAllByCondition(findManyArgs);
+      },
+      () => database.user.count({ where: { ...findManyQuery.where } }),
+      connectionArgs,
+      {
+        recordToEdge: (record) => ({
+          node: new UserEntity(record),
+        }),
+      },
+    );
+
+    return new PageEntity<UserEntity>(page);
   }
 
   async findAllByCondition(args: Prisma.UserFindManyArgs) {

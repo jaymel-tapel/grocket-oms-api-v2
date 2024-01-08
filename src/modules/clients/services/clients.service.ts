@@ -12,7 +12,7 @@ import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
 import { ClientEntity } from '../entities/client.entity';
 import { PageEntity } from '@modules/page/page.entity';
-import { FindManyClientsDto } from '../dto/filter-client.dto';
+import { FilterClientsDto } from '../dto/filter-client.dto';
 import {
   findManyClients,
   sellerFindManyClients,
@@ -73,7 +73,7 @@ export class ClientsService {
 
   async findAllPagination(
     authUser: UserEntity,
-    findManyArgs: FindManyClientsDto,
+    findManyArgs: FilterClientsDto,
     connectionArgs: ConnectionArgsDto,
   ) {
     const database = await this.database.softDelete();
