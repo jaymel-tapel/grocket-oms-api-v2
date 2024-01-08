@@ -1,11 +1,11 @@
 import { Prisma } from '@prisma/client';
-import { ClientSearchEnum, FindManyClientsDto } from '../dto/filter-client.dto';
+import { FilterClientEnum, FilterClientsDto } from '../dto/filter-client.dto';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { DatabaseService } from '@modules/database/services/database.service';
 import { HttpException } from '@nestjs/common';
 
 async function baseFindManyQuery(
-  findManyArgs: FindManyClientsDto,
+  findManyArgs: FilterClientsDto,
   database: DatabaseService,
   seller?: UserEntity,
 ) {
@@ -47,7 +47,7 @@ async function baseFindManyQuery(
 }
 
 export async function findManyClients(
-  findManyArgs: FindManyClientsDto,
+  findManyArgs: FilterClientsDto,
   database: DatabaseService,
 ) {
   const { keyword, clientLoggedIn, filter, from, to } = findManyArgs;
@@ -55,7 +55,7 @@ export async function findManyClients(
   // TODO: Include: Companies, Clients' Orders, Client
   let findManyQuery = await baseFindManyQuery({ from, to }, database);
 
-  if (filter === ClientSearchEnum.SELLER) {
+  if (filter === FilterClientEnum.SELLER) {
     findManyQuery = {
       ...findManyQuery,
       where: {
@@ -88,7 +88,7 @@ export async function findManyClients(
 
 export async function sellerFindManyClients(
   seller: UserEntity,
-  findManyArgs: FindManyClientsDto,
+  findManyArgs: FilterClientsDto,
   database: DatabaseService,
 ) {
   const { keyword, clientLoggedIn, from, to } = findManyArgs;
@@ -146,7 +146,7 @@ async function queryFindManyForSeller(
 }
 
 async function dateRange(
-  { from, to }: FindManyClientsDto,
+  { from, to }: FilterClientsDto,
   database: DatabaseService,
 ) {
   let startDate: Date, endDate: Date;

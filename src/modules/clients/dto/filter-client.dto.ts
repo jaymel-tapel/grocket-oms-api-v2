@@ -1,39 +1,14 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsDate,
-  IsEnum,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { FilterDto } from '@src/common/dtos/search-filter.dto';
+import { IsBoolean, IsOptional } from 'class-validator';
 
-export enum ClientSearchEnum {
+export enum FilterClientEnum {
   SELLER = 'seller',
 }
 
-export class FindManyClientsDto {
-  @IsOptional()
-  @IsString()
-  @ApiPropertyOptional()
-  keyword?: string;
-
+export class FilterClientsDto extends FilterDto<FilterClientEnum> {
   @IsOptional()
   @IsBoolean()
   @ApiPropertyOptional()
   clientLoggedIn?: boolean;
-
-  @IsOptional()
-  @IsEnum(ClientSearchEnum)
-  @ApiPropertyOptional()
-  filter?: ClientSearchEnum;
-
-  @IsOptional()
-  @IsDate()
-  @ApiPropertyOptional({ type: Date })
-  from?: Date;
-
-  @IsOptional()
-  @IsDate()
-  @ApiPropertyOptional()
-  to?: Date;
 }
