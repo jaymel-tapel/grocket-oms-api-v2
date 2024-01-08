@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 import { FilterClientEnum, FilterClientsDto } from '../dto/filter-client.dto';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { DatabaseService } from '@modules/database/services/database.service';
-import { HttpException } from '@nestjs/common';
+import { dateRange } from '@src/common/helpers/date-range';
 
 async function baseFindManyQuery(
   findManyArgs: FilterClientsDto,
@@ -28,7 +28,7 @@ async function baseFindManyQuery(
     };
   }
 
-  const range = await dateRange(findManyArgs, database);
+  const range = await dateRange(findManyArgs, database, 'client');
 
   if (range.startDate !== undefined && range.endDate !== undefined) {
     findManyQuery = {
@@ -143,33 +143,4 @@ async function queryFindManyForSeller(
   };
 
   return findManyQuery;
-}
-
-async function dateRange(
-  { from, to }: FilterClientsDto,
-  database: DatabaseService,
-) {
-  let startDate: Date, endDate: Date;
-
-  if (!from && to) {
-    const firstClient = await database.client.findFirst({
-      where: { clientInfo: { status: 'ACTIVE' } },
-      select: { createdAt: true },
-    });
-
-    startDate = firstClient?.createdAt ?? new Date();
-    endDate = new Date(to.setUTCHours(23, 59, 59, 999));
-  } else if (from || to) {
-    startDate = new Date(from ?? null);
-    endDate = new Date(to?.setUTCHours(23, 59, 59, 999) ?? Date.now());
-
-    if (startDate > endDate) {
-      throw new HttpException(
-        `Start Date (${startDate.toDateString()}) should not be greater than End Date (${endDate.toDateString()})`,
-        400,
-      );
-    }
-  }
-
-  return { startDate, endDate };
 }
