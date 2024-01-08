@@ -6,6 +6,7 @@ import { AlternateEmailsModule } from './modules/alternate-emails/alternate-emai
 import { ProfileModule } from './modules/profile/profile.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { DoesExistConstraint } from './common/validators/user.validation';
+import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { DoesExistConstraint } from './common/validators/user.validation';
     AlternateEmailsModule,
     ProfileModule,
     ClientsModule,
+    CloudinaryModule,
   ],
   controllers: [],
   providers: [DoesExistConstraint],
