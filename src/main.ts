@@ -11,8 +11,8 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('G-Rocket OMS v2')
     .setDescription('API Documentation for OMS API v2')
-    .setVersion('0.1')
-    // .addBearerAuth()
+    .setVersion('0.2')
+    .addBearerAuth()
     .build();
 
   app.setGlobalPrefix('api');
