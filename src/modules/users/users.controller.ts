@@ -13,16 +13,25 @@ import {
 import { UsersService } from './services/users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiPageResponse } from '@modules/page/api-page-response.decorator';
 import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 import { FilterUsersDto } from './dto/filter-user.dto';
+import { PageEntity } from '@modules/page/page.entity';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
 @ApiTags('users')
+@ApiBearerAuth()
+@ApiExtraModels(PageEntity)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
