@@ -2,12 +2,21 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { CreateClientDto } from '../dto/create-client.dto';
 import { UpdateClientDto } from '../dto/update-client.dto';
 import { DatabaseService } from 'src/modules/database/services/database.service';
-import { Prisma, StatusEnum } from '@prisma/client';
+import { Prisma, RoleEnum, StatusEnum } from '@prisma/client';
 import { HashService } from 'src/modules/auth/services/hash.service';
 import { UserEntity } from 'src/modules/users/entities/user.entity';
 import { dd } from '@src/common/helpers/debug';
 import { TransferClientsDto } from '../dto/transfer-client.dto';
 import { UsersService } from '@modules/users/services/users.service';
+import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
+import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
+import { ClientEntity } from '../entities/client.entity';
+import { PageEntity } from '@modules/page/page.entity';
+import { FilterClientsDto } from '../dto/filter-client.dto';
+import {
+  findManyClients,
+  sellerFindManyClients,
+} from '../helpers/find-many-clients.helper';
 
 @Injectable()
 export class ClientsService {
@@ -57,11 +66,53 @@ export class ClientsService {
     });
   }
 
-  async findAll() {
+  async findAllByCondition(args: Prisma.ClientFindManyArgs) {
     const database = await this.database.softDelete();
-    return await database.client.findMany({
-      include: { seller: true, clientInfo: true },
-    });
+    return await database.client.findMany(args);
+  }
+
+  async findAllPagination(
+    authUser: UserEntity,
+    findManyArgs: FilterClientsDto,
+    connectionArgs: ConnectionArgsDto,
+  ) {
+    const database = await this.database.softDelete();
+
+    let findManyQuery: Prisma.ClientFindManyArgs = {};
+
+    if (authUser.role !== RoleEnum.SELLER) {
+      findManyQuery = await findManyClients(findManyArgs, this.database);
+    } else {
+      findManyQuery = await sellerFindManyClients(
+        authUser,
+        findManyArgs,
+        this.database,
+      );
+    }
+
+    const page = await findManyCursorConnection(
+      // 👇 args contain take, skip and cursor
+      async (args) => {
+        const { cursor, ...data } = args;
+
+        const findManyArgs: Prisma.ClientFindManyArgs = {
+          ...data,
+          ...(cursor ? { cursor: { id: parseInt(cursor.id, 10) } } : {}), // Convert id to number if cursor is defined
+          ...findManyQuery,
+        };
+
+        return await this.findAllByCondition(findManyArgs);
+      },
+      () => database.client.count({ where: { ...findManyQuery.where } }),
+      connectionArgs,
+      {
+        recordToEdge: (record) => ({
+          node: new ClientEntity(record),
+        }),
+      },
+    );
+
+    return new PageEntity<ClientEntity>(page);
   }
 
   async findOne(

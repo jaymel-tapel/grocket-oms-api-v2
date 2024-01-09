@@ -7,6 +7,7 @@ import { ProfileModule } from './modules/profile/profile.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { DoesExistConstraint } from './common/validators/user.validation';
 import { ConfigModule } from '@nestjs/config';
+import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { ConfigModule } from '@nestjs/config';
     AlternateEmailsModule,
     ProfileModule,
     ClientsModule,
+    CloudinaryModule,
   ],
   controllers: [],
   providers: [DoesExistConstraint],

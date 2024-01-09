@@ -47,6 +47,6 @@ export class ClientEntity implements Client {
   @ApiPropertyOptional({ type: UserEntity })
   seller?: UserEntity | null;
 
-  @ApiProperty()
-  clientInfo: ClientInfoEntity;
+  @ApiProperty({ type: ClientInfoEntity })
+  clientInfo?: ClientInfoEntity;
 }
