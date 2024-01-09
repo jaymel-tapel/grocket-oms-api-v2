@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
   Query,
 } from '@nestjs/common';
 import { UsersService } from './services/users.service';
@@ -14,10 +15,12 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiPageResponse } from '@modules/page/api-page-response.decorator';
 import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 import { FilterUsersDto } from './dto/filter-user.dto';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('users')
 @ApiTags('users')
 export class UsersController {
