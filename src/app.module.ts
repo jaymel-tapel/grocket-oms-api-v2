@@ -6,9 +6,11 @@ import { AlternateEmailsModule } from './modules/alternate-emails/alternate-emai
 import { ProfileModule } from './modules/profile/profile.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { DoesExistConstraint } from './common/validators/user.validation';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
     UsersModule,
     AuthModule,
