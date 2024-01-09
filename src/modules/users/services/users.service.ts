@@ -148,7 +148,18 @@ export class UsersService {
     const database = await this.database.softDelete();
 
     return await database.$transaction(async (tx) => {
-      await tx.user.findUniqueOrThrow({ where: { id } });
+      const foundUser = await tx.user.findUniqueOrThrow({
+        where: { id },
+        include: { clients: true },
+      });
+
+      if (foundUser.clients.length > 0) {
+        throw new HttpException(
+          `Unable to delete user with ${foundUser.clients.length} assigned clients.`,
+          400,
+        );
+      }
+
       const user = await tx.user.delete({
         where: { id },
       });
