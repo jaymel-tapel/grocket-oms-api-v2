@@ -39,7 +39,8 @@ export class AbilityFactory {
         'Only Sellers and Accountants are allowed to access this',
       );
     } else if (user.role === RoleEnum.ACCOUNTANT) {
-      can(Action.Manage, UserEntity);
+      can(Action.Read, UserEntity);
+      can(Action.Manage, TaskEntity);
     } else {
       can(Action.Read, ClientEntity);
       cannot(Action.Read, ClientEntity, {
