@@ -8,6 +8,8 @@ import { ClientsModule } from './modules/clients/clients.module';
 import { DoesExistConstraint } from './common/validators/user.validation';
 import { ConfigModule } from '@nestjs/config';
 import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
+import { TasksModule } from './modules/my-tasks/tasks.module';
+import { AbilityModule } from './modules/casl/ability.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
     ProfileModule,
     ClientsModule,
     CloudinaryModule,
+    TasksModule,
+    AbilityModule,
   ],
   controllers: [],
   providers: [DoesExistConstraint],

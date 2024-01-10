@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -22,6 +23,12 @@ enum StatusEnum {
   BLOCKED
 }
 
+enum TaskStatusEnum {
+  ACTIVE
+  COMPLETED
+  DELETED
+}
+
 enum LanguageEnum {
   GERMAN
   ENGLISH
@@ -33,21 +40,30 @@ enum TierEnum {
   VIP
 }
 
+enum CreatedByEnum {
+  SELLER
+  ACCOUNTANT
+  AUTO
+}
+
 model User {
-  id              Int              @id @default(autoincrement())
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  deletedAt       DateTime?
-  name            String
-  email           String
-  password        String
-  role            RoleEnum
-  profile_image   String?
-  contact_url     String?
-  phone           String?
-  status          StatusEnum       @default(ACTIVE)
-  alternateEmails AlternateEmail[]
-  clients         Client[]
+  id                   Int              @id @default(autoincrement())
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  deletedAt            DateTime?
+  name                 String
+  email                String
+  password             String
+  role                 RoleEnum
+  forgot_password_code String?
+  profile_image        String?
+  contact_url          String?
+  phone                String?
+  status               StatusEnum       @default(ACTIVE)
+  alternateEmails      AlternateEmail[]
+  clients              Client[]
+  tasks                Task[]
+  taskNotes            TaskNote[]
 }
 
 model AlternateEmail {
@@ -72,6 +88,7 @@ model Client {
   updatedAt            DateTime    @updatedAt
   deletedAt            DateTime?
   clientInfo           ClientInfo?
+  tasks                Task[]
 }
 
 model ClientInfo {
@@ -99,4 +116,72 @@ model ClientSource {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   clientInfo ClientInfo[]
+}
+
+model Task {
+  id              Int              @id @default(autoincrement())
+  userId          Int
+  clientId        Int?
+  taskTypeId      Int?
+  createdBy       CreatedByEnum?   @default(AUTO)
+  user            User             @relation(fields: [userId], references: [id])
+  client          Client?          @relation(fields: [clientId], references: [id])
+  taskType        TaskType?        @relation(fields: [taskTypeId], references: [id])
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+  taskSellers     TaskSeller[]
+  taskAccountants TaskAccountant[]
+  taskNotes       TaskNote[]
+}
+
+model TaskSeller {
+  id          Int            @id @default(autoincrement())
+  taskId      Int
+  task        Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  remarks     String?
+  status      TaskStatusEnum @default(ACTIVE)
+  task_date   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+}
+
+model TaskAccountant {
+  id          Int            @id @default(autoincrement())
+  taskId      Int
+  task        Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  remarks     String?
+  status      TaskStatusEnum @default(ACTIVE)
+  task_date   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+}
+
+model TaskNote {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  taskId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, taskId])
+}
+
+model TaskType {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tasks     Task[]
 }

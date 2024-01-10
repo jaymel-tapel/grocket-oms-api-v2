@@ -23,6 +23,9 @@ export class UserEntity implements User {
   role: $Enums.RoleEnum;
 
   @ApiPropertyOptional({ nullable: true, default: null })
+  forgot_password_code: string;
+
+  @ApiPropertyOptional({ nullable: true, default: null })
   profile_image: string;
 
   @ApiPropertyOptional({ nullable: true, default: null })

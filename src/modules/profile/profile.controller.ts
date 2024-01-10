@@ -7,29 +7,39 @@ import {
   Patch,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ProfileService } from './services/profile.service';
-import { ApiConsumes, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UserEntity } from '../users/entities/user.entity';
 import { UploadPhotoDto } from './dto/upload-photo.dto';
 import { UsersService } from '@modules/users/services/users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileValidationPipe } from './pipes/file-validation.pipe';
+import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
+import { JwtGuard } from '@modules/auth/guard';
 
+@UseGuards(JwtGuard)
 @ApiTags('profile')
 @Controller('profile')
+@ApiBearerAuth()
 export class ProfileController {
   constructor(
     private readonly profileService: ProfileService,
     private readonly usersService: UsersService,
   ) {}
 
-  @Get(':id')
+  @Get()
   @ApiOkResponse({ type: UserEntity })
-  async getProfile(@Param('id', ParseIntPipe) id: number) {
-    return new UserEntity(await this.profileService.fetchProfile(id));
+  async getProfile(@AuthUser() authUser: UserEntity) {
+    return new UserEntity(await this.profileService.fetchProfile(authUser.id));
   }
 
   @Patch(':id')
