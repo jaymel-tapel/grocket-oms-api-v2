@@ -26,6 +26,9 @@ import { ApiPageResponse } from '@modules/page/api-page-response.decorator';
 import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 import { FilterUsersDto } from './dto/filter-user.dto';
 import { PageEntity } from '@modules/page/page.entity';
+import { AbilityFactory, Action } from '@modules/casl/ability.factory';
+import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
+import { ForbiddenError } from '@casl/ability';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -33,7 +36,10 @@ import { PageEntity } from '@modules/page/page.entity';
 @ApiBearerAuth()
 @ApiExtraModels(PageEntity)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly abilityFactory: AbilityFactory,
+  ) {}
 
   @Post()
   @ApiCreatedResponse({ type: UserEntity })
@@ -55,7 +61,14 @@ export class UsersController {
 
   @Get(':id')
   @ApiOkResponse({ type: UserEntity })
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(
+    @AuthUser() authUser: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const ability = await this.abilityFactory.defineAbility(authUser);
+
+    ForbiddenError.from(ability).throwUnlessCan(Action.Create, UserEntity);
+
     return new UserEntity(await this.usersService.findUniqueOrThrow(id));
   }
 
