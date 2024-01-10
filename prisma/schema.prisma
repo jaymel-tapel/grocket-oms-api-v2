@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["relationJoins"]
 }
 
@@ -47,22 +47,23 @@ enum CreatedByEnum {
 }
 
 model User {
-  id              Int              @id @default(autoincrement())
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  deletedAt       DateTime?
-  name            String
-  email           String
-  password        String
-  role            RoleEnum
-  profile_image   String?
-  contact_url     String?
-  phone           String?
-  status          StatusEnum       @default(ACTIVE)
-  alternateEmails AlternateEmail[]
-  clients         Client[]
-  tasks           Task[]
-  taskNotes       TaskNote[]
+  id                   Int              @id @default(autoincrement())
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  deletedAt            DateTime?
+  name                 String
+  email                String
+  password             String
+  role                 RoleEnum
+  forgot_password_code String?
+  profile_image        String?
+  contact_url          String?
+  phone                String?
+  status               StatusEnum       @default(ACTIVE)
+  alternateEmails      AlternateEmail[]
+  clients              Client[]
+  tasks                Task[]
+  taskNotes            TaskNote[]
 }
 
 model AlternateEmail {
