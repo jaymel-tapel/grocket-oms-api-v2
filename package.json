@@ -29,6 +29,8 @@
     "command-nest": "ts-node -r tsconfig-paths/register ./src/main-cli.ts"
   },
   "dependencies": {
+    "@casl/ability": "^6.5.0",
+    "@casl/prisma": "^1.4.1",
     "@devoxa/prisma-relay-cursor-connection": "^3.1.1",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^3.1.1",
