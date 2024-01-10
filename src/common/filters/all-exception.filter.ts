@@ -1,3 +1,4 @@
+import { ForbiddenError } from '@casl/ability';
 import {
   Catch,
   ArgumentsHost,
@@ -52,6 +53,10 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
           console.error(exception);
           break;
       }
+    } else if (exception instanceof ForbiddenError) {
+      statusCode = 403;
+      message = exception.message;
+      stack = exception.stack.replace(/\n/g, '');
     } else {
       // Handle other types of exceptions
       message = exception.message || message; // Use the exception message if available
