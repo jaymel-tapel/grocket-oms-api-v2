@@ -32,6 +32,7 @@ export class AbilityFactory {
       createPrismaAbility,
     );
 
+    console.log(user.role);
     if (user.role === RoleEnum.ADMIN) {
       can(Action.Manage, 'all');
       cannot(Action.Manage, TaskEntity).because(
@@ -44,6 +45,9 @@ export class AbilityFactory {
       cannot(Action.Read, ClientEntity, {
         sellerId: { not: user.id },
       }).because('You can only access your own clients');
+
+      can(Action.Manage, TaskEntity);
+
       cannot(Action.Manage, UserEntity).because(
         'Only Admins and Accountants are allowed to manage this',
       );
