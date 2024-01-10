@@ -29,6 +29,8 @@ import { PageEntity } from '@modules/page/page.entity';
 import { AbilityFactory, Action } from '@modules/casl/ability.factory';
 import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { ForbiddenError } from '@casl/ability';
+import { CaslGuard } from '@modules/casl/ability.guard';
+import { CheckAbilities } from '@modules/casl/ability.decorator';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -49,6 +51,8 @@ export class UsersController {
 
   @Get()
   @ApiPageResponse(UserEntity)
+  @UseGuards(CaslGuard)
+  @CheckAbilities({ action: Action.Read, subject: UserEntity })
   async findAll(
     @Query() filterArgs: FilterUsersDto,
     @Query() connectionArgs: ConnectionArgsDto,
