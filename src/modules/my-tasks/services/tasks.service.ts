@@ -8,12 +8,19 @@ import { TaskEntity } from '../entities/task.entity';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { AbilityFactory, Action } from '@modules/casl/ability.factory';
 import { ForbiddenError } from '@casl/ability';
+import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
+import { TaskSellersService } from './task-sellers.service';
+import { TaskAccountantsService } from './task-accountants.service';
+import { dd } from '@src/common/helpers/debug';
+import { taskIncludeHelper } from '../helpers/task-include.helper';
 
 @Injectable()
 export class TasksService {
   constructor(
     private readonly database: DatabaseService,
     private readonly abilityFactory: AbilityFactory,
+    private readonly taskSellersService: TaskSellersService,
+    private readonly taskAccountantsService: TaskAccountantsService,
   ) {}
 
   async create(authUser: UserEntity, createTaskDto: CreateTaskDto) {
@@ -46,15 +53,11 @@ export class TasksService {
           }),
           ...(note && {
             taskNotes: {
-              create: [{ note, user: { connect: { id: authUser.id } } }],
+              create: { note, user: { connect: { id: authUser.id } } },
             },
           }),
         },
-        include: {
-          taskAccountants: true,
-          taskSellers: true,
-          taskNotes: true,
-        },
+        include: taskIncludeHelper(authUser, { includeTaskNotes: true }),
       });
 
       if (authUser.role === RoleEnum.ACCOUNTANT) {
@@ -73,7 +76,7 @@ export class TasksService {
         });
       }
 
-      return await this.findOne({ where: { id: newTask.id } });
+      return newTask;
     });
   }
 
@@ -87,6 +90,25 @@ export class TasksService {
     const database = await this.database.softDelete();
     const task = await database.task.findUniqueOrThrow(args);
     return new TaskEntity(task);
+  }
+
+  async findAllWithPagination(
+    authUser: UserEntity,
+    connectionArgs: ConnectionArgsDto,
+  ) {
+    if (authUser.role === RoleEnum.ACCOUNTANT) {
+      return await this.taskAccountantsService.paginate(
+        authUser,
+        connectionArgs,
+      );
+    } else {
+      return await this.taskSellersService.paginate(authUser, connectionArgs);
+    }
+  }
+
+  async findAllByCondition(args: Prisma.TaskFindManyArgs) {
+    const database = await this.database.softDelete();
+    return await database.task.findMany(args);
   }
 
   async update(authUser: UserEntity, id: number, updateTaskDTo: UpdateTaskDto) {
@@ -104,26 +126,97 @@ export class TasksService {
       });
     }
 
-    // const updatedTask = await this.database.task.update({
-    //   where: { id },
-    //   data: {
-    //     taskAccountants: {
-    //       update: {
-    //         where: { }
-    //         data: { ...data },
-    //       }
-    //     }
-    //   }
-    // })
+    const updatedTask = await this.database.task.update({
+      where: { id },
+      data: {
+        ...(client_email && {
+          client: { connect: { id: client.id } },
+        }),
+        ...(authUser.role === RoleEnum.ACCOUNTANT && {
+          taskAccountant: {
+            update: {
+              where: { taskId: id },
+              data,
+            },
+          },
+        }),
+        ...(authUser.role === RoleEnum.SELLER && {
+          taskSeller: {
+            update: {
+              where: { taskId: id },
+              data,
+            },
+          },
+        }),
+        ...(note && {
+          taskNotes: {
+            upsert: {
+              where: { userId_taskId: { taskId: id, userId: authUser.id } },
+              update: { note },
+              create: { note, user: { connect: { id: authUser.id } } },
+            },
+          },
+        }),
+      },
+      include: taskIncludeHelper(authUser, { includeTaskNotes: true }),
+    });
 
-    // if (authUser.role === RoleEnum.ACCOUNTANT) {
-    //   // ? Update the Accountant Task
-    //   return await this.database.taskAccountant.update({
-    //     where: { taskId: id },
-    //     data: { ...data },
-    //   });
-    // }
+    return updatedTask;
+  }
 
-    // return updatedTask;
+  async remove(id: number) {
+    const database = await this.database.softDelete();
+
+    return await database.$transaction(async (tx) => {
+      await tx.taskAccountant.delete({
+        where: { taskId: id },
+      });
+
+      await tx.taskSeller.delete({
+        where: { taskId: id },
+      });
+
+      const deletedTask = await tx.task.delete({
+        where: { id },
+      });
+
+      return deletedTask;
+    });
+  }
+
+  async restore(id: number, authUser: UserEntity) {
+    return await this.database.$transaction(async (tx) => {
+      await tx.task.findUniqueOrThrow({ where: { id } });
+
+      return await tx.task.update({
+        where: { id },
+        data: {
+          deletedAt: null,
+          ...(authUser.role === RoleEnum.ACCOUNTANT && {
+            taskAccountant: {
+              update: {
+                where: { taskId: id },
+                data: {
+                  status: 'ACTIVE',
+                  deletedAt: null,
+                },
+              },
+            },
+          }),
+          ...(authUser.role === RoleEnum.SELLER && {
+            taskSeller: {
+              update: {
+                where: { taskId: id },
+                data: {
+                  status: 'ACTIVE',
+                  deletedAt: null,
+                },
+              },
+            },
+          }),
+        },
+        include: taskIncludeHelper(authUser),
+      });
+    });
   }
 }
