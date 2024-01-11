@@ -8,6 +8,8 @@ import { useContainer } from 'class-validator';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors();
+
   const config = new DocumentBuilder()
     .setTitle('G-Rocket OMS v2')
     .setDescription('API Documentation for OMS API v2')
