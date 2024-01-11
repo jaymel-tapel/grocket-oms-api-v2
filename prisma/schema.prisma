@@ -119,25 +119,25 @@ model ClientSource {
 }
 
 model Task {
-  id              Int              @id @default(autoincrement())
-  userId          Int
-  clientId        Int?
-  taskTypeId      Int?
-  createdBy       CreatedByEnum?   @default(AUTO)
-  user            User             @relation(fields: [userId], references: [id])
-  client          Client?          @relation(fields: [clientId], references: [id])
-  taskType        TaskType?        @relation(fields: [taskTypeId], references: [id])
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  deletedAt       DateTime?
-  taskSellers     TaskSeller[]
-  taskAccountants TaskAccountant[]
-  taskNotes       TaskNote[]
+  id             Int             @id @default(autoincrement())
+  userId         Int
+  clientId       Int?
+  taskTypeId     Int?
+  createdBy      CreatedByEnum?  @default(AUTO)
+  user           User            @relation(fields: [userId], references: [id])
+  client         Client?         @relation(fields: [clientId], references: [id])
+  taskType       TaskType?       @relation(fields: [taskTypeId], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  taskSeller     TaskSeller?
+  taskAccountant TaskAccountant?
+  taskNotes      TaskNote[]
 }
 
 model TaskSeller {
   id          Int            @id @default(autoincrement())
-  taskId      Int
+  taskId      Int            @unique
   task        Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
   title       String
   description String?
@@ -152,7 +152,7 @@ model TaskSeller {
 
 model TaskAccountant {
   id          Int            @id @default(autoincrement())
-  taskId      Int
+  taskId      Int            @unique
   task        Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
   title       String
   description String?
@@ -169,7 +169,7 @@ model TaskNote {
   id        Int      @id @default(autoincrement())
   userId    Int
   taskId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   note      String?
   createdAt DateTime @default(now())
