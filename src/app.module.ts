@@ -10,6 +10,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
 import { TasksModule } from './modules/my-tasks/tasks.module';
 import { AbilityModule } from './modules/casl/ability.module';
+import { Commands } from '@modules/database/seeders';
 
 @Module({
   imports: [
@@ -25,6 +26,6 @@ import { AbilityModule } from './modules/casl/ability.module';
     AbilityModule,
   ],
   controllers: [],
-  providers: [DoesExistConstraint],
+  providers: [DoesExistConstraint, ...Commands],
 })
 export class AppModule {}
