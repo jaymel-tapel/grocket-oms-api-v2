@@ -205,6 +205,14 @@ export class ClientsService {
     return client;
   }
 
+  async findAllIndustries() {
+    return await this.database.clientIndustry.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
+
   async transferClients({ to_seller_email, ids }: TransferClientsDto) {
     const seller = await this.usersService.findOne({ email: to_seller_email });
 
