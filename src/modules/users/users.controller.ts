@@ -29,12 +29,13 @@ import { PageEntity } from '@modules/page/page.entity';
 import { AbilityFactory, Action } from '@modules/casl/ability.factory';
 import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { ForbiddenError } from '@casl/ability';
+import { JwtGuard } from '@modules/auth/guard';
 import { CaslGuard } from '@modules/casl/ability.guard';
 import { CheckAbilities } from '@modules/casl/ability.decorator';
 import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-response.decorator';
 import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtGuard)
 @Controller('users')
 @ApiTags('users')
 @ApiBearerAuth()

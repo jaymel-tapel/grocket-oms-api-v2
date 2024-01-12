@@ -1,5 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class HashService {
@@ -32,5 +33,9 @@ export class HashService {
     }
 
     return str;
+  }
+
+  async generatePasswordToken() {
+    return crypto.randomBytes(32).toString('hex');
   }
 }

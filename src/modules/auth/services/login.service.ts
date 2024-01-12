@@ -1,46 +1,34 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
-import { LoginDto } from '../dto/login-auth.dto';
+import { Injectable } from '@nestjs/common';
+import { ValidateUserDto } from '../dto/login-auth.dto';
 import { DatabaseService } from '@modules/database/services/database.service';
 import { HashService } from './hash.service';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
-import { UserEntity } from '@modules/users/entities/user.entity';
 
 @Injectable()
-export class AuthService {
+export class LoginService {
   constructor(
     private readonly database: DatabaseService,
     private readonly hashService: HashService,
     private readonly jwt: JwtService,
-    private readonly config: ConfigService,
   ) {}
 
-  async login(credential: LoginDto) {
-    const user = await this.database.user.findFirstOrThrow({
-      where: { email: credential.email },
-    });
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.database.user.findFirst({ where: { email } });
 
-    const passwordCheck = await this.hashService.comparePassword(
-      credential.password,
-      user.password,
-    );
-
-    if (!passwordCheck) throw new ForbiddenException('Credentials incorrect');
-
-    delete user.password;
-    return await this.signToken(user);
+    if (
+      user &&
+      (await this.hashService.comparePassword(password, user.password))
+    ) {
+      return user;
+    }
+    return null;
   }
 
-  async signToken(user: UserEntity): Promise<{ access_token: string }> {
-    const payload = { user };
-
-    const secret = this.config.get('JWT_SECRET');
-    const token = await this.jwt.signAsync(payload, {
-      secret: secret,
-    });
-
+  async login(credential: ValidateUserDto) {
+    delete credential.password;
     return {
-      access_token: token,
+      ...credential,
+      access_token: this.jwt.sign(credential),
     };
   }
 }
