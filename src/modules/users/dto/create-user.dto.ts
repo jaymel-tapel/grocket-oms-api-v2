@@ -19,8 +19,8 @@ export class CreateUserDto implements Prisma.UserCreateInput {
   email: string;
 
   @IsString()
-  @MinLength(6)
-  @ApiProperty()
+  @MinLength(8)
+  @ApiProperty({ minLength: 8 })
   password: string;
 
   @IsEnum(RoleEnum)

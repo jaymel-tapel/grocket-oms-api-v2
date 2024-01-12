@@ -9,7 +9,7 @@ export class ResetDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(6)
-  @ApiProperty()
+  @MinLength(8)
+  @ApiProperty({ minLength: 8 })
   password: string;
 }
