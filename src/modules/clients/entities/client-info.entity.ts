@@ -18,6 +18,9 @@ export class ClientInfoEntity implements ClientInfo {
   @ApiProperty()
   sourceId: number;
 
+  @ApiProperty()
+  industryId: number;
+
   @ApiPropertyOptional({ default: null })
   phone: string;
 
@@ -30,7 +33,6 @@ export class ClientInfoEntity implements ClientInfo {
   @ApiPropertyOptional({ default: null })
   thirdPartyId: string;
 
-  // Private variable to store the original Decimal value
   @ApiProperty({ type: Number })
   @Transform((value: TransformFnParams) => value.value.toNumber(), {
     toPlainOnly: true,

@@ -10,6 +10,8 @@ import { PageEntity } from '@modules/page/page.entity';
 import { UserEntity } from '../entities/user.entity';
 import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
 import { findManyUsers } from '../helpers/find-many-users.helper';
+import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
+import { createPaginator } from 'prisma-pagination';
 
 @Injectable()
 export class UsersService {
@@ -54,37 +56,21 @@ export class UsersService {
     });
   }
 
-  async findAllPagination(
+  async findAllByOffset(
     filterArgs: FilterUsersDto,
-    connectionArgs: ConnectionArgsDto,
+    offsetPageArgsDto: OffsetPageArgsDto,
   ) {
-    const database = await this.database.softDelete();
+    const { perPage } = offsetPageArgsDto;
 
-    let findManyQuery = await findManyUsers(filterArgs, this.database);
+    const paginate = createPaginator({ perPage });
 
-    const page = await findManyCursorConnection(
-      // 👇 args contain take, skip and cursor
-      async (args) => {
-        const { cursor, ...data } = args;
+    const findManyQuery = await findManyUsers(filterArgs, this.database);
 
-        const findManyArgs: Prisma.UserFindManyArgs = {
-          ...data,
-          ...(cursor ? { cursor: { id: parseInt(cursor.id, 10) } } : {}), // Convert id to number if cursor is defined
-          ...findManyQuery,
-        };
-
-        return await this.findAllByCondition(findManyArgs);
-      },
-      () => database.user.count({ where: { ...findManyQuery.where } }),
-      connectionArgs,
-      {
-        recordToEdge: (record) => ({
-          node: new UserEntity(record),
-        }),
-      },
+    return paginate<UserEntity, Prisma.UserFindManyArgs>(
+      this.database.user,
+      findManyQuery,
+      offsetPageArgsDto,
     );
-
-    return new PageEntity<UserEntity>(page);
   }
 
   async findAllByCondition(args: Prisma.UserFindManyArgs) {

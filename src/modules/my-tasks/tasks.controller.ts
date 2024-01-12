@@ -7,10 +7,17 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { TasksService } from './services/tasks.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtGuard } from '@modules/auth/guard';
 import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { UserEntity } from '@modules/users/entities/user.entity';
@@ -21,11 +28,17 @@ import { AbilityFactory, Action } from '@modules/casl/ability.factory';
 import { TaskEntity } from './entities/task.entity';
 import { ForbiddenError } from '@casl/ability';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { PageEntity } from '@modules/page/page.entity';
+import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
+import { CreatedByEnum } from '@prisma/client';
+import { taskIncludeHelper } from './helpers/task-include.helper';
+import { FetchCompletedTasksDto } from './dto/fetch-completed-tasks.dto';
 
 @UseGuards(JwtGuard)
 @ApiTags('tasks')
 @Controller('tasks')
 @ApiBearerAuth()
+@ApiExtraModels(PageEntity)
 export class TasksController {
   constructor(
     private readonly tasksService: TasksService,
@@ -34,6 +47,7 @@ export class TasksController {
 
   @Post()
   @UseGuards(CaslGuard)
+  @ApiCreatedResponse({ type: TaskEntity })
   @CheckAbilities({ action: Action.Create, subject: TaskEntity })
   async create(
     @AuthUser() user: UserEntity,
@@ -43,17 +57,30 @@ export class TasksController {
   }
 
   @Get()
-  async findAll() {}
+  @UseGuards(CaslGuard)
+  @CheckAbilities({ action: Action.Read, subject: TaskEntity })
+  async findAll(
+    @AuthUser() authUser: UserEntity,
+    @Query() connectionArgs: ConnectionArgsDto,
+    @Query() { completed }: FetchCompletedTasksDto,
+  ) {
+    return await this.tasksService.findAllWithPagination(
+      authUser,
+      connectionArgs,
+      completed,
+    );
+  }
 
   @Get(':id')
+  @ApiOkResponse({ type: TaskEntity })
   async findOne(
     @AuthUser() authUser: UserEntity,
     @Param('id', ParseIntPipe) id: number,
   ) {
     const ability = await this.abilityFactory.defineAbility(authUser);
     const task = await this.tasksService.findUniqueOrThrow({
-      where: { id },
-      include: { taskAccountants: true, taskSellers: true },
+      where: { id, createdBy: authUser.role as CreatedByEnum },
+      include: taskIncludeHelper(authUser, { includeTaskNotes: true }),
     });
 
     ForbiddenError.from(ability).throwUnlessCan(Action.Read, task);
@@ -70,9 +97,27 @@ export class TasksController {
     return await this.tasksService.update(authUser, id, updateTaskDto);
   }
 
+  @Patch('complete/:id')
+  @ApiOkResponse({ type: TaskEntity })
+  async setCompleteTask(
+    @AuthUser() authUser: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.tasksService.setToComplete(id, authUser);
+  }
+
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {}
+  @ApiOkResponse({ type: TaskEntity })
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    return new TaskEntity(await this.tasksService.remove(id));
+  }
 
   @Patch('restore/:id')
-  async restore(@Param('id', ParseIntPipe) id: number) {}
+  @ApiOkResponse({ type: TaskEntity })
+  async restore(
+    @AuthUser() authUser: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return new TaskEntity(await this.tasksService.restore(id, authUser));
+  }
 }

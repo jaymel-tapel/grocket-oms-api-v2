@@ -32,6 +32,7 @@ import { AbilityFactory, Action } from '@modules/casl/ability.factory';
 import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { ForbiddenError } from '@casl/ability';
+import { ClientIndustryEntity } from './entities/client-industries.entity';
 
 @UseGuards(JwtGuard)
 @ApiTags('clients')
@@ -58,6 +59,12 @@ export class ClientsController {
     return new ClientEntity(createdClient);
   }
 
+  @Get('industries')
+  @ApiOkResponse({ type: ClientIndustryEntity, isArray: true })
+  async findAllIndustries() {
+    return await this.clientsService.findAllIndustries();
+  }
+
   @Get()
   @ApiPageResponse(ClientEntity)
   async findAll(
@@ -81,7 +88,17 @@ export class ClientsController {
     const ability = await this.abilityFactory.defineAbility(authUser);
     const client = await this.clientsService.findOne(
       { id },
-      { include: { clientInfo: true, seller: true } },
+      {
+        include: {
+          clientInfo: {
+            include: {
+              source: true,
+              industry: true,
+            },
+          },
+          seller: true,
+        },
+      },
     );
 
     ForbiddenError.from(ability).throwUnlessCan(

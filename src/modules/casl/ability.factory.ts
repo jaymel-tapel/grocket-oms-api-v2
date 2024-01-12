@@ -9,7 +9,7 @@ import { ClientEntity } from '@modules/clients/entities/client.entity';
 import { TaskEntity } from '@modules/my-tasks/entities/task.entity';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { Injectable } from '@nestjs/common';
-import { RoleEnum } from '@prisma/client';
+import { Prisma, RoleEnum } from '@prisma/client';
 
 export enum Action {
   Manage = 'manage',
@@ -32,6 +32,11 @@ export class AbilityFactory {
       createPrismaAbility,
     );
 
+    const taskMessage =
+      user.role === RoleEnum.ACCOUNTANT
+        ? 'This task is for Seller only'
+        : 'You can only access your own tasks';
+
     console.log(user.role);
     if (user.role === RoleEnum.ADMIN) {
       can(Action.Manage, 'all');
@@ -39,7 +44,12 @@ export class AbilityFactory {
         'Only Sellers and Accountants are allowed to access this',
       );
     } else if (user.role === RoleEnum.ACCOUNTANT) {
-      can(Action.Manage, UserEntity);
+      can(Action.Read, [UserEntity, ClientEntity]);
+      can(Action.Manage, TaskEntity);
+      cannot(Action.Manage, TaskEntity, {
+        userId: { not: user.id },
+        createdBy: 'SELLER',
+      } as Prisma.TaskWhereInput).because(taskMessage);
     } else {
       can(Action.Read, ClientEntity);
       cannot(Action.Read, ClientEntity, {
@@ -47,6 +57,9 @@ export class AbilityFactory {
       }).because('You can only access your own clients');
 
       can(Action.Manage, TaskEntity);
+      cannot(Action.Manage, TaskEntity, {
+        userId: { not: user.id },
+      } as Prisma.TaskWhereInput).because(taskMessage);
 
       cannot(Action.Manage, UserEntity).because(
         'Only Admins and Accountants are allowed to manage this',

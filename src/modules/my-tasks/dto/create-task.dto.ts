@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
 import { DoesExist } from '@src/common/validators/user.validation';
 import {
   IsDate,
@@ -42,13 +41,4 @@ export class CreateTaskDto {
   note?: string;
 
   // TODO: orderId
-}
-
-export class TestDto implements Prisma.TaskCreateInput {
-  user: Prisma.UserCreateNestedOneWithoutTasksInput;
-  client?: Prisma.ClientCreateNestedOneWithoutTasksInput;
-  taskType: Prisma.TaskTypeCreateNestedOneWithoutTasksInput;
-  taskSellers?: Prisma.TaskSellerCreateNestedManyWithoutTaskInput;
-  taskAccountants?: Prisma.TaskAccountantCreateNestedManyWithoutTaskInput;
-  taskNotes?: Prisma.TaskNoteCreateNestedManyWithoutTaskInput;
 }
