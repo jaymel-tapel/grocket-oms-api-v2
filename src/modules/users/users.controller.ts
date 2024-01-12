@@ -31,6 +31,8 @@ import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { ForbiddenError } from '@casl/ability';
 import { CaslGuard } from '@modules/casl/ability.guard';
 import { CheckAbilities } from '@modules/casl/ability.decorator';
+import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-response.decorator';
+import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -50,16 +52,16 @@ export class UsersController {
   }
 
   @Get()
-  @ApiPageResponse(UserEntity)
+  @ApiOffsetPageResponse(UserEntity)
   @UseGuards(CaslGuard)
   @CheckAbilities({ action: Action.Read, subject: UserEntity })
   async findAll(
     @Query() filterArgs: FilterUsersDto,
-    @Query() connectionArgs: ConnectionArgsDto,
+    @Query() offsetPageArgsDto: OffsetPageArgsDto,
   ) {
-    return await this.usersService.findAllPagination(
+    return await this.usersService.findAllByOffset(
       filterArgs,
-      connectionArgs,
+      offsetPageArgsDto,
     );
   }
 
