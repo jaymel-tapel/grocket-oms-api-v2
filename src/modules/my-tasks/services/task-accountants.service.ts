@@ -11,9 +11,13 @@ import { TaskAccountantEntity } from '../entities/task-accountant.entity';
 export class TaskAccountantsService {
   constructor(private readonly database: DatabaseService) {}
 
-  async paginate(authUser: UserEntity, connectionArgs: ConnectionArgsDto) {
+  async paginate(
+    authUser: UserEntity,
+    connectionArgs: ConnectionArgsDto,
+    completed?: boolean,
+  ) {
     const database = await this.database.softDelete();
-    const findManyQuery = await this.findAllQuery(authUser);
+    const findManyQuery = await this.findAllQuery(authUser, completed);
     const page = await findManyCursorConnection(
       async (args) => {
         const { cursor, ...data } = args;
@@ -44,11 +48,13 @@ export class TaskAccountantsService {
     return await database.taskAccountant.findMany(args);
   }
 
-  private async findAllQuery(authUser: UserEntity) {
+  private async findAllQuery(authUser: UserEntity, completed?: Boolean) {
+    const status: Prisma.TaskAccountantWhereInput['status'] = completed
+      ? 'COMPLETED'
+      : 'ACTIVE';
+
     const findManyQuery: Prisma.TaskAccountantFindManyArgs = {
-      where: {
-        status: 'ACTIVE',
-      },
+      where: { status },
       include: {
         task: {
           include: {

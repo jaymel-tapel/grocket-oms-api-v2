@@ -11,9 +11,13 @@ import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 export class TaskSellersService {
   constructor(private readonly database: DatabaseService) {}
 
-  async paginate(authUser: UserEntity, connectionArgs: ConnectionArgsDto) {
+  async paginate(
+    authUser: UserEntity,
+    connectionArgs: ConnectionArgsDto,
+    completed?: boolean,
+  ) {
     const database = await this.database.softDelete();
-    const findManyQuery = await this.findAllQuery(authUser);
+    const findManyQuery = await this.findAllQuery(authUser, completed);
     const page = await findManyCursorConnection(
       async (args) => {
         const { cursor, ...data } = args;
@@ -43,10 +47,14 @@ export class TaskSellersService {
     return await database.taskSeller.findMany(args);
   }
 
-  async findAllQuery(authUser: UserEntity) {
+  async findAllQuery(authUser: UserEntity, completed?: boolean) {
+    const status: Prisma.TaskSellerWhereInput['status'] = completed
+      ? 'COMPLETED'
+      : 'ACTIVE';
+
     const findManyQuery: Prisma.TaskSellerFindManyArgs = {
       where: {
-        status: 'ACTIVE',
+        status,
         task: {
           userId: authUser.id,
         },

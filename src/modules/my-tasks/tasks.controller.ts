@@ -32,6 +32,7 @@ import { PageEntity } from '@modules/page/page.entity';
 import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 import { CreatedByEnum } from '@prisma/client';
 import { taskIncludeHelper } from './helpers/task-include.helper';
+import { FetchCompletedTasksDto } from './dto/fetch-completed-tasks.dto';
 
 @UseGuards(JwtGuard)
 @ApiTags('tasks')
@@ -61,10 +62,12 @@ export class TasksController {
   async findAll(
     @AuthUser() authUser: UserEntity,
     @Query() connectionArgs: ConnectionArgsDto,
+    @Query() { completed }: FetchCompletedTasksDto,
   ) {
     return await this.tasksService.findAllWithPagination(
       authUser,
       connectionArgs,
+      completed,
     );
   }
 
@@ -92,6 +95,15 @@ export class TasksController {
     @Body() updateTaskDto: UpdateTaskDto,
   ) {
     return await this.tasksService.update(authUser, id, updateTaskDto);
+  }
+
+  @Patch('complete/:id')
+  @ApiOkResponse({ type: TaskEntity })
+  async setCompleteTask(
+    @AuthUser() authUser: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.tasksService.setToComplete(id, authUser);
   }
 
   @Delete(':id')
