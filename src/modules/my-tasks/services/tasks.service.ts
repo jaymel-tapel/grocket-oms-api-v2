@@ -13,6 +13,7 @@ import { TaskSellersService } from './task-sellers.service';
 import { TaskAccountantsService } from './task-accountants.service';
 import { dd } from '@src/common/helpers/debug';
 import { taskIncludeHelper } from '../helpers/task-include.helper';
+import { taskRelationHelper } from '../helpers/task-relation-table.helper';
 
 @Injectable()
 export class TasksService {
@@ -95,14 +96,20 @@ export class TasksService {
   async findAllWithPagination(
     authUser: UserEntity,
     connectionArgs: ConnectionArgsDto,
+    completed?: boolean,
   ) {
     if (authUser.role === RoleEnum.ACCOUNTANT) {
       return await this.taskAccountantsService.paginate(
         authUser,
         connectionArgs,
+        completed,
       );
     } else {
-      return await this.taskSellersService.paginate(authUser, connectionArgs);
+      return await this.taskSellersService.paginate(
+        authUser,
+        connectionArgs,
+        completed,
+      );
     }
   }
 
@@ -118,7 +125,7 @@ export class TasksService {
     const ability = await this.abilityFactory.defineAbility(authUser);
     const foundTask = await this.findUniqueOrThrow({ where: { id } });
 
-    ForbiddenError.from(ability).throwUnlessCan(Action.Read, foundTask);
+    ForbiddenError.from(ability).throwUnlessCan(Action.Update, foundTask);
 
     if (client_email) {
       client = await this.database.client.findFirstOrThrow({
@@ -162,6 +169,31 @@ export class TasksService {
     });
 
     return updatedTask;
+  }
+
+  async setToComplete(id: number, authUser: UserEntity) {
+    const ability = await this.abilityFactory.defineAbility(authUser);
+    const foundTask = await this.findUniqueOrThrow({ where: { id } });
+
+    ForbiddenError.from(ability).throwUnlessCan(Action.Update, foundTask);
+
+    return await this.database.$transaction(async (tx) => {
+      const taskRelation = taskRelationHelper(authUser);
+
+      const updatedTask = await tx.task.update({
+        where: { id },
+        data: {
+          [taskRelation]: {
+            update: {
+              status: 'COMPLETED',
+              completedAt: new Date(),
+            },
+          },
+        },
+      });
+
+      return new TaskEntity(updatedTask);
+    });
   }
 
   async remove(id: number) {
