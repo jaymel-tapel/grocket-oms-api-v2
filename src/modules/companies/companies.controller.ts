@@ -7,16 +7,24 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CompaniesService } from './services/companies.service';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { CompanyEntity } from './entities/company.entity';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { CompanyArgsDto } from './dto/company-args.dto';
-
+import { JwtGuard } from '@modules/auth/guard';
+@UseGuards(JwtGuard)
 @ApiTags('companies')
 @Controller('companies')
+@ApiBearerAuth()
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 
