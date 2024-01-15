@@ -21,15 +21,14 @@ import { CompaniesModule } from './modules/companies/companies.module';
     MailerModule.forRoot({
       transport: {
         host: process.env.MAIL_HOST,
-        port: parseInt(process.env.MAIL_PORT, 10),
-        secure: false,
+        port: +process.env.MAIL_PORT,
         auth: {
-          user: process.env.MAIL_USER,
+          user: process.env.MAIL_USERNAME,
           pass: process.env.MAIL_PASSWORD,
         },
       },
       defaults: {
-        from: `"No Reply" <${process.env.MAIL_SENDER}>`,
+        from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
       },
     }),
     DatabaseModule,
