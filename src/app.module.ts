@@ -11,6 +11,7 @@ import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
 import { TasksModule } from './modules/my-tasks/tasks.module';
 import { AbilityModule } from './modules/casl/ability.module';
 import { Commands } from '@modules/database/seeders';
+import { CompaniesModule } from './modules/companies/companies.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Commands } from '@modules/database/seeders';
     CloudinaryModule,
     TasksModule,
     AbilityModule,
+    CompaniesModule,
   ],
   controllers: [],
   providers: [DoesExistConstraint, ...Commands],
