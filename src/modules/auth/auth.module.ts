@@ -16,15 +16,6 @@ import { PassportModule } from '@nestjs/passport';
     JwtModule.register({
       secret: process.env.JWT_SECRET,
     }),
-    MailerModule.forRoot({
-      transport: {
-        host: '0.0.0.0',
-        port: 1025,
-      },
-      defaults: {
-        from: 'admin@example.com',
-      },
-    }),
   ],
   controllers: [AuthController],
   providers: [
