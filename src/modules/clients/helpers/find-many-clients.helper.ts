@@ -12,9 +12,10 @@ async function baseFindManyQuery(
   let findManyQuery: Prisma.ClientFindManyArgs = {
     include: {
       clientInfo: {
-        include: { source: true },
+        include: { source: true, industry: true },
       },
       seller: true,
+      companies: true,
     },
     orderBy: {
       createdAt: 'asc',

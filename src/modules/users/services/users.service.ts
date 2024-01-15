@@ -66,11 +66,17 @@ export class UsersService {
 
     const findManyQuery = await findManyUsers(filterArgs, this.database);
 
-    return paginate<UserEntity, Prisma.UserFindManyArgs>(
+    const paginatedUsers = await paginate<UserEntity, Prisma.UserFindManyArgs>(
       this.database.user,
       findManyQuery,
       offsetPageArgsDto,
     );
+
+    paginatedUsers.data = paginatedUsers.data.map(
+      (user) => new UserEntity(user),
+    );
+
+    return paginatedUsers;
   }
 
   async findAllByCondition(args: Prisma.UserFindManyArgs) {

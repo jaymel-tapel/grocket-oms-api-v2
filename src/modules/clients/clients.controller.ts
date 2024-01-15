@@ -23,8 +23,6 @@ import {
 import { UsersService } from '../users/services/users.service';
 import { ClientEntity } from './entities/client.entity';
 import { TransferClientsDto } from './dto/transfer-client.dto';
-import { ApiPageResponse } from '@modules/page/api-page-response.decorator';
-import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 import { FilterClientsDto } from './dto/filter-client.dto';
 import { JwtGuard } from '@modules/auth/guard';
 import { PageEntity } from '@modules/page/page.entity';
@@ -33,6 +31,8 @@ import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { ForbiddenError } from '@casl/ability';
 import { ClientIndustryEntity } from './entities/client-industries.entity';
+import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
+import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-response.decorator';
 
 @UseGuards(JwtGuard)
 @ApiTags('clients')
@@ -66,16 +66,16 @@ export class ClientsController {
   }
 
   @Get()
-  @ApiPageResponse(ClientEntity)
+  @ApiOffsetPageResponse(ClientEntity)
   async findAll(
     @AuthUser() user: UserEntity,
     @Query() findManyArgs: FilterClientsDto,
-    @Query() connectionArgs: ConnectionArgsDto,
+    @Query() offsetPageArgsDto: OffsetPageArgsDto,
   ) {
     return await this.clientsService.findAllPagination(
       user,
       findManyArgs,
-      connectionArgs,
+      offsetPageArgsDto,
     );
   }
 
@@ -97,6 +97,7 @@ export class ClientsController {
             },
           },
           seller: true,
+          companies: true,
         },
       },
     );

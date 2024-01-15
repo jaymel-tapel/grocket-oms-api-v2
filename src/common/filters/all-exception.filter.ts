@@ -46,7 +46,14 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
         }
         case 'P2025': {
           statusCode = HttpStatus.NOT_FOUND;
-          message = exception.message;
+          if (
+            typeof exception.meta['cause'] === 'string' &&
+            exception.meta.cause.includes('update')
+          ) {
+            message = exception.meta.cause;
+          } else {
+            message = exception.message;
+          }
           break;
         }
         default:

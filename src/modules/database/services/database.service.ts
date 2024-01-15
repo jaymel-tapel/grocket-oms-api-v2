@@ -15,6 +15,7 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
           Task: true,
           TaskAccountant: true,
           TaskSeller: true,
+          Company: true,
         },
         defaultConfig: {
           field: 'deletedAt',

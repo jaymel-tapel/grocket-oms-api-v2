@@ -12,6 +12,8 @@ import { TasksModule } from './modules/my-tasks/tasks.module';
 import { AbilityModule } from './modules/casl/ability.module';
 import { Commands } from '@modules/database/seeders';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { CompaniesModule } from './modules/companies/companies.module';
+
 
 @Module({
   imports: [
@@ -39,6 +41,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
     CloudinaryModule,
     TasksModule,
     AbilityModule,
+    CompaniesModule,
   ],
   controllers: [],
   providers: [DoesExistConstraint, ...Commands],
