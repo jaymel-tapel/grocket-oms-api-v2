@@ -46,4 +46,24 @@ export class CompaniesService {
       }
     });
   }
+
+  async remove(id: number) {
+    const database = await this.database.softDelete();
+    return await database.$transaction(async (tx) => {
+      return await tx.company.delete({
+        where: { id },
+      });
+    });
+  }
+
+  async restore(id: number) {
+    return await this.database.$transaction(async (tx) => {
+      return await tx.company.update({
+        where: { id, deletedAt: { not: null } },
+        data: {
+          deletedAt: null,
+        },
+      });
+    });
+  }
 }

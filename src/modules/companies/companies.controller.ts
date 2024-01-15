@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -52,5 +53,17 @@ export class CompaniesController {
     return new CompanyEntity(
       await this.companiesService.update(id, updateCompanyDto),
     );
+  }
+
+  @Delete(':id')
+  @ApiOkResponse({ type: CompanyEntity })
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    return new CompanyEntity(await this.companiesService.remove(id));
+  }
+
+  @Patch('restore/:id')
+  @ApiOkResponse({ type: CompanyEntity })
+  async restore(@Param('id', ParseIntPipe) id: number) {
+    return new CompanyEntity(await this.companiesService.restore(id));
   }
 }
