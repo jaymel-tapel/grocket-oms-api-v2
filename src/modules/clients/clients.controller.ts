@@ -97,6 +97,7 @@ export class ClientsController {
             },
           },
           seller: true,
+          companies: true,
         },
       },
     );
