@@ -17,6 +17,8 @@ import {
   findManyClients,
   sellerFindManyClients,
 } from '../helpers/find-many-clients.helper';
+import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
+import { createPaginator } from 'prisma-pagination';
 
 @Injectable()
 export class ClientsService {
@@ -74,9 +76,10 @@ export class ClientsService {
   async findAllPagination(
     authUser: UserEntity,
     findManyArgs: FilterClientsDto,
-    connectionArgs: ConnectionArgsDto,
+    offsetPageArgsDto: OffsetPageArgsDto,
   ) {
-    const database = await this.database.softDelete();
+    const { perPage } = offsetPageArgsDto;
+    const paginate = createPaginator({ perPage });
 
     let findManyQuery: Prisma.ClientFindManyArgs = {};
 
@@ -90,29 +93,16 @@ export class ClientsService {
       );
     }
 
-    const page = await findManyCursorConnection(
-      // 👇 args contain take, skip and cursor
-      async (args) => {
-        const { cursor, ...data } = args;
+    const paginatedClients = await paginate<
+      ClientEntity,
+      Prisma.ClientFindManyArgs
+    >(this.database.client, findManyQuery, offsetPageArgsDto);
 
-        const findManyArgs: Prisma.ClientFindManyArgs = {
-          ...data,
-          ...(cursor ? { cursor: { id: parseInt(cursor.id, 10) } } : {}), // Convert id to number if cursor is defined
-          ...findManyQuery,
-        };
-
-        return await this.findAllByCondition(findManyArgs);
-      },
-      () => database.client.count({ where: { ...findManyQuery.where } }),
-      connectionArgs,
-      {
-        recordToEdge: (record) => ({
-          node: new ClientEntity(record),
-        }),
-      },
+    paginatedClients.data = paginatedClients.data.map(
+      (client) => new ClientEntity(client),
     );
 
-    return new PageEntity<ClientEntity>(page);
+    return paginatedClients;
   }
 
   async findOne(
