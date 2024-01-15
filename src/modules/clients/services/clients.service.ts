@@ -79,6 +79,7 @@ export class ClientsService {
     offsetPageArgsDto: OffsetPageArgsDto,
   ) {
     const { perPage } = offsetPageArgsDto;
+    const database = await this.database.softDelete();
     const paginate = createPaginator({ perPage });
 
     let findManyQuery: Prisma.ClientFindManyArgs = {};
@@ -96,7 +97,7 @@ export class ClientsService {
     const paginatedClients = await paginate<
       ClientEntity,
       Prisma.ClientFindManyArgs
-    >(this.database.client, findManyQuery, offsetPageArgsDto);
+    >(database.client, findManyQuery, offsetPageArgsDto);
 
     paginatedClients.data = paginatedClients.data.map(
       (client) => new ClientEntity(client),
