@@ -24,7 +24,7 @@ export class ForgotService {
       data: { forgot_password_code },
     });
 
-    const link = process.env.RESET_ROUTE + `?token=${forgot_password_code}`;
+    const link = process.env.RESET_ROUTE + `${forgot_password_code}`;
 
     await this.mailerService.sendMail({
       to: user.email,
