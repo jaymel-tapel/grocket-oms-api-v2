@@ -7,11 +7,7 @@ import {
   ValidatorConstraintInterface,
   registerDecorator,
 } from 'class-validator';
-
-type ITable = {
-  tableName: string;
-  column: string;
-};
+import { ITable } from './interface/table.interface';
 
 @Injectable()
 @ValidatorConstraint({ async: true })
