@@ -13,7 +13,8 @@ import { AbilityModule } from './modules/casl/ability.module';
 import { Commands } from '@modules/database/seeders';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CompaniesModule } from './modules/companies/companies.module';
-
+import { OrdersModule } from './modules/orders/orders.module';
+import { SellersModule } from './modules/sellers/sellers.module';
 
 @Module({
   imports: [
@@ -41,6 +42,8 @@ import { CompaniesModule } from './modules/companies/companies.module';
     TasksModule,
     AbilityModule,
     CompaniesModule,
+    OrdersModule,
+    SellersModule,
   ],
   controllers: [],
   providers: [DoesExistConstraint, ...Commands],
