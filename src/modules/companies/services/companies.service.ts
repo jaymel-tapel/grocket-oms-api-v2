@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateCompanyDto } from '../dto/create-company.dto';
 import { UpdateCompanyDto } from '../dto/update-company.dto';
 import { CompanyArgsDto } from '../dto/company-args.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CompaniesService {
@@ -33,6 +34,16 @@ export class CompaniesService {
     const database = await this.database.softDelete();
     return await database.company.findMany({
       where: companyArgs,
+    });
+  }
+
+  async findOne(args: Prisma.CompanyFindFirstArgs) {
+    const database = await this.database.softDelete();
+    return await database.company.findFirst({
+      ...args,
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
