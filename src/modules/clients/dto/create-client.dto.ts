@@ -58,10 +58,10 @@ export class ClientInfoDto {
   @ApiProperty({ type: Number })
   sourceId: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   @ApiProperty({ type: Number })
-  industryId: number;
+  industryId?: number;
 }
 
 export class CreateClientDto extends IntersectionType(
