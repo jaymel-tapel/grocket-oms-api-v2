@@ -29,6 +29,14 @@ export class ClientDto {
   @MinLength(8)
   @ApiPropertyOptional({ minLength: 8 })
   password?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({
+    description:
+      "If Auth User's Role is either Admin or Accountant then this is required",
+  })
+  sellerId?: number;
 }
 
 export class ClientInfoDto {
