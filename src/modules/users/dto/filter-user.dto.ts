@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { FilterDto } from '@src/common/dtos/search-filter.dto';
-import { IsEnum, IsNotEmpty, IsOptional, ValidateIf } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export enum FilterUserEnum {
   ID = 'id',
@@ -13,7 +13,8 @@ export class FilterUsersDto extends FilterDto {
   @ApiPropertyOptional()
   filter?: FilterUserEnum;
 
-  @IsNotEmpty()
-  @ValidateIf((o) => o.filter !== undefined)
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional()
   keyword?: string;
 }

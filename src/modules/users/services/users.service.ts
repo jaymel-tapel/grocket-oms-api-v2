@@ -61,13 +61,13 @@ export class UsersService {
     offsetPageArgsDto: OffsetPageArgsDto,
   ) {
     const { perPage } = offsetPageArgsDto;
-
+    const database = await this.database.softDelete();
     const paginate = createPaginator({ perPage });
 
     const findManyQuery = await findManyUsers(filterArgs, this.database);
 
     const paginatedUsers = await paginate<UserEntity, Prisma.UserFindManyArgs>(
-      this.database.user,
+      database.user,
       findManyQuery,
       offsetPageArgsDto,
     );
