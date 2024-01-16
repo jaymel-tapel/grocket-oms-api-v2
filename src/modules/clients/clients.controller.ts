@@ -42,17 +42,17 @@ import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-resp
 export class ClientsController {
   constructor(
     private readonly clientsService: ClientsService,
-    private readonly usersService: UsersService,
     private readonly abilityFactory: AbilityFactory,
   ) {}
 
   @Post()
   @ApiCreatedResponse({ type: ClientEntity })
-  async create(@Body() createClientDto: CreateClientDto) {
-    const user = await this.usersService.findUniqueOrThrow(1);
-
+  async create(
+    @AuthUser() authUser: UserEntity,
+    @Body() createClientDto: CreateClientDto,
+  ) {
     const createdClient = await this.clientsService.create(
-      user,
+      authUser,
       createClientDto,
     );
 
