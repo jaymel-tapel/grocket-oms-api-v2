@@ -1,4 +1,6 @@
+import { Prisma } from '@prisma/client';
+
 export type ITable = {
-  tableName: string;
+  tableName: Prisma.TypeMap['meta']['modelProps'];
   column: string;
 };
