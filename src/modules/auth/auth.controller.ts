@@ -27,11 +27,13 @@ export class AuthController {
   }
 
   @Post('forgot')
+  @ApiBody({ type: ForgotPasswordDto })
   async forgot(@Body() credential: ForgotPasswordDto) {
     return await this.forgotService.forgot(credential);
   }
 
   @Post('reset')
+  @ApiBody({ type: ResetDto })
   async reset(@Body() recovery: ResetDto) {
     return await this.resetService.reset(recovery);
   }
