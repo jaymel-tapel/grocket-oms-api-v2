@@ -46,6 +46,11 @@ enum CreatedByEnum {
   AUTO
 }
 
+enum CurrencyEnum {
+  USD
+  EUR
+}
+
 model User {
   id                   Int              @id @default(autoincrement())
   createdAt            DateTime         @default(now())
@@ -76,6 +81,20 @@ model AlternateEmail {
   deletedAt DateTime?
 }
 
+model Brand {
+  id        Int          @id @default(autoincrement())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
+  name      String
+  code      String
+  logo      String?
+  address   String?
+  currency  CurrencyEnum @default(USD)
+  clientId  Int
+  client    Client       @relation(fields: [clientId], references: [id])
+}
+
 model Client {
   id                   Int         @id @default(autoincrement())
   name                 String
@@ -90,6 +109,7 @@ model Client {
   clientInfo           ClientInfo?
   tasks                Task[]
   companies            Company[]
+  brands               Brand[]
 }
 
 model ClientInfo {
