@@ -7,7 +7,6 @@ import {
   Patch,
   Delete,
   Body,
-  Query,
   UseGuards,
   UploadedFile,
   UseInterceptors,
@@ -22,7 +21,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { BrandEntity } from './entities/brand.entity';
-import { BrandArgsDto } from './dto/brand-args.dto';
 import { JwtGuard } from '@modules/auth/guard';
 import { UpdateBrandDto } from './dto/update-brand.dto';
 import { FileValidationPipe } from '@modules/profile/pipes/file-validation.pipe';
@@ -51,9 +49,15 @@ export class BrandsController {
 
   @Get()
   @ApiOkResponse({ type: BrandEntity, isArray: true })
-  async findAll(@Query() brandArgs?: BrandArgsDto) {
-    const brands = await this.brandsService.findAll(brandArgs);
+  async findAll() {
+    const brands = await this.brandsService.findAll();
     return brands.map((brand) => new BrandEntity(brand));
+  }
+
+  @Get(':id')
+  @ApiOkResponse({ type: BrandEntity })
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    return new BrandEntity(await this.brandsService.findUnique(id));
   }
 
   @Patch(':id')

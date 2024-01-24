@@ -27,12 +27,9 @@ export class BrandEntity implements Brand {
   @ApiPropertyOptional({ nullable: true, default: null })
   logo: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   address: string;
 
   @ApiProperty({ enum: $Enums.CurrencyEnum })
   currency: $Enums.CurrencyEnum;
-
-  @ApiProperty()
-  clientId: number;
 }
