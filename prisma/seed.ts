@@ -7,7 +7,7 @@ const roundsOfHashing = 10;
 const prisma = new PrismaClient();
 
 async function main() {
-  let admin, accountant;
+  let admin, accountant, seller;
   // create two dummy users
   const passwordAdmin = await bcrypt.hash('grocketseller', roundsOfHashing);
   const passwordAccountant = await bcrypt.hash('asdfzxcv', roundsOfHashing);
@@ -31,6 +31,21 @@ async function main() {
     });
   }
 
+  const foundSeller = await prisma.user.findFirst({
+    where: { email: 'seller1@gmail.com' },
+  });
+
+  if (!foundSeller) {
+    seller = await prisma.user.create({
+      data: {
+        email: 'seller1@gmail.com',
+        name: 'Seller #1',
+        role: 'SELLER',
+        password: passwordAccountant,
+      },
+    });
+  }
+
   if (!foundAccountant) {
     accountant = await prisma.user.create({
       data: {
@@ -42,7 +57,7 @@ async function main() {
     });
   }
 
-  console.log({ admin, accountant });
+  console.log({ admin, accountant, seller });
 }
 
 // execute the main function
