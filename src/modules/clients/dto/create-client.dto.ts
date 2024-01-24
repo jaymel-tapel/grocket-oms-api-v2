@@ -37,6 +37,10 @@ export class ClientDto {
       "If Auth User's Role is either Admin or Accountant then this is required",
   })
   sellerId?: number;
+
+  @IsNumber()
+  @ApiProperty()
+  brandId: number;
 }
 
 export class ClientInfoDto {
