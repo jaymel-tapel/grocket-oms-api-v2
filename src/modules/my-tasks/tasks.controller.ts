@@ -108,8 +108,11 @@ export class TasksController {
 
   @Delete(':id')
   @ApiOkResponse({ type: TaskEntity })
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return new TaskEntity(await this.tasksService.remove(id));
+  async remove(
+    @AuthUser() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return new TaskEntity(await this.tasksService.remove(id, user));
   }
 
   @Patch('restore/:id')
