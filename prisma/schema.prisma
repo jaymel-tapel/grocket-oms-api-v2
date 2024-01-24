@@ -51,6 +51,37 @@ enum CurrencyEnum {
   EUR
 }
 
+enum OrderCreatedByEnum {
+  ADMIN
+  ACCOUNTANT
+  SELLER
+  CLIENT
+}
+
+enum PaymentStatusEnum {
+  NEW
+  SENT_INVOICE
+  PR1
+  PR2
+  PAID
+  UNPAID
+}
+
+enum OrderEmailTypeEnum {
+  BEAUFTRAGT
+  WEITERLEITUNG
+  GESCHEITERT
+}
+
+enum OrderReviewStatus {
+  NEU // New
+  BEAUFTRAGT // Instructed
+  WEITERLEITUNG // Forwarding
+  GESCHEITERT // Failed
+  WIDERSPRUCH // Contradiction
+  GELOSCHT // Deleted
+}
+
 model User {
   id                   Int              @id @default(autoincrement())
   createdAt            DateTime         @default(now())
@@ -91,8 +122,7 @@ model Brand {
   logo      String?
   address   String?
   currency  CurrencyEnum @default(USD)
-  clientId  Int
-  client    Client       @relation(fields: [clientId], references: [id])
+  clients   ClientInfo[]
 }
 
 model Client {
@@ -109,7 +139,7 @@ model Client {
   clientInfo           ClientInfo?
   tasks                Task[]
   companies            Company[]
-  brands               Brand[]
+  orders               Order[]
 }
 
 model ClientInfo {
@@ -117,9 +147,11 @@ model ClientInfo {
   clientId          Int             @unique
   sourceId          Int
   industryId        Int?
+  brandId           Int             @default(0)
   client            Client          @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   source            ClientSource    @relation(fields: [sourceId], references: [id])
   industry          ClientIndustry? @relation(fields: [industryId], references: [id])
+  brand             Brand           @relation(fields: [brandId], references: [id])
   phone             String?
   sentOffer         Boolean?        @default(false)
   hasLoggedIn       Boolean?        @default(false)
@@ -145,6 +177,53 @@ model Company {
   valid_url    Boolean   @default(false)
   check_url    Boolean   @default(false)
   latest_check Boolean   @default(false)
+  orders       Order[]
+}
+
+model Order {
+  id                  Int                @id @default(autoincrement())
+  clientId            Int
+  companyId           Int
+  client              Client             @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  deletedAt           DateTime?
+  order_date          DateTime?          @default(now())
+  createdBy           OrderCreatedByEnum
+  send_confirmation   Boolean?           @default(false)
+  unit_cost           Decimal            @default(0.00) @db.Money()
+  total_price         Decimal            @default(0.00) @db.Money()
+  remarks             String?
+  payment_status      PaymentStatusEnum? @default(NEW)
+  payment_status_date DateTime?
+  date_paid           DateTime?
+  orderReviews        OrderReview[]
+  orderLogs           OrderLog[]
+}
+
+model OrderReview {
+  id               Int               @id @default(autoincrement())
+  orderId          Int
+  order            Order             @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+  name             String
+  status           OrderReviewStatus @default(NEU)
+  google_review_id String?
+}
+
+model OrderLog {
+  id         Int                 @id @default(autoincrement())
+  orderId    Int
+  order      Order               @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  by         String
+  action     String
+  email_type OrderEmailTypeEnum?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  deletedAt  DateTime?
 }
 
 model ClientSource {
