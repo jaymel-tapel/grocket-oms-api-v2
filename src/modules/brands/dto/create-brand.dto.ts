@@ -11,12 +11,6 @@ import {
 } from 'class-validator';
 
 export class CreateBrandDto {
-  @IsNumber()
-  @IsNotEmpty()
-  @DoesExist({ tableName: 'client', column: 'id' })
-  @ApiProperty()
-  clientId: number;
-
   @IsString()
   @IsNotEmpty()
   @MinLength(3)
@@ -43,7 +37,7 @@ export class CreateBrandDto {
   @IsString()
   @IsOptional()
   @MinLength(3)
-  @ApiProperty()
+  @ApiPropertyOptional()
   address?: string;
 
   @IsEnum(CurrencyEnum)

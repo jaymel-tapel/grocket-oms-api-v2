@@ -196,17 +196,23 @@ export class TasksService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number, authUser: UserEntity) {
     const database = await this.database.softDelete();
+    const ability = await this.abilityFactory.defineAbility(authUser);
+    const foundTask = await this.findUniqueOrThrow({ where: { id } });
+
+    ForbiddenError.from(ability).throwUnlessCan(Action.Update, foundTask);
 
     return await database.$transaction(async (tx) => {
-      await tx.taskAccountant.delete({
-        where: { taskId: id },
-      });
-
-      await tx.taskSeller.delete({
-        where: { taskId: id },
-      });
+      if (authUser.role === RoleEnum.ACCOUNTANT) {
+        await tx.taskAccountant.delete({
+          where: { taskId: id },
+        });
+      } else {
+        await tx.taskSeller.delete({
+          where: { taskId: id },
+        });
+      }
 
       const deletedTask = await tx.task.delete({
         where: { id },
@@ -217,6 +223,11 @@ export class TasksService {
   }
 
   async restore(id: number, authUser: UserEntity) {
+    const ability = await this.abilityFactory.defineAbility(authUser);
+    const foundTask = await this.findUniqueOrThrow({ where: { id } });
+
+    ForbiddenError.from(ability).throwUnlessCan(Action.Update, foundTask);
+
     return await this.database.$transaction(async (tx) => {
       await tx.task.findUniqueOrThrow({ where: { id } });
 

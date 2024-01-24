@@ -20,14 +20,10 @@ export class BrandsService {
   ) {}
 
   async create(createBrandDto: CreateBrandDto, image?: Express.Multer.File) {
-    const { clientId, logo, ...data } = createBrandDto;
+    const { logo, ...data } = createBrandDto;
     let imageUrl: UploadApiResponse | UploadApiErrorResponse;
 
     return await this.database.$transaction(async (tx) => {
-      tx.client.findUniqueOrThrow({
-        where: { id: clientId },
-      });
-
       const code = await tx.brand.findFirst({ where: { code: data.code } });
 
       if (code) {
@@ -42,21 +38,19 @@ export class BrandsService {
         data: {
           ...data,
           ...(imageUrl && { logo: imageUrl.secure_url }),
-          client: {
-            connect: {
-              id: clientId,
-            },
-          },
         },
       });
     });
   }
 
-  async findAll(brandDto: BrandArgsDto) {
+  async findAll() {
     const database = await this.database.softDelete();
-    return await database.brand.findMany({
-      where: brandDto,
-    });
+    return await database.brand.findMany({});
+  }
+
+  async findUnique(id: number) {
+    const database = await this.database.softDelete();
+    return await database.brand.findUnique({ where: { id } });
   }
 
   async update(id: number, updateBrandDto: UpdateBrandDto) {

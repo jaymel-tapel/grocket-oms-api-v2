@@ -29,6 +29,14 @@ export class ClientDto {
   @MinLength(8)
   @ApiPropertyOptional({ minLength: 8 })
   password?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({
+    description:
+      "If Auth User's Role is either Admin or Accountant then this is required",
+  })
+  sellerId?: number;
 }
 
 export class ClientInfoDto {
@@ -58,10 +66,10 @@ export class ClientInfoDto {
   @ApiProperty({ type: Number })
   sourceId: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsNumber()
   @ApiProperty({ type: Number })
-  industryId: number;
+  industryId?: number;
 }
 
 export class CreateClientDto extends IntersectionType(

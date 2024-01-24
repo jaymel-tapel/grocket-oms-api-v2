@@ -29,12 +29,30 @@ export class ClientsService {
   ) {}
 
   async create(authUser: UserEntity, createClientDto: CreateClientDto) {
-    const {
+    let {
       name,
       email,
       password: passDto,
+      sellerId,
       ...clientInfoDto
     } = createClientDto;
+
+    if (authUser.role !== RoleEnum.SELLER && !sellerId) {
+      throw new HttpException('sellerId should not be empty', 400);
+    } else if (authUser.role === RoleEnum.SELLER) {
+      sellerId = authUser.id;
+    } else if (sellerId) {
+      const foundSeller = await this.usersService.findOne({
+        id: sellerId,
+        role: 'SELLER',
+      });
+
+      if (!foundSeller) {
+        throw new HttpException('Seller not found', 404);
+      }
+
+      sellerId = foundSeller.id;
+    }
 
     return await this.database.$transaction(async (tx) => {
       const foundClient = await this.findOneWithDeleted({ email });
@@ -58,7 +76,7 @@ export class ClientsService {
           name,
           email,
           password: passwordObj.hash,
-          seller: { connect: { id: authUser.id } },
+          seller: { connect: { id: sellerId } },
           clientInfo: { create: clientInfoDto },
         },
         include: { clientInfo: true },

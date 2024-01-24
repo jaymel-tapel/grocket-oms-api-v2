@@ -16,7 +16,7 @@ export class DoesExistConstraint implements ValidatorConstraintInterface {
   async validate(value: any, args?: ValidationArguments): Promise<boolean> {
     const { tableName, column }: ITable = args.constraints[0];
 
-    const doesExist = await this.database[tableName].findFirst({
+    const doesExist = await(this.database[tableName] as any).findFirst({
       where: { [column]: value },
     });
 
