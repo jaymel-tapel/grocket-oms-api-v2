@@ -15,6 +15,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { SellersModule } from './modules/sellers/sellers.module';
+import { BrandsModule } from './modules/brands/brands.module';
 
 @Module({
   imports: [
@@ -44,8 +45,8 @@ import { SellersModule } from './modules/sellers/sellers.module';
     CompaniesModule,
     OrdersModule,
     SellersModule,
+    BrandsModule,
   ],
-  controllers: [],
   providers: [DoesExistConstraint, ...Commands],
 })
 export class AppModule {}
