@@ -1,3 +1,4 @@
+import { BrandEntity } from '@modules/brands/entities/brand.entity';
 import {
   ApiHideProperty,
   ApiProperty,
@@ -8,8 +9,12 @@ import { Decimal } from '@prisma/client/runtime/library';
 import { Transform, TransformFnParams } from 'class-transformer';
 
 export class ClientInfoEntity implements ClientInfo {
-  constructor(partial: Partial<ClientInfoEntity>) {
+  constructor({ brand, ...partial }: Partial<ClientInfoEntity>) {
     Object.assign(this, partial);
+
+    if (brand) {
+      this.brand = new BrandEntity(brand);
+    }
   }
 
   @ApiProperty()
@@ -59,4 +64,10 @@ export class ClientInfoEntity implements ClientInfo {
 
   @ApiHideProperty()
   clientId: number;
+
+  @ApiProperty()
+  brandId: number;
+
+  @ApiPropertyOptional({ type: BrandEntity })
+  brand?: BrandEntity;
 }
