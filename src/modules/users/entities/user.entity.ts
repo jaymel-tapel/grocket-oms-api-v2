@@ -22,7 +22,7 @@ export class UserEntity implements User {
   @ApiProperty({ enum: $Enums.RoleEnum })
   role: $Enums.RoleEnum;
 
-  @ApiPropertyOptional({ nullable: true, default: null })
+  @Exclude()
   forgot_password_code: string;
 
   @ApiPropertyOptional({ nullable: true, default: null })
