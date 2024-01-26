@@ -198,6 +198,8 @@ model Order {
   payment_status      PaymentStatusEnum? @default(NEW)
   payment_status_date DateTime?
   date_paid           DateTime?
+  invoice_image       String?
+  task                Task?
   orderReviews        OrderReview[]
   orderLogs           OrderLog[]
 }
@@ -246,10 +248,12 @@ model Task {
   id             Int             @id @default(autoincrement())
   userId         Int
   clientId       Int?
+  orderId        Int?            @unique
   taskTypeId     Int?
   createdBy      CreatedByEnum?  @default(AUTO)
   user           User            @relation(fields: [userId], references: [id])
   client         Client?         @relation(fields: [clientId], references: [id])
+  order          Order?          @relation(fields: [orderId], references: [id])
   taskType       TaskType?       @relation(fields: [taskTypeId], references: [id])
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
