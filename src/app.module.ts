@@ -17,6 +17,8 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { SellersModule } from './modules/sellers/sellers.module';
 import { BrandsModule } from './modules/brands/brands.module';
 import { IsAlreadyExistConstraint } from './common/validators/isAlreadyExist.validation';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -32,6 +34,13 @@ import { IsAlreadyExistConstraint } from './common/validators/isAlreadyExist.val
       },
       defaults: {
         from: `"${process.env.MAIL_FROM_NAME}" <${process.env.MAIL_FROM_ADDRESS}>`,
+      },
+      template: {
+        dir: join(__dirname, '..', 'src/templates'),
+        adapter: new HandlebarsAdapter(),
+        options: {
+          strict: true,
+        },
       },
     }),
     DatabaseModule,

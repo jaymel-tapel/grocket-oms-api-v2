@@ -74,6 +74,14 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @ApiProperty({ type: CreateOrderReviewDto, isArray: true })
   orderReviews: CreateOrderReviewDto[];
+
+  @IsOptional()
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    required: false,
+  })
+  file?: Express.Multer.File;
 }
 
 export class CreateOrderClientDto extends OmitType(CreateClientDto, [
@@ -96,7 +104,7 @@ export class CreateOrderClientDto extends OmitType(CreateClientDto, [
 
   @IsNumber()
   @DoesExist({ tableName: 'brand', column: 'id' })
-  @ApiPropertyOptional()
+  @ApiProperty()
   brandId: number;
 }
 

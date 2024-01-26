@@ -26,6 +26,9 @@ export class TaskEntity implements Task {
   clientId: number;
 
   @ApiProperty()
+  orderId: number;
+
+  @ApiProperty()
   taskTypeId: number;
 
   @ApiProperty({ enum: CreatedByEnum })
