@@ -69,6 +69,9 @@ export class OrderEntity implements Order {
   @ApiPropertyOptional({ nullable: true, default: null })
   date_paid: Date | null;
 
+  @ApiPropertyOptional({ nullable: true, default: null })
+  invoice_image: string | null;
+
   @ApiPropertyOptional({ type: ClientEntity })
   client?: ClientEntity;
 
