@@ -1,8 +1,10 @@
 import { Prisma } from '@prisma/client';
 
-export const clientIncludeHelper = () => {
+export const clientIncludeHelper = (
+  clientInfoArgs?: Prisma.Client$clientInfoArgs,
+) => {
   let include: Prisma.ClientInclude = {
-    clientInfo: true,
+    clientInfo: clientInfoArgs ?? true,
     seller: true,
   };
 
