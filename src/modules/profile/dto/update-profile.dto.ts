@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsAlreadyExist } from '@src/common/validators/isAlreadyExist.validation';
 import { IsArray, IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
 import { AlternateEmailDto } from 'src/modules/alternate-emails/dto/alternate-email.dto';
 
@@ -10,6 +11,7 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsEmail()
+  @IsAlreadyExist({ tableName: 'user', column: 'email' })
   @ApiPropertyOptional({ format: 'email' })
   email?: string;
 
