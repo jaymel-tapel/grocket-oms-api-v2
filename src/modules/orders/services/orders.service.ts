@@ -23,6 +23,7 @@ import { OrderLogsService } from './order-logs.service';
 import { paymentStatusNameHelper } from '../helpers/payment-status-name.helper';
 import { CloudinaryService } from '@modules/cloudinary/services/cloudinary.service';
 import { clientIncludeHelper } from '@modules/clients/helpers/client-include.helper';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class OrdersService {
@@ -33,6 +34,7 @@ export class OrdersService {
     private readonly companiesService: CompaniesService,
     private readonly orderLogsService: OrderLogsService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly mailerService: MailerService,
   ) {}
 
   private async validateSellerAndClient(
@@ -167,11 +169,6 @@ export class OrdersService {
             },
           },
         },
-        include: {
-          client: {
-            include: clientIncludeHelper(),
-          },
-        },
       });
 
       if (file) {
@@ -190,10 +187,14 @@ export class OrdersService {
       },
       include: {
         client: {
-          include: clientIncludeHelper(),
+          include: clientIncludeHelper({ include: { brand: true } }),
         },
       },
     });
+
+    const adminEmails = process.env.ADMIN_EMAILS.split(',');
+    // ? Send Email to the seller about new order
+    await this.newOrderEmail(updatedOrder, updatedOrder.client, adminEmails);
 
     // ? Create a Log for the Order
     await this.orderLogsService.createLog(updatedOrder.id, authUser, {
@@ -201,6 +202,27 @@ export class OrdersService {
     });
 
     return updatedOrder;
+  }
+
+  private async newOrderEmail(
+    order: OrderEntity,
+    client: ClientEntity,
+    admins: string[],
+  ) {
+    const brand = client.clientInfo.brand;
+    return await this.mailerService.sendMail({
+      subject: `${brand.name} Order Details`,
+      to: client.seller.email,
+      cc: admins,
+      template: 'new-order-notif',
+      context: {
+        orderId: order.id,
+        brand_name: brand.name,
+        seller_email: client.seller.email,
+        client_email: client.email,
+        total_price: order.total_price,
+      },
+    });
   }
 
   async findAllWithPagination(
