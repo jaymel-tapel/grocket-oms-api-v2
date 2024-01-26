@@ -9,6 +9,8 @@ import {
   ParseIntPipe,
   UseGuards,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { OrdersService } from './services/orders.service';
 import {
@@ -19,12 +21,12 @@ import {
 import {
   UpdateOrderClientInfoDto,
   UpdateOrderCombinedEntity,
-  UpdateOrderCompanyDto,
   UpdateOrderDto,
 } from './dto/update-order.dto';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiTags,
@@ -36,7 +38,8 @@ import { JwtGuard } from '@modules/auth/guard';
 import { FilterOrderDto } from './dto/filter-order.dto';
 import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-response.decorator';
-import { UpdateOrderCombinedDto } from './dto/update-order.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FileValidationPipe } from '@modules/profile/pipes/file-validation.pipe';
 
 @UseGuards(JwtGuard)
 @ApiTags('orders')
@@ -47,16 +50,19 @@ export class OrdersController {
 
   @Post()
   @ApiCreatedResponse({ type: OrderEntity })
+  @ApiConsumes('multipart/form-data')
   @ApiBody({ type: CreateOrderEntity })
+  @UseInterceptors(FileInterceptor('file'))
   async create(
     @AuthUser() user: UserEntity,
     @Body() createOrderDto: CreateOrderDto,
     @Body() createOrderClientDto: CreateOrderClientDto,
+    @UploadedFile(new FileValidationPipe()) file?: Express.Multer.File | null,
   ) {
     return new OrderEntity(
       await this.ordersService.create(
         user,
-        createOrderDto,
+        { file, ...createOrderDto },
         createOrderClientDto,
       ),
     );
@@ -86,16 +92,16 @@ export class OrdersController {
   @ApiOkResponse({ type: OrderEntity })
   @ApiBody({ type: UpdateOrderCombinedEntity })
   async update(
+    @AuthUser() user: UserEntity,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateOrder: UpdateOrderDto,
     @Body() updateClientInfo: UpdateOrderClientInfoDto,
-    @Body() updateCompany: UpdateOrderCompanyDto,
   ) {
-    return await this.ordersService.update(id, {
+    const updatedOrder = await this.ordersService.update(id, user, {
       updateOrder,
       updateClientInfo,
-      updateCompany,
     });
+    return new OrderEntity(updatedOrder);
   }
 
   @Delete(':id')
