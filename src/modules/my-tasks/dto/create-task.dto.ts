@@ -3,6 +3,7 @@ import { DoesExist } from '@src/common/validators/user.validation';
 import {
   IsDate,
   IsEmail,
+  IsNumber,
   IsOptional,
   IsString,
   MinLength,
@@ -31,6 +32,12 @@ export class CreateTaskDto {
   client_email?: string;
 
   @IsOptional()
+  @IsNumber()
+  @DoesExist({ tableName: 'order', column: 'id' })
+  @ApiPropertyOptional()
+  orderId?: number;
+
+  @IsOptional()
   @IsDate()
   @ApiPropertyOptional()
   task_date?: Date;
@@ -39,6 +46,4 @@ export class CreateTaskDto {
   @IsString()
   @ApiPropertyOptional()
   note?: string;
-
-  // TODO: orderId
 }
