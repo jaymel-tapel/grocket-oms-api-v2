@@ -29,7 +29,7 @@ export class ClientEntity implements Client {
   @Exclude()
   password: string;
 
-  @ApiProperty()
+  @Exclude()
   forgot_password_code: string;
 
   @ApiProperty()
