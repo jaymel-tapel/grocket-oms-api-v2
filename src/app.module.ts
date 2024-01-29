@@ -14,6 +14,7 @@ import { Commands } from '@modules/database/seeders';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { BrandsModule } from './modules/brands/brands.module';
+import { SellersModule } from './modules/sellers/sellers.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { BrandsModule } from './modules/brands/brands.module';
     AbilityModule,
     CompaniesModule,
     BrandsModule,
+    SellersModule,
   ],
   providers: [DoesExistConstraint, ...Commands],
 })
