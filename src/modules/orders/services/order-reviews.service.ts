@@ -75,6 +75,19 @@ export class OrderReviewsService {
       where: { id },
     });
 
+    const orderReviews = await database.orderReview.findMany({
+      where: { orderId: deletedReview.orderId },
+      include: { order: true },
+    });
+
+    await database.order.update({
+      where: { id: deletedReview.orderId },
+      data: {
+        total_price:
+          orderReviews.length * Number(orderReviews[0].order.unit_cost),
+      },
+    });
+
     // ? Create a Log for the Order
     await this.orderLogsService.createLog(deletedReview.orderId, authUser, {
       action: 'order review updated',
