@@ -81,6 +81,17 @@ export class OrdersController {
     );
   }
 
+  @Get('deleted')
+  @ApiOffsetPageResponse(OrderEntity)
+  async findAllDeleted(
+    @AuthUser() user: UserEntity,
+    @Query() offsetPageArgsDto: OffsetPageArgsDto,
+  ) {
+    return await this.ordersService.findAllDeletedWithPagination(
+      offsetPageArgsDto,
+    );
+  }
+
   @Get(':id')
   @ApiOkResponse({ type: OrderEntity })
   async findOne(@Param('id', ParseIntPipe) id: number) {
