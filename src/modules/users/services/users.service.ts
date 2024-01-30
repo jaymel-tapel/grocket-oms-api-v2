@@ -162,7 +162,7 @@ export class UsersService {
       });
 
       await tx.alternateEmail.deleteMany({
-        where: { userId: user.id, deletedAt: { not: null } },
+        where: { userId: user.id, deletedAt: null },
       });
 
       return user;
