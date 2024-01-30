@@ -252,6 +252,27 @@ export class OrdersService {
     return paginatedOrders;
   }
 
+  async findAllDeletedWithPagination(offsetPageArgsDto: OffsetPageArgsDto) {
+    const { perPage } = offsetPageArgsDto;
+    const paginate = createPaginator({ perPage });
+
+    let findManyQuery: Prisma.OrderFindManyArgs = {
+      where: { deletedAt: { not: null } },
+      include: { orderReviews: true, client: true },
+    };
+
+    const paginatedOrders = await paginate<
+      OrderEntity,
+      Prisma.OrderFindManyArgs
+    >(this.database.order, findManyQuery, offsetPageArgsDto);
+
+    paginatedOrders.data = paginatedOrders.data.map(
+      (order) => new OrderEntity(order),
+    );
+
+    return paginatedOrders;
+  }
+
   async findOne(id: number) {
     const database = await this.database.softDelete();
 
