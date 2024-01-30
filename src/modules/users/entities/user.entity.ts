@@ -22,6 +22,12 @@ export class UserEntity implements User {
   @ApiProperty({ enum: $Enums.RoleEnum })
   role: $Enums.RoleEnum;
 
+  @Exclude()
+  forgot_password_code: string;
+
+  @ApiPropertyOptional({ nullable: true, default: null })
+  profile_image: string;
+
   @ApiPropertyOptional({ nullable: true, default: null })
   contact_url: string | null;
 

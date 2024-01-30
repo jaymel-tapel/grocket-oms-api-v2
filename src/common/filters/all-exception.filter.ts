@@ -1,3 +1,4 @@
+import { ForbiddenError } from '@casl/ability';
 import {
   Catch,
   ArgumentsHost,
@@ -45,13 +46,24 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
         }
         case 'P2025': {
           statusCode = HttpStatus.NOT_FOUND;
-          message = exception.message;
+          if (
+            typeof exception?.meta?.cause === 'string' &&
+            exception.meta?.cause.includes('update')
+          ) {
+            message = exception.meta.cause;
+          } else {
+            message = exception.message;
+          }
           break;
         }
         default:
           console.error(exception);
           break;
       }
+    } else if (exception instanceof ForbiddenError) {
+      statusCode = 403;
+      message = exception.message;
+      stack = exception.stack.replace(/\n/g, '');
     } else {
       // Handle other types of exceptions
       message = exception.message || message; // Use the exception message if available

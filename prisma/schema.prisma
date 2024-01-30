@@ -2,7 +2,8 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -22,27 +23,293 @@ enum StatusEnum {
   BLOCKED
 }
 
+enum TaskStatusEnum {
+  ACTIVE
+  COMPLETED
+  DELETED
+}
+
+enum LanguageEnum {
+  GERMAN
+  ENGLISH
+}
+
+enum TierEnum {
+  FREE
+  PREMIUM
+  VIP
+}
+
+enum CreatedByEnum {
+  SELLER
+  ACCOUNTANT
+  AUTO
+}
+
+enum CurrencyEnum {
+  USD
+  EUR
+}
+
+enum OrderCreatedByEnum {
+  ADMIN
+  ACCOUNTANT
+  SELLER
+  CLIENT
+}
+
+enum PaymentStatusEnum {
+  NEW
+  SENT_INVOICE
+  PR1
+  PR2
+  PAID
+  UNPAID
+}
+
+enum OrderEmailTypeEnum {
+  BEAUFTRAGT
+  WEITERLEITUNG
+  GESCHEITERT
+}
+
+enum OrderReviewStatus {
+  NEU // New
+  BEAUFTRAGT // Instructed
+  WEITERLEITUNG // Forwarding
+  GESCHEITERT // Failed
+  WIDERSPRUCH // Contradiction
+  GELOSCHT // Deleted
+}
+
 model User {
-  id              Int              @id @default(autoincrement())
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  deletedAt       DateTime?
-  name            String
-  email           String           @unique
-  password        String
-  role            RoleEnum
-  contact_url     String?
-  phone           String?
-  status          StatusEnum       @default(ACTIVE)
-  alternateEmails AlternateEmail[]
+  id                   Int              @id @default(autoincrement())
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  deletedAt            DateTime?
+  name                 String
+  email                String
+  password             String
+  role                 RoleEnum
+  forgot_password_code String?
+  profile_image        String?
+  contact_url          String?
+  phone                String?
+  status               StatusEnum       @default(ACTIVE)
+  alternateEmails      AlternateEmail[]
+  clients              Client[]
+  tasks                Task[]
+  taskNotes            TaskNote[]
 }
 
 model AlternateEmail {
   id        Int       @id @default(autoincrement())
   user      User      @relation(fields: [userId], references: [id])
   userId    Int
-  email     String    @unique
+  email     String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+}
+
+model Brand {
+  id        Int          @id @default(autoincrement())
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
+  name      String
+  code      String
+  logo      String?
+  address   String?
+  currency  CurrencyEnum @default(USD)
+  clients   ClientInfo[]
+}
+
+model Client {
+  id                   Int         @id @default(autoincrement())
+  name                 String
+  email                String
+  password             String
+  forgot_password_code String?
+  seller               User        @relation(fields: [sellerId], references: [id])
+  sellerId             Int
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  deletedAt            DateTime?
+  clientInfo           ClientInfo?
+  tasks                Task[]
+  companies            Company[]
+  orders               Order[]
+}
+
+model ClientInfo {
+  id                Int             @id @default(autoincrement())
+  clientId          Int             @unique
+  sourceId          Int
+  industryId        Int?
+  brandId           Int             @default(0)
+  client            Client          @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  source            ClientSource    @relation(fields: [sourceId], references: [id])
+  industry          ClientIndustry? @relation(fields: [industryId], references: [id])
+  brand             Brand           @relation(fields: [brandId], references: [id])
+  phone             String?
+  sentOffer         Boolean?        @default(false)
+  hasLoggedIn       Boolean?        @default(false)
+  thirdPartyId      String?
+  default_unit_cost Decimal?        @default(0.00) @db.Decimal(65, 2)
+  status            StatusEnum?     @default(ACTIVE)
+  language          LanguageEnum?   @default(GERMAN)
+  tier              TierEnum?       @default(FREE)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+}
+
+model Company {
+  id           Int       @id @default(autoincrement())
+  clientId     Int
+  client       Client    @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  name         String
+  url          String
+  valid_url    Boolean   @default(false)
+  check_url    Boolean   @default(false)
+  latest_check Boolean   @default(false)
+  orders       Order[]
+}
+
+model Order {
+  id                  Int                @id @default(autoincrement())
+  clientId            Int
+  companyId           Int
+  client              Client             @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  deletedAt           DateTime?
+  order_date          DateTime?          @default(now())
+  createdBy           OrderCreatedByEnum
+  send_confirmation   Boolean?           @default(false)
+  unit_cost           Decimal            @default(0.00) @db.Money()
+  total_price         Decimal            @default(0.00) @db.Money()
+  remarks             String?
+  payment_status      PaymentStatusEnum? @default(NEW)
+  payment_status_date DateTime?
+  date_paid           DateTime?
+  invoice_image       String?
+  task                Task?
+  orderReviews        OrderReview[]
+  orderLogs           OrderLog[]
+}
+
+model OrderReview {
+  id               Int               @id @default(autoincrement())
+  orderId          Int
+  order            Order             @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+  name             String
+  status           OrderReviewStatus @default(NEU)
+  google_review_id String?
+}
+
+model OrderLog {
+  id         Int                 @id @default(autoincrement())
+  orderId    Int
+  order      Order               @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  by         String
+  action     String
+  email_type OrderEmailTypeEnum?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  deletedAt  DateTime?
+}
+
+model ClientSource {
+  id         Int          @id @default(autoincrement())
+  name       String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  clientInfo ClientInfo[]
+}
+
+model ClientIndustry {
+  id         Int          @id @default(autoincrement())
+  name       String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  clientInfo ClientInfo[]
+}
+
+model Task {
+  id             Int             @id @default(autoincrement())
+  userId         Int
+  clientId       Int?
+  orderId        Int?            @unique
+  taskTypeId     Int?
+  createdBy      CreatedByEnum?  @default(AUTO)
+  user           User            @relation(fields: [userId], references: [id])
+  client         Client?         @relation(fields: [clientId], references: [id])
+  order          Order?          @relation(fields: [orderId], references: [id])
+  taskType       TaskType?       @relation(fields: [taskTypeId], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  taskSeller     TaskSeller?
+  taskAccountant TaskAccountant?
+  taskNotes      TaskNote[]
+}
+
+model TaskSeller {
+  id          Int            @id @default(autoincrement())
+  taskId      Int            @unique
+  task        Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  remarks     String?
+  status      TaskStatusEnum @default(ACTIVE)
+  task_date   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+}
+
+model TaskAccountant {
+  id          Int            @id @default(autoincrement())
+  taskId      Int            @unique
+  task        Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  remarks     String?
+  status      TaskStatusEnum @default(ACTIVE)
+  task_date   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+}
+
+model TaskNote {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  taskId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, taskId])
+}
+
+model TaskType {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tasks     Task[]
 }

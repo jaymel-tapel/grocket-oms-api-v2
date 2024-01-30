@@ -10,6 +10,15 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
         models: {
           User: true,
           AlternateEmail: true,
+          Client: true,
+          ClientInfo: true,
+          Task: true,
+          TaskAccountant: true,
+          TaskSeller: true,
+          Company: true,
+          Order: true,
+          OrderLog: true,
+          OrderReview: true,
         },
         defaultConfig: {
           field: 'deletedAt',
@@ -17,6 +26,7 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
             if (deleted) return new Date();
             return null;
           },
+          allowToOneUpdates: true,
         },
       }),
     );

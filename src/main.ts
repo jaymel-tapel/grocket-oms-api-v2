@@ -3,15 +3,18 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exception.filter';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { useContainer } from 'class-validator';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableCors();
+
   const config = new DocumentBuilder()
     .setTitle('G-Rocket OMS v2')
     .setDescription('API Documentation for OMS API v2')
-    .setVersion('0.1')
-    // .addBearerAuth()
+    .setVersion('0.2')
+    .addBearerAuth()
     .build();
 
   app.setGlobalPrefix('api');
@@ -24,6 +27,9 @@ async function bootstrap() {
       },
     }),
   );
+
+  // * For creating a custom validation
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 

@@ -1,9 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { DatabaseService } from '../../database/services/database.service';
 import { HashService } from '../../auth/services/hash.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, StatusEnum } from '@prisma/client';
+import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
+import { FilterUsersDto } from '../dto/filter-user.dto';
+import { PageEntity } from '@modules/page/page.entity';
+import { UserEntity } from '../entities/user.entity';
+import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
+import { findManyUsers } from '../helpers/find-many-users.helper';
+import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
+import { createPaginator } from 'prisma-pagination';
 
 @Injectable()
 export class UsersService {
@@ -15,6 +23,18 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
     const database = await this.database.softDelete();
     const result = await database.$transaction(async (tx) => {
+      const foundUser = await this.findOneWithDeleted({
+        email: createUserDto.email,
+      });
+
+      if (foundUser?.status === StatusEnum.BLOCKED) {
+        throw new HttpException('User is blocked', 400);
+      } else if (foundUser?.status === StatusEnum.DELETED) {
+        return await this.restore(foundUser?.id);
+      } else if (foundUser) {
+        throw new HttpException('User already exists', 409);
+      }
+
       createUserDto.password = await this.hashService.hashPassword(
         createUserDto.password,
       );
@@ -23,7 +43,7 @@ export class UsersService {
         data: createUserDto,
       });
 
-      return newUser;
+      return await newUser;
     });
 
     return result;
@@ -34,6 +54,29 @@ export class UsersService {
     return await database.user.findMany({
       include: { alternateEmails: true },
     });
+  }
+
+  async findAllByOffset(
+    filterArgs: FilterUsersDto,
+    offsetPageArgsDto: OffsetPageArgsDto,
+  ) {
+    const { perPage } = offsetPageArgsDto;
+    const database = await this.database.softDelete();
+    const paginate = createPaginator({ perPage });
+
+    const findManyQuery = await findManyUsers(filterArgs, this.database);
+
+    const paginatedUsers = await paginate<UserEntity, Prisma.UserFindManyArgs>(
+      database.user,
+      findManyQuery,
+      offsetPageArgsDto,
+    );
+
+    paginatedUsers.data = paginatedUsers.data.map(
+      (user) => new UserEntity(user),
+    );
+
+    return paginatedUsers;
   }
 
   async findAllByCondition(args: Prisma.UserFindManyArgs) {
@@ -47,20 +90,43 @@ export class UsersService {
     });
   }
 
-  async findOne(id: number) {
+  async findUniqueOrThrow(id: number) {
     const database = await this.database.softDelete();
     return await database.user.findUniqueOrThrow({
       where: { id },
     });
   }
 
-  async findOneWithDeleted(id: number) {
+  async findUniqueWithDeleted(id: number) {
     return await this.database.user.findUnique({ where: { id } });
   }
 
-  async findByCondition(args: Prisma.UserFindUniqueArgs) {
+  async findUniqueByCondition(args: Prisma.UserFindUniqueArgs) {
     const database = await this.database.softDelete();
     return await database.user.findUnique(args);
+  }
+
+  async findOne(data: Prisma.UserWhereInput, args?: Prisma.UserFindFirstArgs) {
+    const database = await this.database.softDelete();
+    return await database.user.findFirst({
+      where: { ...data },
+      ...args,
+    });
+  }
+
+  async findOneWithDeleted(
+    data: Prisma.UserWhereInput,
+    args?: Prisma.UserFindFirstArgs,
+  ) {
+    return await this.database.user.findFirst({
+      where: {
+        ...data,
+        AND: {
+          OR: [{ deletedAt: null }, { deletedAt: { not: null } }],
+        },
+      },
+      ...args,
+    });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -74,8 +140,25 @@ export class UsersService {
     const database = await this.database.softDelete();
 
     return await database.$transaction(async (tx) => {
+      const foundUser = await tx.user.findUniqueOrThrow({
+        where: { id },
+        include: { clients: true },
+      });
+
+      if (foundUser.clients.length > 0) {
+        throw new HttpException(
+          `Unable to delete user with ${foundUser.clients.length} assigned clients.`,
+          400,
+        );
+      }
+
       const user = await tx.user.delete({
         where: { id },
+      });
+
+      await tx.user.update({
+        where: { id: user.id },
+        data: { status: 'DELETED' },
       });
 
       await tx.alternateEmail.deleteMany({
@@ -88,17 +171,18 @@ export class UsersService {
 
   async restore(id: number) {
     const database = await this.database.softDelete();
-
-    const foundUser = await this.findOne(id);
+    const foundUser = await this.findUniqueWithDeleted(id);
 
     const user = await database.user.update({
-      where: { id },
+      where: { id: foundUser.id },
       data: {
         deletedAt: null,
+        status: 'ACTIVE',
       },
     });
 
-    const emails = await database.alternateEmail.updateMany({
+    // ? Also restore all their alternate emails
+    await database.alternateEmail.updateMany({
       where: {
         userId: user.id,
         deletedAt: {
