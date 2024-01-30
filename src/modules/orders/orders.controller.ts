@@ -105,6 +105,7 @@ export class OrdersController {
 
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number) {
-    return await this.ordersService.remove(id);
+    await this.ordersService.remove(id);
+    return { message: 'Successfully Deleted Order Review' };
   }
 }

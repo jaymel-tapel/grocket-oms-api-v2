@@ -372,6 +372,14 @@ export class OrdersService {
   }
 
   async remove(id: number) {
-    return `This action removes a #${id} order`;
+    const database = await this.database.softDelete();
+
+    await database.orderReview.deleteMany({
+      where: { orderId: id, deletedAt: null },
+    });
+
+    return await database.order.delete({
+      where: { id },
+    });
   }
 }
