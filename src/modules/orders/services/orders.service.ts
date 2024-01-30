@@ -371,11 +371,16 @@ export class OrdersService {
     return order;
   }
 
-  async remove(id: number) {
+  async remove(id: number, authUser: UserEntity) {
     const database = await this.database.softDelete();
 
     await database.orderReview.deleteMany({
       where: { orderId: id, deletedAt: null },
+    });
+
+    // ? Create a Log for the Order
+    await this.orderLogsService.createLog(id, authUser, {
+      action: 'order deleted',
     });
 
     return await database.order.delete({

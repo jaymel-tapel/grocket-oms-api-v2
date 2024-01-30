@@ -104,8 +104,11 @@ export class OrdersController {
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    await this.ordersService.remove(id);
+  async remove(
+    @AuthUser() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    await this.ordersService.remove(id, user);
     return { message: 'Successfully Deleted Order Review' };
   }
 }
