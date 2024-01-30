@@ -9,6 +9,10 @@ import {
 } from 'class-validator';
 
 export class CreateOrderReviewDto {
+  constructor(data: Partial<CreateOrderReviewDto>) {
+    Object.assign(this, data);
+  }
+
   @IsNotEmpty()
   @IsString()
   @MinLength(3)
