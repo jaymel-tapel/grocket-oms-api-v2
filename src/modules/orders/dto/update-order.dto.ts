@@ -22,10 +22,7 @@ export class UpdateOrderDto extends OmitType(CreateOrderDto, [
 
   @IsNumber()
   @DoesExist({ tableName: 'company', column: 'id' })
-  @ApiProperty({
-    description:
-      'If company_name or company_url is defined, then pass this also',
-  })
+  @ApiProperty()
   companyId: number;
 }
 
