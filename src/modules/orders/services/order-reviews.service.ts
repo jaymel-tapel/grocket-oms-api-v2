@@ -90,7 +90,7 @@ export class OrderReviewsService {
 
     // ? Create a Log for the Order
     await this.orderLogsService.createLog(deletedReview.orderId, authUser, {
-      action: 'order review updated',
+      action: 'order review deleted',
     });
 
     return deletedReview;
