@@ -17,7 +17,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { CreateOrderReviewDto } from './create-order-review.dto';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { DoesExist } from '@src/common/validators/user.validation';
 import { CreateClientDto } from '@modules/clients/dto/create-client.dto';
 
@@ -73,6 +73,17 @@ export class CreateOrderDto {
   @Type(() => CreateOrderReviewDto)
   @ValidateNested({ each: true })
   @ApiProperty({ type: CreateOrderReviewDto, isArray: true })
+  @Transform(({ value }) => {
+    const parsedValue = JSON.parse(value);
+
+    // Ensure the parsed value is an array
+    if (Array.isArray(parsedValue)) {
+      // Map each item to an instance of CreateOrderReviewDto
+      return parsedValue.map((item) => new CreateOrderReviewDto(item));
+    }
+
+    return [];
+  })
   orderReviews: CreateOrderReviewDto[];
 
   @IsOptional()

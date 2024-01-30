@@ -59,13 +59,12 @@ export class OrdersController {
     @Body() createOrderClientDto: CreateOrderClientDto,
     @UploadedFile(new FileValidationPipe()) file?: Express.Multer.File | null,
   ) {
-    return new OrderEntity(
-      await this.ordersService.create(
-        user,
-        { file, ...createOrderDto },
-        createOrderClientDto,
-      ),
+    const newOrder = await this.ordersService.create(
+      user,
+      { file, ...createOrderDto },
+      createOrderClientDto,
     );
+    return new OrderEntity(newOrder);
   }
 
   @Get()
