@@ -6,11 +6,13 @@ import { UsersModule } from '@modules/users/users.module';
 import { CompaniesModule } from '@modules/companies/companies.module';
 import { OrderLogsService } from './services/order-logs.service';
 import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
+import { OrderReviewsService } from './services/order-reviews.service';
+import { OrderReviewsController } from './order-reviews.controller';
 
 @Module({
   imports: [ClientsModule, UsersModule, CompaniesModule, CloudinaryModule],
-  controllers: [OrdersController],
-  providers: [OrdersService, OrderLogsService],
+  controllers: [OrdersController, OrderReviewsController],
+  providers: [OrdersService, OrderLogsService, OrderReviewsService],
   exports: [OrdersService],
 })
 export class OrdersModule {}

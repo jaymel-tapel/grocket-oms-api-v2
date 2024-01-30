@@ -1,8 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { OrderReviewStatus } from '@prisma/client';
+import { DoesExist } from '@src/common/validators/user.validation';
 import {
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   MinLength,
@@ -26,5 +28,12 @@ export class CreateOrderReviewDto {
 
   @IsOptional()
   @IsString()
+  @ApiPropertyOptional()
   google_review_id?: string;
+}
+
+export class CreateOrderReviewWithOrderIDDto extends CreateOrderReviewDto {
+  @DoesExist({ tableName: 'order', column: 'id' })
+  @IsNumber()
+  orderId: number;
 }
