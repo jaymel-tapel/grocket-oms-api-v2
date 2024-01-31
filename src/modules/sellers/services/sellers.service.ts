@@ -1,42 +1,39 @@
 import { DatabaseService } from '@modules/database/services/database.service';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ChartDto } from '../dto/chart.dto';
+import { getWeek, sub } from 'date-fns';
+import { SellerCountDto } from '../dto/seller-count.dto';
 
 @Injectable()
 export class SellersService {
   constructor(private readonly database: DatabaseService) {}
 
-  async getSellerCount() {
-    const count = await this.sellerCount();
+  async getSellerCount(data?: SellerCountDto) {
+    if (Object.entries(data).length === 0) {
+      // default to now and the past 30 days
+      const today = new Date();
+      var priorDate = sub(today, { days: 30 });
+
+      const count = await this.sellerCount(priorDate, today);
+      return count;
+    }
+
+    if (!(data.startRange && data.endRange)) {
+      return new BadRequestException(
+        'startRange and endRange should both be filled',
+      );
+    }
+
+    const count = await this.sellerCount(data.startRange, data.endRange);
     return count;
   }
 
-  // Store last weeks number?
-  async getVolatility() {
-    const count = await this.sellerCount();
-
-    // Change digits to last weeks count
-    // Via database?
-    const sellerDifference = count.allSellers - 4;
-    const activeSellerDifference = count.activeSellers - 4;
-    const inactiveSellerDifference = count.inactiveSellers - 1;
-
-    const sellerVolatility = (sellerDifference / count.allSellers) * 100;
-    const activeSellerVolatility =
-      (activeSellerDifference / count.activeSellers) * 100;
-    const inactiveSellerVolatility =
-      (inactiveSellerDifference / count.inactiveSellers) * 100;
-
-    return {
-      sellerVolatility,
-      activeSellerVolatility,
-      inactiveSellerVolatility,
-    };
-  }
-
   async getChartDetail(data: ChartDto) {
-    const [startDate] = data.startRange.toISOString().split('T');
-    const [endDate] = data.endRange.toISOString().split('T');
+    const startDate = data.startRange;
+    const endDate = data.endRange;
+
+    data.startRange.setUTCHours(0, 0, 0, 0);
+    data.endRange.setUTCHours(0, 0, 0, 0);
 
     const inactiveSeller = data.getInactive;
 
@@ -47,73 +44,50 @@ export class SellersService {
         role: 'SELLER',
         ...(!inactiveSeller && {
           createdAt: { gte: new Date(startDate), lte: new Date(endDate) },
-          deletedAt: null,
+          status: 'ACTIVE',
         }),
         ...(inactiveSeller && {
           deletedAt: { gte: new Date(startDate), lte: new Date(endDate) },
+          status: 'DELETED',
         }),
       },
     });
 
     const sellersByDate = {};
     result.forEach((seller) => {
+      inactiveSeller
+        ? seller.deletedAt.setUTCHours(0, 0, 0, 0)
+        : seller.createdAt.setUTCHours(0, 0, 0, 0);
+
       // Sort by day
       if (data.interval === 'day') {
-        const [date] = inactiveSeller
-          ? seller.deletedAt.toISOString().split('T')
-          : seller.createdAt.toISOString().split('T');
+        let date = inactiveSeller
+          ? seller.deletedAt.toISOString()
+          : seller.createdAt.toISOString();
         sellersByDate[date] = (sellersByDate[date] || 0) + 1;
       }
 
       // Sort by week
       else if (data.interval === 'week') {
-        if (inactiveSeller) {
-          const date = `Week ${this.getWeekNumber(seller.deletedAt)[1]} (${
-            this.getWeekNumber(seller.deletedAt)[0]
-          })`;
-          sellersByDate[date] = (sellersByDate[date] || 0) + 1;
-        } else {
-          const date = `Week ${this.getWeekNumber(seller.createdAt)[1]} (${
-            this.getWeekNumber(seller.createdAt)[0]
-          })`;
-          sellersByDate[date] = (sellersByDate[date] || 0) + 1;
-        }
+        const date = inactiveSeller
+          ? `${getWeek(seller.deletedAt)} (${seller.deletedAt.getFullYear()})`
+          : `${getWeek(seller.createdAt)} (${seller.createdAt.getFullYear()})`;
+        sellersByDate[date] = (sellersByDate[date] || 0) + 1;
       }
 
       // Sort by month
       else if (data.interval === 'month') {
-        const month = [
-          'Jan',
-          'Feb',
-          'Mar',
-          'Apr',
-          'May',
-          'Jun',
-          'Jul',
-          'Aug',
-          'Sep',
-          'Oct',
-          'Nov',
-          'Dec',
-        ];
+        inactiveSeller
+          ? seller.deletedAt.setDate(1)
+          : seller.createdAt.setDate(1);
 
-        if (inactiveSeller) {
-          const date =
-            month[seller.deletedAt.getMonth()] +
-            ' ' +
-            seller.deletedAt.getFullYear().toString();
-          sellersByDate[date] = (sellersByDate[date] || 0) + 1;
-        } else {
-          const date =
-            month[seller.createdAt.getMonth()] +
-            ' ' +
-            seller.createdAt.getFullYear().toString();
-          sellersByDate[date] = (sellersByDate[date] || 0) + 1;
-        }
+        const week = inactiveSeller
+          ? seller.deletedAt.toISOString()
+          : seller.createdAt.toISOString();
+        sellersByDate[week] = (sellersByDate[week] || 0) + 1;
       }
     });
 
-    // If it is recommended to make the date a value instead of a key
     const sellerCount = Object.keys(sellersByDate).map((date) => ({
       date,
       sellerCount: sellersByDate[date],
@@ -122,48 +96,49 @@ export class SellersService {
     return { sellerCount };
   }
 
-  private async allSellers() {
-    return await this.database.user.findMany({ where: { role: 'SELLER' } });
-  }
-
-  private async activeSellers() {
+  private async allSellers(startRange?: Date, endRange?: Date) {
     return await this.database.user.findMany({
-      where: { role: 'SELLER', deletedAt: null },
+      where: {
+        role: 'SELLER',
+        ...(startRange &&
+          endRange && { createdAt: { gte: startRange, lte: endRange } }),
+      },
     });
   }
 
-  private async inactiveSellers() {
+  private async activeSellers(startRange?: Date, endRange?: Date) {
     return await this.database.user.findMany({
-      where: { role: 'SELLER', deletedAt: { not: null } },
+      where: {
+        role: 'SELLER',
+        ...(startRange &&
+          endRange && { createdAt: { gte: startRange, lte: endRange } }),
+        status: 'ACTIVE',
+      },
     });
   }
 
-  private async sellerCount() {
-    const allSellers = (await this.allSellers()).length;
-    const activeSellers = (await this.activeSellers()).length;
-    const inactiveSellers = (await this.inactiveSellers()).length;
+  private async inactiveSellers(startRange?: Date, endRange?: Date) {
+    return await this.database.user.findMany({
+      where: {
+        role: 'SELLER',
+        ...(startRange &&
+          endRange && { deletedAt: { gte: startRange, lte: endRange } }),
+        status: 'DELETED',
+      },
+    });
+  }
+
+  private async sellerCount(startRange?: Date, endRange?: Date) {
+    const allSellers = (await this.allSellers(startRange, endRange)).length;
+    const activeSellers = (await this.activeSellers(startRange, endRange))
+      .length;
+    const inactiveSellers = (await this.inactiveSellers(startRange, endRange))
+      .length;
 
     return {
       allSellers,
       activeSellers,
       inactiveSellers,
     };
-  }
-
-  // Stolen
-  private getWeekNumber(sellerDate) {
-    sellerDate = new Date(
-      Date.UTC(
-        sellerDate.getFullYear(),
-        sellerDate.getMonth(),
-        sellerDate.getDate(),
-      ),
-    );
-    sellerDate.setUTCDate(
-      sellerDate.getUTCDate() + 4 - (sellerDate.getUTCDay() || 7),
-    );
-    var yearStart = Date.UTC(sellerDate.getUTCFullYear(), 0, 1);
-    var weekNo = Math.ceil(((sellerDate - yearStart) / 86400000 + 1) / 7);
-    return [sellerDate.getUTCFullYear(), weekNo];
   }
 }

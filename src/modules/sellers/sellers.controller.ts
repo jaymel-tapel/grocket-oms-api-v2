@@ -9,7 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { ChartDto } from './dto/chart.dto';
 import { SellerCountEntity } from './entity/seller-count.dto';
-import { SellerVolatilityEntity } from './entity/seller-volatility.dto';
+import { SellerCountDto } from './dto/seller-count.dto';
 
 @UseGuards(JwtGuard)
 @Controller('sellers')
@@ -20,14 +20,8 @@ export class SellersController {
 
   @Get('count')
   @ApiOkResponse({ type: SellerCountEntity })
-  async getSellerCount() {
-    return this.sellerService.getSellerCount();
-  }
-
-  @Get('volatility')
-  @ApiOkResponse({ type: SellerVolatilityEntity })
-  async getVolatility() {
-    return await this.sellerService.getVolatility();
+  async getSellerCount(@Body() data: SellerCountDto) {
+    return this.sellerService.getSellerCount(data);
   }
 
   @Get('chart')
