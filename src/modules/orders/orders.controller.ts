@@ -40,6 +40,7 @@ import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-response.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileValidationPipe } from '@modules/profile/pipes/file-validation.pipe';
+import { UploadPhotoDto } from '@modules/profile/dto/upload-photo.dto';
 
 @UseGuards(JwtGuard)
 @ApiTags('orders')
@@ -112,6 +113,22 @@ export class OrdersController {
       updateClientInfo,
     });
     return new OrderEntity(updatedOrder);
+  }
+
+  @Post('upload/:id')
+  @ApiOkResponse({ type: OrderEntity })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('image'))
+  async profilePhoto(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() { image_delete }: UploadPhotoDto,
+    @UploadedFile(new FileValidationPipe())
+    image?: Express.Multer.File | null,
+  ) {
+    const order = await this.ordersService.findUniqueOrThrow(id);
+    return new OrderEntity(
+      await this.ordersService.uploadPhoto(order, image, image_delete),
+    );
   }
 
   @Delete(':id')

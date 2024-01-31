@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { CreateOrderClientDto, CreateOrderDto } from '../dto/create-order.dto';
 import {
   UpdateOrderCombinedDto,
@@ -24,6 +24,7 @@ import { paymentStatusNameHelper } from '../helpers/payment-status-name.helper';
 import { CloudinaryService } from '@modules/cloudinary/services/cloudinary.service';
 import { clientIncludeHelper } from '@modules/clients/helpers/client-include.helper';
 import { MailerService } from '@nestjs-modules/mailer';
+import { extractPublicIdFromUrl } from '@modules/profile/helpers/upload-photo.helper';
 
 @Injectable()
 export class OrdersService {
@@ -65,7 +66,7 @@ export class OrdersService {
       clientEntity &&
       sellerEntity &&
       (clientEntity.sellerId !== sellerEntity.id ||
-        clientEntity.sellerId !== alterAccount.userId)
+        clientEntity.sellerId !== alterAccount?.userId)
     ) {
       throw new HttpException('The seller does not own this client', 400);
     } else if (
@@ -225,6 +226,11 @@ export class OrdersService {
     });
   }
 
+  async findUniqueOrThrow(id: number) {
+    const database = await this.database.softDelete();
+    return await database.order.findUniqueOrThrow({ where: { id } });
+  }
+
   async findAllWithPagination(
     authUser: UserEntity,
     filterOrderArgs: FilterOrderDto,
@@ -276,7 +282,7 @@ export class OrdersService {
   async findOne(id: number) {
     const database = await this.database.softDelete();
 
-    return await database.order.findUnique({
+    return await database.order.findUniqueOrThrow({
       where: { id },
       include: orderIncludeHelper(),
     });
@@ -406,6 +412,52 @@ export class OrdersService {
 
     return await database.order.delete({
       where: { id },
+    });
+  }
+
+  async uploadPhoto(
+    order: OrderEntity,
+    image?: Express.Multer.File,
+    image_delete?: Boolean,
+  ) {
+    if (image_delete) {
+      return await this.removeImage(order);
+    } else if (image) {
+      return await this.replaceImage(order, image);
+    }
+  }
+
+  private async removeImage(order: OrderEntity) {
+    if (order.invoice_image) {
+      const publicId = extractPublicIdFromUrl(order.invoice_image);
+      // ? Remove the image from Cloudinary using the destroy method
+      await this.cloudinaryService.destroyImage(publicId);
+    }
+
+    return await this.database.order.update({
+      where: { id: order.id },
+      data: {
+        invoice_image: null,
+      },
+    });
+  }
+
+  private async replaceImage(order: OrderEntity, image: Express.Multer.File) {
+    if (order.invoice_image) {
+      await this.removeImage(order);
+    }
+
+    // ? Upload the new image to Cloudinary
+    const result = await this.cloudinaryService.uploadImage(image).catch(() => {
+      throw new BadRequestException('Invalid file type.');
+    });
+
+    // ? Update the order's invoice_image with the Cloudinary URL
+    return await this.database.order.update({
+      where: { id: order.id },
+      data: {
+        invoice_image: result.secure_url,
+      },
     });
   }
 }
