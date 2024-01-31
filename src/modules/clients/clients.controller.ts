@@ -33,6 +33,7 @@ import { ForbiddenError } from '@casl/ability';
 import { ClientIndustryEntity } from './entities/client-industries.entity';
 import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-response.decorator';
+import { ClientSourceEntity } from './entities/client-source.entity';
 
 @UseGuards(JwtGuard)
 @ApiTags('clients')
@@ -63,6 +64,12 @@ export class ClientsController {
   @ApiOkResponse({ type: ClientIndustryEntity, isArray: true })
   async findAllIndustries() {
     return await this.clientsService.findAllIndustries();
+  }
+
+  @Get('source')
+  @ApiOkResponse({ type: ClientSourceEntity, isArray: true })
+  async findAllOrigin() {
+    return await this.clientsService.findAllSource();
   }
 
   @Get()

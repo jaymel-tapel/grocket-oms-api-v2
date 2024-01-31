@@ -5,7 +5,6 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AlternateEmailsModule } from './modules/alternate-emails/alternate-emails.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { ClientsModule } from './modules/clients/clients.module';
-import { DoesExistConstraint } from './common/validators/user.validation';
 import { ConfigModule } from '@nestjs/config';
 import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
 import { TasksModule } from './modules/my-tasks/tasks.module';
@@ -16,9 +15,10 @@ import { CompaniesModule } from './modules/companies/companies.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { SellersModule } from './modules/sellers/sellers.module';
 import { BrandsModule } from './modules/brands/brands.module';
-import { IsAlreadyExistConstraint } from './common/validators/isAlreadyExist.validation';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from 'path';
+import { EmailModule } from './modules/mail/email.module';
+import { ValidatorConstraints } from './common/validators';
+import { CustomHandlebarsAdapter } from './common/helpers/handlebars';
 
 @Module({
   imports: [
@@ -37,7 +37,7 @@ import { join } from 'path';
       },
       template: {
         dir: join(__dirname, '..', 'src/templates'),
-        adapter: new HandlebarsAdapter(),
+        adapter: new CustomHandlebarsAdapter(),
         options: {
           strict: true,
         },
@@ -56,7 +56,8 @@ import { join } from 'path';
     OrdersModule,
     SellersModule,
     BrandsModule,
+    EmailModule,
   ],
-  providers: [DoesExistConstraint, IsAlreadyExistConstraint, ...Commands],
+  providers: [...ValidatorConstraints, ...Commands],
 })
 export class AppModule {}
