@@ -125,7 +125,7 @@ export class OrdersController {
     @UploadedFile(new FileValidationPipe())
     image?: Express.Multer.File | null,
   ) {
-    const order = await this.ordersService.findUniqueOrThrow(id);
+    const order = await this.ordersService.findUniqueOrThrow({ where: { id } });
     return new OrderEntity(
       await this.ordersService.uploadPhoto(order, image, image_delete),
     );
