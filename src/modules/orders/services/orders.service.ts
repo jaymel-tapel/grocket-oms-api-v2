@@ -226,9 +226,9 @@ export class OrdersService {
     });
   }
 
-  async findUniqueOrThrow(id: number) {
+  async findUniqueOrThrow(args: Prisma.OrderFindUniqueOrThrowArgs) {
     const database = await this.database.softDelete();
-    return await database.order.findUniqueOrThrow({ where: { id } });
+    return await database.order.findUniqueOrThrow(args);
   }
 
   async findAllWithPagination(
