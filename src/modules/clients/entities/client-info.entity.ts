@@ -4,8 +4,7 @@ import {
   ApiProperty,
   ApiPropertyOptional,
 } from '@nestjs/swagger';
-import { $Enums, ClientInfo } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+import { $Enums, ClientInfo, Prisma } from '@prisma/client';
 import { Transform, TransformFnParams } from 'class-transformer';
 
 export class ClientInfoEntity implements ClientInfo {
@@ -42,7 +41,7 @@ export class ClientInfoEntity implements ClientInfo {
   @Transform((value: TransformFnParams) => value.value.toNumber(), {
     toPlainOnly: true,
   })
-  default_unit_cost: Decimal;
+  default_unit_cost: Prisma.Decimal;
 
   @ApiProperty({ enum: $Enums.StatusEnum })
   status: $Enums.StatusEnum;

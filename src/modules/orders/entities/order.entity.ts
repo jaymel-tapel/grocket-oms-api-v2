@@ -1,8 +1,7 @@
 import { ClientEntity } from '@modules/clients/entities/client.entity';
 import { CompanyEntity } from '@modules/companies/entities/company.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { $Enums, Order } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+import { $Enums, Order, Prisma } from '@prisma/client';
 import { Transform, TransformFnParams } from 'class-transformer';
 import { OrderReviewEntity } from './order-review.entity';
 
@@ -63,13 +62,13 @@ export class OrderEntity implements Order {
     toPlainOnly: true,
   })
   @ApiProperty({ type: Number })
-  unit_cost: Decimal;
+  unit_cost: Prisma.Decimal;
 
   @Transform((value: TransformFnParams) => value.value.toNumber(), {
     toPlainOnly: true,
   })
   @ApiProperty({ type: Number })
-  total_price: Decimal;
+  total_price: Prisma.Decimal;
 
   @ApiPropertyOptional({ nullable: true, default: null })
   remarks: string;
