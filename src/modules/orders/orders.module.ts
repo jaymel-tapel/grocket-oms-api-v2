@@ -13,6 +13,6 @@ import { OrderReviewsController } from './order-reviews.controller';
   imports: [ClientsModule, UsersModule, CompaniesModule, CloudinaryModule],
   controllers: [OrdersController, OrderReviewsController],
   providers: [OrdersService, OrderLogsService, OrderReviewsService],
-  exports: [OrdersService, OrderReviewsService],
+  exports: [OrdersService, OrderLogsService, OrderReviewsService],
 })
 export class OrdersModule {}
