@@ -19,6 +19,7 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
           Order: true,
           OrderLog: true,
           OrderReview: true,
+          Brand: true,
         },
         defaultConfig: {
           field: 'deletedAt',

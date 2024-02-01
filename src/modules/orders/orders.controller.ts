@@ -40,6 +40,7 @@ import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-response.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileValidationPipe } from '@modules/profile/pipes/file-validation.pipe';
+import { UploadPhotoDto } from '@modules/profile/dto/upload-photo.dto';
 
 @UseGuards(JwtGuard)
 @ApiTags('orders')
@@ -59,13 +60,12 @@ export class OrdersController {
     @Body() createOrderClientDto: CreateOrderClientDto,
     @UploadedFile(new FileValidationPipe()) file?: Express.Multer.File | null,
   ) {
-    return new OrderEntity(
-      await this.ordersService.create(
-        user,
-        { file, ...createOrderDto },
-        createOrderClientDto,
-      ),
+    const newOrder = await this.ordersService.create(
+      user,
+      { file, ...createOrderDto },
+      createOrderClientDto,
     );
+    return new OrderEntity(newOrder);
   }
 
   @Get()
@@ -78,6 +78,17 @@ export class OrdersController {
     return await this.ordersService.findAllWithPagination(
       user,
       findManyArgs,
+      offsetPageArgsDto,
+    );
+  }
+
+  @Get('deleted')
+  @ApiOffsetPageResponse(OrderEntity)
+  async findAllDeleted(
+    @AuthUser() user: UserEntity,
+    @Query() offsetPageArgsDto: OffsetPageArgsDto,
+  ) {
+    return await this.ordersService.findAllDeletedWithPagination(
       offsetPageArgsDto,
     );
   }
@@ -104,8 +115,28 @@ export class OrdersController {
     return new OrderEntity(updatedOrder);
   }
 
+  @Post('upload/:id')
+  @ApiOkResponse({ type: OrderEntity })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('image'))
+  async profilePhoto(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() { image_delete }: UploadPhotoDto,
+    @UploadedFile(new FileValidationPipe())
+    image?: Express.Multer.File | null,
+  ) {
+    const order = await this.ordersService.findUniqueOrThrow({ where: { id } });
+    return new OrderEntity(
+      await this.ordersService.uploadPhoto(order, image, image_delete),
+    );
+  }
+
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return await this.ordersService.remove(id);
+  async remove(
+    @AuthUser() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    await this.ordersService.remove(id, user);
+    return { message: 'Successfully Deleted Order Review' };
   }
 }

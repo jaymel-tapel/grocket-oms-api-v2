@@ -1,12 +1,17 @@
 import { ClientEntity } from '@modules/clients/entities/client.entity';
 import { CompanyEntity } from '@modules/companies/entities/company.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { $Enums, Order } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+import { $Enums, Order, Prisma } from '@prisma/client';
 import { Transform, TransformFnParams } from 'class-transformer';
+import { OrderReviewEntity } from './order-review.entity';
 
 export class OrderEntity implements Order {
-  constructor({ client, company, ...partial }: Partial<OrderEntity>) {
+  constructor({
+    client,
+    company,
+    orderReviews,
+    ...partial
+  }: Partial<OrderEntity>) {
     Object.assign(this, partial);
 
     if (client) {
@@ -15,6 +20,14 @@ export class OrderEntity implements Order {
 
     if (company) {
       this.company = new CompanyEntity(company);
+    }
+
+    if (orderReviews) {
+      this.orderReviews = orderReviews.map(
+        (review) => new OrderReviewEntity(review),
+      );
+
+      this.orderReviewCount = this.orderReviews.length;
     }
   }
 
@@ -49,13 +62,13 @@ export class OrderEntity implements Order {
     toPlainOnly: true,
   })
   @ApiProperty({ type: Number })
-  unit_cost: Decimal;
+  unit_cost: Prisma.Decimal;
 
   @Transform((value: TransformFnParams) => value.value.toNumber(), {
     toPlainOnly: true,
   })
   @ApiProperty({ type: Number })
-  total_price: Decimal;
+  total_price: Prisma.Decimal;
 
   @ApiPropertyOptional({ nullable: true, default: null })
   remarks: string;
@@ -77,4 +90,10 @@ export class OrderEntity implements Order {
 
   @ApiPropertyOptional({ type: CompanyEntity })
   company?: CompanyEntity;
+
+  @ApiPropertyOptional({ type: OrderReviewEntity, isArray: true })
+  orderReviews?: OrderReviewEntity[];
+
+  @ApiPropertyOptional()
+  orderReviewCount?: number;
 }

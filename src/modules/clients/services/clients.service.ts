@@ -222,6 +222,10 @@ export class ClientsService {
     });
   }
 
+  async findAllSource() {
+    return await this.database.clientSource.findMany({});
+  }
+
   async transferClients({ to_seller_email, ids }: TransferClientsDto) {
     const seller = await this.usersService.findOne({ email: to_seller_email });
 

@@ -7,6 +7,7 @@ export const orderIncludeHelper = () => {
     },
     company: true,
     orderReviews: true,
+    orderLogs: true,
   };
 
   return include;
