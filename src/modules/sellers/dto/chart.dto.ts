@@ -2,6 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsBoolean, IsDate, IsOptional, IsString } from 'class-validator';
 
+// Not used for now
 export class ChartDto {
   @IsBoolean()
   @IsOptional()

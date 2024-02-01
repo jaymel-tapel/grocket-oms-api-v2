@@ -7,9 +7,9 @@ import {
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { ChartDto } from './dto/chart.dto';
-import { SellerCountEntity } from './entity/seller-count.dto';
-import { SellerCountDto } from './dto/seller-count.dto';
+import { SellerCountEntity } from './entity/seller-count.entity';
+import { DateRangeDto } from './dto/date-range.dto';
+import { ChartDetailEntity } from './entity/chart-detail.entity';
 
 @UseGuards(JwtGuard)
 @Controller('sellers')
@@ -20,13 +20,15 @@ export class SellersController {
 
   @Get('count')
   @ApiOkResponse({ type: SellerCountEntity })
-  async getSellerCount(@Body() data: SellerCountDto) {
-    return this.sellerService.getSellerCount(data);
+  @ApiBody({ type: DateRangeDto, required: false })
+  async getSellerCount(@Body() data?: DateRangeDto) {
+    return await this.sellerService.getSellerCount(data);
   }
 
   @Get('chart')
-  @ApiBody({ type: ChartDto })
-  async getChartDetail(@Body() data: ChartDto) {
-    return await this.sellerService.getChartDetail(data);
+  @ApiOkResponse({ type: ChartDetailEntity })
+  @ApiBody({ type: DateRangeDto, required: false })
+  async getChartDetail(@Body() data?: DateRangeDto) {
+    return new ChartDetailEntity(await this.sellerService.getChartDetail(data));
   }
 }

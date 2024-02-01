@@ -1,17 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsDate, IsOptional } from 'class-validator';
 
-export class SellerCountDto {
+class DateRange {
   @IsDate()
   @Type(() => Date)
   @IsOptional()
-  @ApiProperty()
+  @ApiPropertyOptional()
   startRange?: Date;
 
   @IsDate()
   @Type(() => Date)
   @IsOptional()
-  @ApiProperty()
+  @ApiPropertyOptional()
   endRange?: Date;
 }
+
+export class DateRangeDto extends PartialType(DateRange) {}
