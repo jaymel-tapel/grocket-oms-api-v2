@@ -19,6 +19,7 @@ import { join } from 'path';
 import { EmailModule } from './modules/mail/email.module';
 import { ValidatorConstraints } from './common/validators';
 import { CustomHandlebarsAdapter } from './common/helpers/handlebars';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { CustomHandlebarsAdapter } from './common/helpers/handlebars';
     SellersModule,
     BrandsModule,
     EmailModule,
+    DashboardModule,
   ],
   providers: [...ValidatorConstraints, ...Commands],
 })
