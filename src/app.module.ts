@@ -13,7 +13,6 @@ import { Commands } from '@modules/database/seeders';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { OrdersModule } from './modules/orders/orders.module';
-import { SellersModule } from './modules/sellers/sellers.module';
 import { BrandsModule } from './modules/brands/brands.module';
 import { join } from 'path';
 import { EmailModule } from './modules/mail/email.module';

@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiTags,
@@ -31,6 +32,7 @@ export class OrderReviewsController {
 
   @Post()
   @ApiCreatedResponse({ type: OrderReviewEntity })
+  @ApiBody({ type: CreateOrderReviewWithOrderIDDto })
   async create(
     @AuthUser() user: UserEntity,
     @Body() createOrderReviewDto: CreateOrderReviewWithOrderIDDto,
