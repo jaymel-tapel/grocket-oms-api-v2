@@ -57,7 +57,6 @@ import { SellersModule } from './modules/sellers/sellers.module';
     SellersModule,
     BrandsModule,
     EmailModule,
-    SellersModule,
   ],
   providers: [...ValidatorConstraints, ...Commands],
 })
