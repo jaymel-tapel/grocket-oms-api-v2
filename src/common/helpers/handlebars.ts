@@ -15,6 +15,10 @@ const handlebarsHelpers = {
   or() {
     return Array.prototype.slice.call(arguments, 0, -1).some(Boolean);
   },
+  regexMatch: (value, pattern, options) => {
+    const regexObj = new RegExp(pattern);
+    return regexObj.test(value);
+  },
 };
 
 @Injectable()

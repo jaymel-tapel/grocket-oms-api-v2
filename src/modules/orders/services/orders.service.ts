@@ -176,6 +176,22 @@ export class OrdersService {
         },
       });
 
+      if (orderDto.send_confirmation) {
+        const reviewers = orderReviews.map((reviewer) => reviewer.name);
+        await this.sendConfirmationEmail(
+          clientEntity,
+          sellerEntity,
+          reviewers,
+          unit_cost,
+          companyEntity.name,
+        );
+
+        // ? Create a Log for the Order
+        await this.orderLogsService.createLog(newOrder.id, authUser, {
+          action: 'order confirmation sent',
+        });
+      }
+
       if (file) {
         invoice_image = (await this.cloudinaryService.uploadImage(file))
           .secure_url;
@@ -207,6 +223,34 @@ export class OrdersService {
     });
 
     return updatedOrder;
+  }
+
+  private async sendConfirmationEmail(
+    clientEntity: ClientEntity,
+    sellerEntity: UserEntity,
+    orderReviews: string[],
+    unit_cost: number,
+    company_name: string,
+  ) {
+    return await this.mailerService.sendMail({
+      subject: 'Bestellbestätigung',
+      to: clientEntity.email,
+      replyTo: sellerEntity.email,
+      template: 'order-confirmation',
+      context: {
+        name: clientEntity.name,
+        orderReviews,
+        unit_cost,
+        company_name,
+      },
+      attachments: [
+        {
+          filename: 'Logo_iew4yg.png',
+          path: process.env.G_ROCKET_LOGO,
+          cid: 'image@review',
+        },
+      ],
+    });
   }
 
   private async newOrderEmail(
@@ -327,18 +371,16 @@ export class OrdersService {
     }
 
     // ? Find Company and Update
-    await this.companiesService
-      .findOne({
-        where: { id: orderData.companyId },
-      })
-      .then(async (company) => {
-        await this.database.company.update({
-          where: { id: company.id },
-          data: { clientId: clientEntity.id },
-        });
-      });
+    const company = await this.companiesService.findOne({
+      where: { id: orderData.companyId },
+    });
 
-    const orderReviewsCount = await this.database.orderReview.count({
+    await this.database.company.update({
+      where: { id: company.id },
+      data: { clientId: clientEntity.id },
+    });
+
+    const orderReviews = await this.database.orderReview.findMany({
       where: { orderId: id },
     });
 
@@ -348,7 +390,7 @@ export class OrdersService {
         ...orderData,
         clientId: clientEntity.id,
         ...(orderData.unit_cost && {
-          total_price: orderReviewsCount * orderData.unit_cost,
+          total_price: orderReviews.length * orderData.unit_cost,
         }),
       },
     });
@@ -359,6 +401,23 @@ export class OrdersService {
         updatedOrder,
         authUser,
       );
+    }
+
+    if (orderData.send_confirmation) {
+      const reviewers = orderReviews.map((reviewer) => reviewer.name);
+
+      await this.sendConfirmationEmail(
+        clientEntity,
+        sellerEntity,
+        reviewers,
+        orderData.unit_cost ?? +updatedOrder.unit_cost,
+        company.name,
+      );
+
+      // ? Create a Log for the Order
+      await this.orderLogsService.createLog(updatedOrder.id, authUser, {
+        action: 'order confirmation sent',
+      });
     }
 
     // ? Create a Log for the Order
