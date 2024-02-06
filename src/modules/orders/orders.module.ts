@@ -8,11 +8,17 @@ import { OrderLogsService } from './services/order-logs.service';
 import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
 import { OrderReviewsService } from './services/order-reviews.service';
 import { OrderReviewsController } from './order-reviews.controller';
+import { OrderReportsService } from './services/order-reports.service';
 
 @Module({
   imports: [ClientsModule, UsersModule, CompaniesModule, CloudinaryModule],
   controllers: [OrdersController, OrderReviewsController],
-  providers: [OrdersService, OrderLogsService, OrderReviewsService],
+  providers: [
+    OrdersService,
+    OrderLogsService,
+    OrderReviewsService,
+    OrderReportsService,
+  ],
   exports: [OrdersService, OrderLogsService, OrderReviewsService],
 })
 export class OrdersModule {}

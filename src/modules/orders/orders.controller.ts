@@ -41,13 +41,19 @@ import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-resp
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileValidationPipe } from '@modules/profile/pipes/file-validation.pipe';
 import { UploadPhotoDto } from '@modules/profile/dto/upload-photo.dto';
+import { OrderReportDateRangeDto } from './dto/get-order-report.dto';
+import { OrderReportsService } from './services/order-reports.service';
+import { OrderGraphEntity } from './entities/order-graph.entity';
 
 @UseGuards(JwtGuard)
 @ApiTags('orders')
 @Controller('orders')
 @ApiBearerAuth()
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly orderReportsService: OrderReportsService,
+  ) {}
 
   @Post()
   @ApiCreatedResponse({ type: OrderEntity })
@@ -90,6 +96,14 @@ export class OrdersController {
   ) {
     return await this.ordersService.findAllDeletedWithPagination(
       offsetPageArgsDto,
+    );
+  }
+
+  @Get('graph')
+  @ApiOkResponse({ type: OrderGraphEntity })
+  async getOrderGraphReport(@Query() orderReportDto: OrderReportDateRangeDto) {
+    return new OrderGraphEntity(
+      await this.orderReportsService.orderGraphReport(orderReportDto),
     );
   }
 
