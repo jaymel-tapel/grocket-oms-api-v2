@@ -76,7 +76,7 @@ export class OrdersService {
     } else if (
       clientEntity &&
       !sellerEntity &&
-      alterAccount.userId !== clientEntity.sellerId
+      alterAccount?.userId !== clientEntity.sellerId
     ) {
       throw new HttpException('The client already has a seller', 400);
     }
@@ -165,6 +165,7 @@ export class OrdersService {
           client: {
             connect: { id: clientEntity.id },
           },
+          seller: { connect: { id: sellerEntity.id } },
           company: {
             connect: { id: companyEntity.id },
           },
@@ -175,22 +176,6 @@ export class OrdersService {
           },
         },
       });
-
-      if (orderDto.send_confirmation) {
-        const reviewers = orderReviews.map((reviewer) => reviewer.name);
-        await this.sendConfirmationEmail(
-          clientEntity,
-          sellerEntity,
-          reviewers,
-          unit_cost,
-          companyEntity.name,
-        );
-
-        // ? Create a Log for the Order
-        await this.orderLogsService.createLog(newOrder.id, authUser, {
-          action: 'order confirmation sent',
-        });
-      }
 
       if (file) {
         invoice_image = (await this.cloudinaryService.uploadImage(file))
@@ -210,6 +195,7 @@ export class OrdersService {
         client: {
           include: clientIncludeHelper({ include: { brand: true } }),
         },
+        company: true,
       },
     });
 
@@ -221,6 +207,22 @@ export class OrdersService {
     await this.orderLogsService.createLog(updatedOrder.id, authUser, {
       action: 'order created',
     });
+
+    if (orderDto.send_confirmation) {
+      const reviewers = orderReviews.map((reviewer) => reviewer.name);
+      await this.sendConfirmationEmail(
+        clientEntity,
+        sellerEntity,
+        reviewers,
+        unit_cost,
+        updatedOrder.company.name,
+      );
+
+      // ? Create a Log for the Order
+      await this.orderLogsService.createLog(newOrder.id, authUser, {
+        action: 'order confirmation sent',
+      });
+    }
 
     return updatedOrder;
   }
