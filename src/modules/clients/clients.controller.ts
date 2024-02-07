@@ -20,7 +20,6 @@ import {
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { UsersService } from '../users/services/users.service';
 import { ClientEntity } from './entities/client.entity';
 import { TransferClientsDto } from './dto/transfer-client.dto';
 import { FilterClientsDto } from './dto/filter-client.dto';
@@ -34,6 +33,7 @@ import { ClientIndustryEntity } from './entities/client-industries.entity';
 import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-response.decorator';
 import { ClientSourceEntity } from './entities/client-source.entity';
+import { FindClientsBySellerDto } from './dto/find-clients-by-seller.dto';
 
 @UseGuards(JwtGuard)
 @ApiTags('clients')
@@ -84,6 +84,17 @@ export class ClientsController {
       findManyArgs,
       offsetPageArgsDto,
     );
+  }
+
+  @Get('search')
+  @ApiOkResponse({ type: ClientEntity, isArray: true })
+  async findAllClientsBySeller(
+    @Query() findClientsDto: FindClientsBySellerDto,
+  ) {
+    const clients = await this.clientsService.findAllClientsBySeller(
+      findClientsDto,
+    );
+    return clients.map((client) => new ClientEntity(client));
   }
 
   @Get(':id')
