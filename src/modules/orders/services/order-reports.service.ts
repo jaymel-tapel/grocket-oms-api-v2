@@ -57,7 +57,23 @@ export class OrderReportsService {
       count: paidOrdersObj[date],
     }));
 
+    const totalOrderReviews = foundOrders.reduce(
+      (sum, orders) => sum + orders.orderReviews.length,
+      0,
+    );
+
+    const avg_amount_of_reviews = totalOrderReviews / foundOrders.length;
+
+    const avg_unit_cost = foundOrders.reduce(
+      (sum, orders) => sum + Number(orders.unit_cost),
+      0,
+    );
+
     return {
+      total_orders: foundOrders.length,
+      total_paid_orders: foundPaidOrders.length,
+      avg_amount_of_reviews,
+      avg_unit_cost,
       orders,
       paidOrders,
     };
