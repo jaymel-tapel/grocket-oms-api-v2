@@ -13,6 +13,18 @@ export class OrderReportEntity {
     Object.assign(this, data);
   }
 
+  @ApiProperty()
+  total_orders: number;
+
+  @ApiProperty()
+  total_paid_orders: number;
+
+  @ApiProperty()
+  avg_amount_of_reviews: number;
+
+  @ApiProperty()
+  avg_unit_cost: number;
+
   @ApiProperty({ type: [BaseOrderReport] })
   orders: BaseOrderReport[];
 
