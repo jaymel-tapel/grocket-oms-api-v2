@@ -18,6 +18,7 @@ import { join } from 'path';
 import { EmailModule } from './modules/mail/email.module';
 import { ValidatorConstraints } from './common/validators';
 import { CustomHandlebarsAdapter } from './common/helpers/handlebars';
+import { SellersModule } from './modules/sellers/sellers.module';
 
 @Module({
   imports: [
