@@ -82,6 +82,14 @@ enum OrderReviewStatus {
   GELOSCHT // Deleted
 }
 
+enum TaskTypeEnum {
+  SENT_INVOICE
+  PR1
+  PR2
+  TWO_MTFU
+  UNPAID
+}
+
 model User {
   id                   Int              @id @default(autoincrement())
   createdAt            DateTime         @default(now())
@@ -252,12 +260,11 @@ model Task {
   userId         Int
   clientId       Int?
   orderId        Int?            @unique
-  taskTypeId     Int?
+  taskType       TaskTypeEnum?
   createdBy      CreatedByEnum?  @default(AUTO)
   user           User            @relation(fields: [userId], references: [id])
   client         Client?         @relation(fields: [clientId], references: [id])
   order          Order?          @relation(fields: [orderId], references: [id])
-  taskType       TaskType?       @relation(fields: [taskTypeId], references: [id])
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   deletedAt      DateTime?
@@ -307,12 +314,4 @@ model TaskNote {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, taskId])
-}
-
-model TaskType {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  tasks     Task[]
 }

@@ -3,7 +3,12 @@ import { UserEntity } from '@modules/users/entities/user.entity';
 import { Injectable } from '@nestjs/common';
 import { CreateTaskDto } from '../dto/create-task.dto';
 import { ClientEntity } from '@modules/clients/entities/client.entity';
-import { CreatedByEnum, Prisma, RoleEnum } from '@prisma/client';
+import {
+  CreatedByEnum,
+  Prisma,
+  RoleEnum,
+  TaskStatusEnum,
+} from '@prisma/client';
 import { TaskEntity } from '../entities/task.entity';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { AbilityFactory, Action } from '@modules/casl/ability.factory';
@@ -171,7 +176,11 @@ export class TasksService {
     return updatedTask;
   }
 
-  async setToComplete(id: number, authUser: UserEntity) {
+  async updateTaskStatus(
+    id: number,
+    authUser: UserEntity,
+    setToActive?: boolean,
+  ) {
     const ability = await this.abilityFactory.defineAbility(authUser);
     const foundTask = await this.findUniqueOrThrow({ where: { id } });
 
@@ -179,14 +188,23 @@ export class TasksService {
 
     return await this.database.$transaction(async (tx) => {
       const taskRelation = taskRelationHelper(authUser);
+      let status: TaskStatusEnum, completedAt: Date | null;
+
+      if (setToActive) {
+        status = 'ACTIVE';
+        completedAt = null;
+      } else {
+        status = 'COMPLETED';
+        completedAt = new Date();
+      }
 
       const updatedTask = await tx.task.update({
         where: { id },
         data: {
           [taskRelation]: {
             update: {
-              status: 'COMPLETED',
-              completedAt: new Date(),
+              status,
+              completedAt,
             },
           },
         },
@@ -208,9 +226,19 @@ export class TasksService {
         await tx.taskAccountant.delete({
           where: { taskId: id },
         });
+
+        await tx.taskAccountant.update({
+          where: { taskId: id },
+          data: { status: 'DELETED' },
+        });
       } else {
         await tx.taskSeller.delete({
           where: { taskId: id },
+        });
+
+        await tx.taskAccountant.update({
+          where: { taskId: id },
+          data: { status: 'DELETED' },
         });
       }
 

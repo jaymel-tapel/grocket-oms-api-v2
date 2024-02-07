@@ -373,12 +373,8 @@ export class OrdersService {
     }
 
     // ? Find Company and Update
-    const company = await this.companiesService.findOne({
-      where: { id: orderData.companyId },
-    });
-
-    await this.database.company.update({
-      where: { id: company.id },
+    const company = await this.database.company.update({
+      where: { id: orderData.companyId, clientId: clientEntity.id },
       data: { clientId: clientEntity.id },
     });
 
@@ -387,9 +383,10 @@ export class OrdersService {
     });
 
     let updatedOrder = await this.database.order.update({
-      where: { id },
+      where: { id, clientId: clientEntity.id },
       data: {
         ...orderData,
+        companyId: company.id,
         clientId: clientEntity.id,
         ...(orderData.unit_cost && {
           total_price: orderReviews.length * orderData.unit_cost,

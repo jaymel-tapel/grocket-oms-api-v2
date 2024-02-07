@@ -1,7 +1,7 @@
 import { ClientEntity } from '@modules/clients/entities/client.entity';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CreatedByEnum, Task } from '@prisma/client';
+import { CreatedByEnum, Task, TaskTypeEnum } from '@prisma/client';
 
 export class TaskEntity implements Task {
   constructor({ user, client, ...partial }: Partial<TaskEntity>) {
@@ -28,8 +28,8 @@ export class TaskEntity implements Task {
   @ApiProperty()
   orderId: number;
 
-  @ApiProperty()
-  taskTypeId: number;
+  @ApiPropertyOptional({ enum: TaskTypeEnum, nullable: true, default: null })
+  taskType: TaskTypeEnum | null;
 
   @ApiProperty({ enum: CreatedByEnum })
   createdBy: CreatedByEnum;

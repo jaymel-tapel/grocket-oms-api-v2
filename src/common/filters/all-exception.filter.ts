@@ -50,7 +50,9 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
             typeof exception?.meta?.cause === 'string' &&
             exception.meta?.cause.includes('update')
           ) {
-            message = exception.meta.cause;
+            message = exception.meta.modelName
+              ? `Cannot update ${exception.meta.modelName}`
+              : exception.meta.cause;
           } else {
             message = exception.message;
           }
