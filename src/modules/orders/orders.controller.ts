@@ -44,6 +44,7 @@ import { UploadPhotoDto } from '@modules/profile/dto/upload-photo.dto';
 import { OrderReportDateRangeDto } from './dto/get-order-report.dto';
 import { OrderReportsService } from './services/order-reports.service';
 import { OrderGraphEntity } from './entities/order-graph.entity';
+import { OrderReportEntity } from './entities/order-report.entity';
 
 @UseGuards(JwtGuard)
 @ApiTags('orders')
@@ -96,6 +97,14 @@ export class OrdersController {
   ) {
     return await this.ordersService.findAllDeletedWithPagination(
       offsetPageArgsDto,
+    );
+  }
+
+  @Get('report')
+  @ApiOkResponse({ type: OrderReportEntity })
+  async getOrderReport(@Query() orderReportDto: OrderReportDateRangeDto) {
+    return new OrderReportEntity(
+      await this.orderReportsService.orderReport(orderReportDto),
     );
   }
 
