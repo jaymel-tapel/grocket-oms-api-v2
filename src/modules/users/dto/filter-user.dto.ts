@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { FilterDto } from '@src/common/dtos/search-filter.dto';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { ToBoolean } from '@src/common/helpers/toBoolean';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export enum FilterUserEnum {
   ID = 'id',
@@ -17,4 +18,10 @@ export class FilterUsersDto extends FilterDto {
   @IsString()
   @ApiPropertyOptional()
   keyword?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @ToBoolean()
+  @ApiPropertyOptional()
+  showInactive?: boolean;
 }
