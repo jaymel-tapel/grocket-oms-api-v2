@@ -19,9 +19,11 @@ import { EmailModule } from './modules/mail/email.module';
 import { ValidatorConstraints } from './common/validators';
 import { CustomHandlebarsAdapter } from './common/helpers/handlebars';
 import { SellersModule } from './modules/sellers/sellers.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     MailerModule.forRoot({
       transport: {
