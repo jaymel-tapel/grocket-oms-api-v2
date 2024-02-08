@@ -18,7 +18,10 @@ export class OrderReportsService {
     const foundOrders = await this.findAllOrdersByRange(baseReport);
     const foundPaidOrders = await this.findAllOrdersByRange({
       ...baseReport,
-      orderQuery: { where: { payment_status: 'PAID' } },
+      orderQuery: {
+        ...baseReport.orderQuery.where,
+        where: { payment_status: 'PAID' },
+      },
     });
 
     const datesArray = eachDayOfInterval({

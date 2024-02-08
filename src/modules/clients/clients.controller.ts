@@ -34,6 +34,9 @@ import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-response.decorator';
 import { ClientSourceEntity } from './entities/client-source.entity';
 import { FindClientsBySellerDto } from './dto/find-clients-by-seller.dto';
+import { ClientReportDateRangeDto } from './dto/get-client-report.dto';
+import { ClientReportsService } from './services/client-reports.service';
+import { ClientReportEntity } from './entities/client-report.entity';
 
 @UseGuards(JwtGuard)
 @ApiTags('clients')
@@ -43,6 +46,7 @@ import { FindClientsBySellerDto } from './dto/find-clients-by-seller.dto';
 export class ClientsController {
   constructor(
     private readonly clientsService: ClientsService,
+    private readonly clientReportsService: ClientReportsService,
     private readonly abilityFactory: AbilityFactory,
   ) {}
 
@@ -95,6 +99,14 @@ export class ClientsController {
       findClientsDto,
     );
     return clients.map((client) => new ClientEntity(client));
+  }
+
+  @Get('report')
+  @ApiOkResponse({ type: ClientReportEntity })
+  async getClientReport(@Query() reportDto: ClientReportDateRangeDto) {
+    return new ClientReportEntity(
+      await this.clientReportsService.report(reportDto),
+    );
   }
 
   @Get(':id')
