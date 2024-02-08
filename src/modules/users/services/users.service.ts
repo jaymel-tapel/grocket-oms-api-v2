@@ -61,7 +61,9 @@ export class UsersService {
     offsetPageArgsDto: OffsetPageArgsDto,
   ) {
     const { perPage } = offsetPageArgsDto;
-    const database = await this.database.softDelete();
+    const database = filterArgs.showInactive
+      ? this.database
+      : await this.database.softDelete();
     const paginate = createPaginator({ perPage });
 
     const findManyQuery = await findManyUsers(filterArgs, this.database);
