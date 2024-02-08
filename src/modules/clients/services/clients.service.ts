@@ -18,6 +18,7 @@ import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { createPaginator } from 'prisma-pagination';
 import { FindClientsBySellerDto } from '../dto/find-clients-by-seller.dto';
 import { clientIncludeHelper } from '../helpers/client-include.helper';
+import { EventsService } from '@modules/events/services/events.services';
 
 @Injectable()
 export class ClientsService {
@@ -25,6 +26,7 @@ export class ClientsService {
     private readonly database: DatabaseService,
     private readonly hashService: HashService,
     private readonly usersService: UsersService,
+    private readonly eventsService: EventsService,
   ) {}
 
   async create(authUser: UserEntity, createClientDto: CreateClientDto) {
@@ -200,6 +202,8 @@ export class ClientsService {
         data: { status: 'DELETED' },
       });
 
+      this.eventsService.emitDeleteClientEvent(client);
+
       return client;
     });
   }
@@ -220,6 +224,8 @@ export class ClientsService {
         },
       },
     });
+
+    this.eventsService.emitRestoreClientEvent(client);
 
     return client;
   }
