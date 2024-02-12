@@ -9,9 +9,16 @@ import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
 import { OrderReviewsService } from './services/order-reviews.service';
 import { OrderReviewsController } from './order-reviews.controller';
 import { OrderReportsService } from './services/order-reports.service';
+import { InvoicesModule } from '@modules/invoices/invoices.module';
 
 @Module({
-  imports: [ClientsModule, UsersModule, CompaniesModule, CloudinaryModule],
+  imports: [
+    ClientsModule,
+    UsersModule,
+    CompaniesModule,
+    CloudinaryModule,
+    InvoicesModule,
+  ],
   controllers: [OrdersController, OrderReviewsController],
   providers: [
     OrdersService,
