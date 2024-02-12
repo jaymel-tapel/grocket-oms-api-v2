@@ -20,6 +20,7 @@ import { ValidatorConstraints } from './common/validators';
 import { CustomHandlebarsAdapter } from './common/helpers/handlebars';
 import { SellersModule } from './modules/sellers/sellers.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { InvoicesModule } from './modules/invoices/invoices.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     SellersModule,
     BrandsModule,
     EmailModule,
+    InvoicesModule,
   ],
   providers: [...ValidatorConstraints, ...Commands],
 })

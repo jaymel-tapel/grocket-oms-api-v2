@@ -25,6 +25,12 @@ import { CloudinaryService } from '@modules/cloudinary/services/cloudinary.servi
 import { clientIncludeHelper } from '@modules/clients/helpers/client-include.helper';
 import { MailerService } from '@nestjs-modules/mailer';
 import { extractPublicIdFromUrl } from '@modules/profile/helpers/upload-photo.helper';
+import { InvoicesService } from '@modules/invoices/services/invoices.service';
+import PuppeteerHTMLPDF from 'puppeteer-html-pdf';
+import handlebars from 'handlebars';
+import * as fs from 'fs/promises';
+import { join } from 'path';
+import { format } from 'date-fns';
 
 @Injectable()
 export class OrdersService {
@@ -34,6 +40,7 @@ export class OrdersService {
     private readonly clientService: ClientsService,
     private readonly companiesService: CompaniesService,
     private readonly orderLogsService: OrderLogsService,
+    private readonly invoicesService: InvoicesService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly mailerService: MailerService,
   ) {}
@@ -425,6 +432,58 @@ export class OrdersService {
     });
 
     return updatedOrder;
+  }
+
+  async generateInvoicePDFBuffer(order: OrderEntity) {
+    const htmlPDF = new PuppeteerHTMLPDF();
+    htmlPDF.setOptions({ format: 'A4' });
+
+    const templatePath = 'src/templates/pdf/invoice-pdf.hbs';
+    const templateContent = await htmlPDF.readFile(templatePath, 'utf-8');
+    const compiledTemplate = handlebars.compile(templateContent);
+
+    const brand = order.client.clientInfo.brand;
+    const currency = brand.currency;
+    const currencySymbol = currency === 'USD' ? '$' : '€';
+    const currentDate = format(new Date(), 'MMM dd, yyyy');
+    const paid_to_date = 0.0;
+    const invoice = await this.invoicesService.create({ orderId: order.id });
+    const amount = +invoice.amount;
+
+    const orderData = {
+      invoice_no: invoice.invoiceId,
+      to_company: order.company.name,
+      date: currentDate,
+      invoice_due: null,
+      descriptions: invoice.review_names,
+      qty: invoice.quantity,
+      rate: invoice.rate,
+      amount,
+      total: amount,
+      paid_to_date,
+      balance: amount - paid_to_date,
+      currency,
+      currencySymbol,
+    };
+
+    const htmlContent = compiledTemplate(orderData);
+
+    const pdfBuffer = await htmlPDF.create(htmlContent);
+    // Define the folder where you want to store the PDFs
+    const folderPath = 'public/pdf';
+
+    // Create the folder if it doesn't exist
+    await fs.mkdir(folderPath, { recursive: true });
+
+    // Generate the file name based on the order ID
+    const fileName = `order-#${order.id}_invoice-${invoice.invoiceId}.pdf`;
+
+    // Combine the folder path and file name to get the full file path
+    const filePath = join(folderPath, fileName);
+
+    await htmlPDF.writeFile(pdfBuffer, filePath);
+
+    return pdfBuffer;
   }
 
   private async updatePaymentStatus(

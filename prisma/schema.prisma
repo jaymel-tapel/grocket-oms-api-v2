@@ -132,6 +132,7 @@ model Brand {
   address   String?
   currency  CurrencyEnum @default(USD)
   clients   ClientInfo[]
+  invoices  Invoice[]
 }
 
 model Client {
@@ -213,6 +214,7 @@ model Order {
   task                Task?
   orderReviews        OrderReview[]
   orderLogs           OrderLog[]
+  invoices            Invoice[]
 }
 
 model OrderReview {
@@ -314,4 +316,19 @@ model TaskNote {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, taskId])
+}
+
+model Invoice {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  invoiceId    String?
+  orderId      Int
+  brandId      Int
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  brand        Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  review_names String[]
+  quantity     Int
+  rate         Float
+  amount       Decimal  @default(0.00) @db.Money()
 }

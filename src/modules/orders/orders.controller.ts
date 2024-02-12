@@ -11,6 +11,7 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  Res,
 } from '@nestjs/common';
 import { OrdersService } from './services/orders.service';
 import {
@@ -45,6 +46,8 @@ import { OrderReportDateRangeDto } from './dto/get-order-report.dto';
 import { OrderReportsService } from './services/order-reports.service';
 import { OrderGraphEntity } from './entities/order-graph.entity';
 import { OrderReportEntity } from './entities/order-report.entity';
+import { Response } from 'express';
+import { clientIncludeHelper } from '@modules/clients/helpers/client-include.helper';
 
 @UseGuards(JwtGuard)
 @ApiTags('orders')
@@ -114,6 +117,32 @@ export class OrdersController {
     return new OrderGraphEntity(
       await this.orderReportsService.orderGraphReport(orderReportDto),
     );
+  }
+
+  @Get('generate-pdf/:id')
+  async generatePdf(
+    @Res() res: Response,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const order = new OrderEntity(
+      await this.ordersService.findUniqueOrThrow({
+        where: { id },
+        include: {
+          client: {
+            include: clientIncludeHelper({ include: { brand: true } }),
+          },
+          orderReviews: true,
+          company: true,
+        },
+      }),
+    );
+    const pdfBuffer = await this.ordersService.generateInvoicePDFBuffer(order);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=invoice.pdf`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+
+    res.end(pdfBuffer);
   }
 
   @Get(':id')
