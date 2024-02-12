@@ -9,6 +9,7 @@ export async function dateRange(
   { from, to }: FilterDto,
   database: DatabaseService,
   tableName: TableNameTypes,
+  showDeleted?: boolean,
 ) {
   let startDate: Date, endDate: Date, firstData: any;
 
@@ -17,7 +18,9 @@ export async function dateRange(
 
     switch (tableName) {
       case 'user':
-        whereClause = { status: 'ACTIVE' };
+        whereClause = showDeleted
+          ? { status: 'DELETED' }
+          : { status: 'ACTIVE' };
         break;
       case 'client':
         whereClause = { clientInfo: { status: 'ACTIVE' } };

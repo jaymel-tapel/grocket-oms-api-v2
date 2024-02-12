@@ -8,10 +8,7 @@ import { UserEntity } from 'src/modules/users/entities/user.entity';
 import { dd } from '@src/common/helpers/debug';
 import { TransferClientsDto } from '../dto/transfer-client.dto';
 import { UsersService } from '@modules/users/services/users.service';
-import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
-import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
 import { ClientEntity } from '../entities/client.entity';
-import { PageEntity } from '@modules/page/page.entity';
 import { FilterClientsDto } from '../dto/filter-client.dto';
 import {
   findManyClients,
@@ -19,6 +16,9 @@ import {
 } from '../helpers/find-many-clients.helper';
 import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { createPaginator } from 'prisma-pagination';
+import { FindClientsBySellerDto } from '../dto/find-clients-by-seller.dto';
+import { clientIncludeHelper } from '../helpers/client-include.helper';
+import { EventsService } from '@modules/events/services/events.services';
 
 @Injectable()
 export class ClientsService {
@@ -26,6 +26,7 @@ export class ClientsService {
     private readonly database: DatabaseService,
     private readonly hashService: HashService,
     private readonly usersService: UsersService,
+    private readonly eventsService: EventsService,
   ) {}
 
   async create(authUser: UserEntity, createClientDto: CreateClientDto) {
@@ -124,6 +125,17 @@ export class ClientsService {
     return paginatedClients;
   }
 
+  async findAllClientsBySeller({ sellerId, keyword }: FindClientsBySellerDto) {
+    const database = await this.database.softDelete();
+    return await database.client.findMany({
+      where: {
+        sellerId,
+        email: { contains: keyword, mode: 'insensitive' },
+      },
+      include: clientIncludeHelper(),
+    });
+  }
+
   async findOne(
     data: Prisma.ClientWhereInput,
     args?: Prisma.ClientFindFirstArgs,
@@ -190,6 +202,8 @@ export class ClientsService {
         data: { status: 'DELETED' },
       });
 
+      this.eventsService.emitDeleteClientEvent(client);
+
       return client;
     });
   }
@@ -210,6 +224,8 @@ export class ClientsService {
         },
       },
     });
+
+    this.eventsService.emitRestoreClientEvent(client);
 
     return client;
   }

@@ -9,9 +9,8 @@
       "request": "attach",
       "name": "Nestjs Debugger",
       "skipFiles": ["<node_internals>/**"],
-      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "port": 9229,
-      "restart": true,
+      "restart": true
     }
   ]
 }

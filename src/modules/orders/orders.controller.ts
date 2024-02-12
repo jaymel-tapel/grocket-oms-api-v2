@@ -11,6 +11,7 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  Res,
 } from '@nestjs/common';
 import { OrdersService } from './services/orders.service';
 import {
@@ -41,13 +42,22 @@ import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-resp
 import { FileInterceptor } from '@nestjs/platform-express';
 import { FileValidationPipe } from '@modules/profile/pipes/file-validation.pipe';
 import { UploadPhotoDto } from '@modules/profile/dto/upload-photo.dto';
+import { OrderReportDateRangeDto } from './dto/get-order-report.dto';
+import { OrderReportsService } from './services/order-reports.service';
+import { OrderGraphEntity } from './entities/order-graph.entity';
+import { OrderReportEntity } from './entities/order-report.entity';
+import { Response } from 'express';
+import { clientIncludeHelper } from '@modules/clients/helpers/client-include.helper';
 
 @UseGuards(JwtGuard)
 @ApiTags('orders')
 @Controller('orders')
 @ApiBearerAuth()
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly orderReportsService: OrderReportsService,
+  ) {}
 
   @Post()
   @ApiCreatedResponse({ type: OrderEntity })
@@ -91,6 +101,48 @@ export class OrdersController {
     return await this.ordersService.findAllDeletedWithPagination(
       offsetPageArgsDto,
     );
+  }
+
+  @Get('report')
+  @ApiOkResponse({ type: OrderReportEntity })
+  async getOrderReport(@Query() orderReportDto: OrderReportDateRangeDto) {
+    return new OrderReportEntity(
+      await this.orderReportsService.orderReport(orderReportDto),
+    );
+  }
+
+  @Get('graph')
+  @ApiOkResponse({ type: OrderGraphEntity })
+  async getOrderGraphReport(@Query() orderReportDto: OrderReportDateRangeDto) {
+    return new OrderGraphEntity(
+      await this.orderReportsService.orderGraphReport(orderReportDto),
+    );
+  }
+
+  @Get('generate-pdf/:id')
+  async generatePdf(
+    @Res() res: Response,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const order = new OrderEntity(
+      await this.ordersService.findUniqueOrThrow({
+        where: { id },
+        include: {
+          client: {
+            include: clientIncludeHelper({ include: { brand: true } }),
+          },
+          orderReviews: true,
+          company: true,
+        },
+      }),
+    );
+    const pdfBuffer = await this.ordersService.generateInvoicePDFBuffer(order);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=invoice.pdf`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+
+    res.end(pdfBuffer);
   }
 
   @Get(':id')
