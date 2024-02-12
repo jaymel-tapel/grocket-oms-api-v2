@@ -16,7 +16,10 @@ import { dd } from '@src/common/helpers/debug';
 import { FilterOrderDto } from '../dto/filter-order.dto';
 import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { createPaginator } from 'prisma-pagination';
-import { findManyOrdersQuery } from '../helpers/find-many-orders.helper';
+import {
+  findManyOrdersQuery,
+  findManyOrdersQueryForSeller,
+} from '../helpers/find-many-orders.helper';
 import { orderIncludeHelper } from '../helpers/order-include.helper';
 import { AlternateEmailEntity } from '@modules/alternate-emails/entities/alternate-email.entity';
 import { OrderLogsService } from './order-logs.service';
@@ -301,6 +304,12 @@ export class OrdersService {
 
     if (authUser.role !== RoleEnum.SELLER) {
       findManyQuery = await findManyOrdersQuery(filterOrderArgs, this.database);
+    } else {
+      findManyQuery = await findManyOrdersQueryForSeller(
+        authUser,
+        filterOrderArgs,
+        this.database,
+      );
     }
 
     const paginatedOrders = await paginate<
