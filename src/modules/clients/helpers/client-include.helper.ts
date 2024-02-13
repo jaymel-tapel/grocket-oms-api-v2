@@ -6,6 +6,7 @@ export const clientIncludeHelper = (
   let include: Prisma.ClientInclude = {
     clientInfo: clientInfoArgs ?? true,
     seller: true,
+    companies: true,
   };
 
   return include;
