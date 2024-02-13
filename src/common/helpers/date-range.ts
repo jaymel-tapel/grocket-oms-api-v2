@@ -23,7 +23,9 @@ export async function dateRange(
           : { status: 'ACTIVE' };
         break;
       case 'client':
-        whereClause = { clientInfo: { status: 'ACTIVE' } };
+        whereClause = {
+          clientInfo: { status: 'ACTIVE', brand: { code: options?.code } },
+        };
         break;
       case 'order':
         whereClause = showDeleted
