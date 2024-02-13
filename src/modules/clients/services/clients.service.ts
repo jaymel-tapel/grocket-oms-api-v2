@@ -170,7 +170,7 @@ export class ClientsService {
   async update(id: number, updateClientDto: UpdateClientDto) {
     const { name, email, ...clientInfoDto } = updateClientDto;
 
-    return await this.database.client.update({
+    const updatedClient = await this.database.client.update({
       where: { id },
       data: {
         name,
@@ -181,6 +181,10 @@ export class ClientsService {
       },
       include: { clientInfo: true },
     });
+
+    this.eventsService.emitUpdateClientEvent(updatedClient);
+
+    return updatedClient;
   }
 
   async remove(id: number) {
