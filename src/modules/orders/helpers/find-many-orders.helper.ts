@@ -10,21 +10,31 @@ async function baseFindManyQuery(
   database: DatabaseService,
   seller?: UserEntity,
 ) {
+  const { from, to, code, showDeleted } = findManyArgs;
+
   let findManyQuery: Prisma.OrderFindManyArgs = {
     include: orderIncludeHelper(),
     orderBy: {
       createdAt: 'desc',
+    },
+    where: {
+      brand: { code },
     },
   };
 
   if (seller) {
     findManyQuery = {
       ...findManyQuery,
-      where: { client: { sellerId: seller.id } },
+      where: { ...findManyQuery.where, client: { sellerId: seller.id } },
     };
   }
 
-  const range = await dateRange(findManyArgs, database, 'order');
+  const range = await dateRange(
+    { from, to, options: { code } },
+    database,
+    'order',
+    showDeleted,
+  );
 
   if (range.startDate !== undefined && range.endDate !== undefined) {
     findManyQuery = {
@@ -39,6 +49,16 @@ async function baseFindManyQuery(
     };
   }
 
+  if (showDeleted) {
+    findManyQuery = {
+      ...findManyQuery,
+      where: {
+        ...findManyQuery.where,
+        deletedAt: { not: null },
+      },
+    };
+  }
+
   return findManyQuery;
 }
 
@@ -46,9 +66,9 @@ export const findManyOrdersQuery = async (
   filterOrderArgs: FilterOrderDto,
   database: DatabaseService,
 ) => {
-  const { keyword, filter, from, to } = filterOrderArgs;
+  const { keyword, filter } = filterOrderArgs;
 
-  let findManyQuery = await baseFindManyQuery({ from, to }, database);
+  let findManyQuery = await baseFindManyQuery(filterOrderArgs, database);
 
   if (keyword) {
     switch (filter) {
@@ -163,9 +183,15 @@ export const findManyOrdersQueryForSeller = async (
   filterOrderArgs: FilterOrderDto,
   database: DatabaseService,
 ) => {
-  const { keyword, filter, from, to } = filterOrderArgs;
+  const { keyword, filter } = filterOrderArgs;
 
-  let findManyQuery = await baseFindManyQuery({ from, to }, database, seller);
+  let findManyQuery = await baseFindManyQuery(
+    filterOrderArgs,
+    database,
+    seller,
+  );
+
+  console.log(findManyQuery);
 
   if (keyword) {
     switch (filter) {

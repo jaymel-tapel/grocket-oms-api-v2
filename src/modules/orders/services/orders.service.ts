@@ -152,7 +152,7 @@ export class OrdersService {
       // ? Find Company
       let companyEntity = await this.companiesService.findOne({
         where: {
-          name: company_name,
+          name: { equals: company_name, mode: 'insensitive' },
           clientId: clientEntity.id,
         },
       });
@@ -175,6 +175,7 @@ export class OrdersService {
           client: {
             connect: { id: clientEntity.id },
           },
+          brand: { connect: { id: clientEntity.clientInfo.brandId } },
           seller: { connect: { id: sellerEntity.id } },
           company: {
             connect: { id: companyEntity.id },
@@ -297,7 +298,10 @@ export class OrdersService {
     offsetPageArgsDto: OffsetPageArgsDto,
   ) {
     const { perPage } = offsetPageArgsDto;
-    const database = await this.database.softDelete();
+    const database = filterOrderArgs.showDeleted
+      ? this.database
+      : await this.database.softDelete();
+
     const paginate = createPaginator({ perPage });
 
     let findManyQuery: Prisma.OrderFindManyArgs = {};
@@ -316,27 +320,6 @@ export class OrdersService {
       OrderEntity,
       Prisma.OrderFindManyArgs
     >(database.order, findManyQuery, offsetPageArgsDto);
-
-    paginatedOrders.data = paginatedOrders.data.map(
-      (order) => new OrderEntity(order),
-    );
-
-    return paginatedOrders;
-  }
-
-  async findAllDeletedWithPagination(offsetPageArgsDto: OffsetPageArgsDto) {
-    const { perPage } = offsetPageArgsDto;
-    const paginate = createPaginator({ perPage });
-
-    let findManyQuery: Prisma.OrderFindManyArgs = {
-      where: { deletedAt: { not: null } },
-      include: { orderReviews: true, client: true },
-    };
-
-    const paginatedOrders = await paginate<
-      OrderEntity,
-      Prisma.OrderFindManyArgs
-    >(this.database.order, findManyQuery, offsetPageArgsDto);
 
     paginatedOrders.data = paginatedOrders.data.map(
       (order) => new OrderEntity(order),
@@ -402,6 +385,7 @@ export class OrdersService {
       where: { id, clientId: clientEntity.id },
       data: {
         ...orderData,
+        brandId: clientEntity.clientInfo.brandId,
         companyId: company.id,
         clientId: clientEntity.id,
         ...(orderData.unit_cost && {

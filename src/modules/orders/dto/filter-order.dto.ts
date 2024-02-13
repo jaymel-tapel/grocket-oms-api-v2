@@ -1,6 +1,8 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { FilterDto } from '@src/common/dtos/search-filter.dto';
-import { IsEnum, IsOptional } from 'class-validator';
+import { ToBoolean } from '@src/common/helpers/toBoolean';
+import { DoesExist } from '@src/common/validators/user.validation';
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional } from 'class-validator';
 
 export enum FilterOrderEnum {
   ORDER_ID = 'order_id',
@@ -14,8 +16,19 @@ export enum FilterOrderEnum {
 }
 
 export class FilterOrderDto extends FilterDto {
+  @IsNotEmpty()
+  @DoesExist({ tableName: 'brand', column: 'code' })
+  @ApiProperty()
+  code: string;
+
   @IsOptional()
   @IsEnum(FilterOrderEnum)
   @ApiPropertyOptional({ enum: FilterOrderEnum })
   filter?: FilterOrderEnum;
+
+  @IsOptional()
+  @IsBoolean()
+  @ToBoolean()
+  @ApiPropertyOptional()
+  showDeleted?: boolean;
 }
