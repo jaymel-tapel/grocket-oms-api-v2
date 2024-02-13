@@ -133,6 +133,7 @@ model Brand {
   currency  CurrencyEnum @default(USD)
   clients   ClientInfo[]
   invoices  Invoice[]
+  orders    Order[]
 }
 
 model Client {
@@ -193,11 +194,13 @@ model Company {
 model Order {
   id                  Int                @id @default(autoincrement())
   clientId            Int
+  brandId             Int?
   sellerId            Int                @default(1)
   companyId           Int
   client              Client             @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   seller              User               @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  brand               Brand?             @relation(fields: [brandId], references: [id])
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
   deletedAt           DateTime?
