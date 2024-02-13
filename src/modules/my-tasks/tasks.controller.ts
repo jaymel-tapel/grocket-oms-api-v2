@@ -103,7 +103,16 @@ export class TasksController {
     @AuthUser() authUser: UserEntity,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return await this.tasksService.setToComplete(id, authUser);
+    return await this.tasksService.updateTaskStatus(id, authUser);
+  }
+
+  @Patch('active/:id')
+  @ApiOkResponse({ type: TaskEntity })
+  async setActiveTask(
+    @AuthUser() authUser: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return await this.tasksService.updateTaskStatus(id, authUser, true);
   }
 
   @Delete(':id')

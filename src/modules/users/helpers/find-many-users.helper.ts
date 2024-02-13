@@ -16,7 +16,12 @@ async function baseFindManyQuery(
     },
   };
 
-  const range = await dateRange(filterUserArgs, database, 'user');
+  const range = await dateRange(
+    filterUserArgs,
+    database,
+    'user',
+    filterUserArgs.showInactive,
+  );
 
   if (range.startDate !== undefined && range.endDate !== undefined) {
     findManyQuery = {
@@ -31,6 +36,16 @@ async function baseFindManyQuery(
     };
   }
 
+  if (filterUserArgs.showInactive) {
+    findManyQuery = {
+      ...findManyQuery,
+      where: {
+        ...findManyQuery.where,
+        status: 'DELETED',
+      },
+    };
+  }
+
   return findManyQuery;
 }
 
@@ -38,10 +53,10 @@ export async function findManyUsers(
   filterUserArgs: FilterUsersDto,
   database: DatabaseService,
 ): Promise<Prisma.UserFindManyArgs> {
-  const { keyword, filter, from, to } = filterUserArgs;
+  const { keyword, filter, from, to, showInactive } = filterUserArgs;
 
   let findManyQuery: Prisma.UserFindManyArgs = await baseFindManyQuery(
-    { from, to },
+    { from, to, showInactive },
     database,
   );
 

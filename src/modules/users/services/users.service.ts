@@ -4,11 +4,8 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { DatabaseService } from '../../database/services/database.service';
 import { HashService } from '../../auth/services/hash.service';
 import { Prisma, StatusEnum } from '@prisma/client';
-import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 import { FilterUsersDto } from '../dto/filter-user.dto';
-import { PageEntity } from '@modules/page/page.entity';
 import { UserEntity } from '../entities/user.entity';
-import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
 import { findManyUsers } from '../helpers/find-many-users.helper';
 import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { createPaginator } from 'prisma-pagination';
@@ -61,7 +58,9 @@ export class UsersService {
     offsetPageArgsDto: OffsetPageArgsDto,
   ) {
     const { perPage } = offsetPageArgsDto;
-    const database = await this.database.softDelete();
+    const database = filterArgs.showInactive
+      ? this.database
+      : await this.database.softDelete();
     const paginate = createPaginator({ perPage });
 
     const findManyQuery = await findManyUsers(filterArgs, this.database);

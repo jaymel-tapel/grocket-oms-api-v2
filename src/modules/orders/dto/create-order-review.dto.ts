@@ -35,5 +35,6 @@ export class CreateOrderReviewDto {
 export class CreateOrderReviewWithOrderIDDto extends CreateOrderReviewDto {
   @DoesExist({ tableName: 'order', column: 'id' })
   @IsNumber()
+  @ApiProperty()
   orderId: number;
 }

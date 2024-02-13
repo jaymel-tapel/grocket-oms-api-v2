@@ -82,6 +82,14 @@ enum OrderReviewStatus {
   GELOSCHT // Deleted
 }
 
+enum TaskTypeEnum {
+  SENT_INVOICE
+  PR1
+  PR2
+  TWO_MTFU
+  UNPAID
+}
+
 model User {
   id                   Int              @id @default(autoincrement())
   createdAt            DateTime         @default(now())
@@ -98,6 +106,7 @@ model User {
   status               StatusEnum       @default(ACTIVE)
   alternateEmails      AlternateEmail[]
   clients              Client[]
+  orders               Order[]
   tasks                Task[]
   taskNotes            TaskNote[]
 }
@@ -123,6 +132,7 @@ model Brand {
   address   String?
   currency  CurrencyEnum @default(USD)
   clients   ClientInfo[]
+  invoices  Invoice[]
 }
 
 model Client {
@@ -183,8 +193,10 @@ model Company {
 model Order {
   id                  Int                @id @default(autoincrement())
   clientId            Int
+  sellerId            Int                @default(1)
   companyId           Int
   client              Client             @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  seller              User               @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
@@ -202,6 +214,7 @@ model Order {
   task                Task?
   orderReviews        OrderReview[]
   orderLogs           OrderLog[]
+  invoices            Invoice[]
 }
 
 model OrderReview {
@@ -249,12 +262,11 @@ model Task {
   userId         Int
   clientId       Int?
   orderId        Int?            @unique
-  taskTypeId     Int?
+  taskType       TaskTypeEnum?
   createdBy      CreatedByEnum?  @default(AUTO)
   user           User            @relation(fields: [userId], references: [id])
   client         Client?         @relation(fields: [clientId], references: [id])
   order          Order?          @relation(fields: [orderId], references: [id])
-  taskType       TaskType?       @relation(fields: [taskTypeId], references: [id])
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   deletedAt      DateTime?
@@ -306,10 +318,17 @@ model TaskNote {
   @@unique([userId, taskId])
 }
 
-model TaskType {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  tasks     Task[]
+model Invoice {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  invoiceId    String?
+  orderId      Int
+  brandId      Int
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  brand        Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  review_names String[]
+  quantity     Int
+  rate         Float
+  amount       Decimal  @default(0.00) @db.Money()
 }

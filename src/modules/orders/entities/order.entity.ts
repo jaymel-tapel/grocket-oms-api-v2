@@ -4,18 +4,24 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { $Enums, Order, Prisma } from '@prisma/client';
 import { Transform, TransformFnParams } from 'class-transformer';
 import { OrderReviewEntity } from './order-review.entity';
+import { UserEntity } from '@modules/users/entities/user.entity';
 
 export class OrderEntity implements Order {
   constructor({
     client,
     company,
     orderReviews,
+    seller,
     ...partial
   }: Partial<OrderEntity>) {
     Object.assign(this, partial);
 
     if (client) {
       this.client = new ClientEntity(client);
+    }
+
+    if (seller) {
+      this.seller = new UserEntity(seller);
     }
 
     if (company) {
@@ -36,6 +42,9 @@ export class OrderEntity implements Order {
 
   @ApiProperty()
   clientId: number;
+
+  @ApiProperty()
+  sellerId: number;
 
   @ApiProperty()
   companyId: number;
@@ -87,6 +96,9 @@ export class OrderEntity implements Order {
 
   @ApiPropertyOptional({ type: ClientEntity })
   client?: ClientEntity;
+
+  @ApiPropertyOptional({ type: UserEntity })
+  seller?: UserEntity;
 
   @ApiPropertyOptional({ type: CompanyEntity })
   company?: CompanyEntity;

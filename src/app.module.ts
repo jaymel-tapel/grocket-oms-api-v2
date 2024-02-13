@@ -13,16 +13,19 @@ import { Commands } from '@modules/database/seeders';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { OrdersModule } from './modules/orders/orders.module';
-import { SellersModule } from './modules/sellers/sellers.module';
 import { BrandsModule } from './modules/brands/brands.module';
 import { join } from 'path';
 import { EmailModule } from './modules/mail/email.module';
 import { ValidatorConstraints } from './common/validators';
 import { CustomHandlebarsAdapter } from './common/helpers/handlebars';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { SellersModule } from './modules/sellers/sellers.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { InvoicesModule } from './modules/invoices/invoices.module';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     ConfigModule.forRoot({ isGlobal: true }),
     MailerModule.forRoot({
       transport: {
@@ -59,6 +62,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     BrandsModule,
     EmailModule,
     DashboardModule,
+    InvoicesModule,
   ],
   providers: [...ValidatorConstraints, ...Commands],
 })

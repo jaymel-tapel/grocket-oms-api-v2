@@ -16,7 +16,10 @@ import { dd } from '@src/common/helpers/debug';
 import { FilterOrderDto } from '../dto/filter-order.dto';
 import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { createPaginator } from 'prisma-pagination';
-import { findManyOrdersQuery } from '../helpers/find-many-orders.helper';
+import {
+  findManyOrdersQuery,
+  findManyOrdersQueryForSeller,
+} from '../helpers/find-many-orders.helper';
 import { orderIncludeHelper } from '../helpers/order-include.helper';
 import { AlternateEmailEntity } from '@modules/alternate-emails/entities/alternate-email.entity';
 import { OrderLogsService } from './order-logs.service';
@@ -25,6 +28,12 @@ import { CloudinaryService } from '@modules/cloudinary/services/cloudinary.servi
 import { clientIncludeHelper } from '@modules/clients/helpers/client-include.helper';
 import { MailerService } from '@nestjs-modules/mailer';
 import { extractPublicIdFromUrl } from '@modules/profile/helpers/upload-photo.helper';
+import { InvoicesService } from '@modules/invoices/services/invoices.service';
+import PuppeteerHTMLPDF from 'puppeteer-html-pdf';
+import handlebars from 'handlebars';
+import * as fs from 'fs/promises';
+import { join } from 'path';
+import { format } from 'date-fns';
 
 @Injectable()
 export class OrdersService {
@@ -34,6 +43,7 @@ export class OrdersService {
     private readonly clientService: ClientsService,
     private readonly companiesService: CompaniesService,
     private readonly orderLogsService: OrderLogsService,
+    private readonly invoicesService: InvoicesService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly mailerService: MailerService,
   ) {}
@@ -76,7 +86,7 @@ export class OrdersService {
     } else if (
       clientEntity &&
       !sellerEntity &&
-      alterAccount.userId !== clientEntity.sellerId
+      alterAccount?.userId !== clientEntity.sellerId
     ) {
       throw new HttpException('The client already has a seller', 400);
     }
@@ -165,6 +175,7 @@ export class OrdersService {
           client: {
             connect: { id: clientEntity.id },
           },
+          seller: { connect: { id: sellerEntity.id } },
           company: {
             connect: { id: companyEntity.id },
           },
@@ -194,6 +205,7 @@ export class OrdersService {
         client: {
           include: clientIncludeHelper({ include: { brand: true } }),
         },
+        company: true,
       },
     });
 
@@ -206,7 +218,51 @@ export class OrdersService {
       action: 'order created',
     });
 
+    if (orderDto.send_confirmation) {
+      const reviewers = orderReviews.map((reviewer) => reviewer.name);
+      await this.sendConfirmationEmail(
+        clientEntity,
+        sellerEntity,
+        reviewers,
+        unit_cost,
+        updatedOrder.company.name,
+      );
+
+      // ? Create a Log for the Order
+      await this.orderLogsService.createLog(newOrder.id, authUser, {
+        action: 'order confirmation sent',
+      });
+    }
+
     return updatedOrder;
+  }
+
+  private async sendConfirmationEmail(
+    clientEntity: ClientEntity,
+    sellerEntity: UserEntity,
+    orderReviews: string[],
+    unit_cost: number,
+    company_name: string,
+  ) {
+    return await this.mailerService.sendMail({
+      subject: 'Bestellbestätigung',
+      to: clientEntity.email,
+      replyTo: sellerEntity.email,
+      template: 'order-confirmation',
+      context: {
+        name: clientEntity.name,
+        orderReviews,
+        unit_cost,
+        company_name,
+      },
+      attachments: [
+        {
+          filename: 'Logo_iew4yg.png',
+          path: process.env.G_ROCKET_LOGO,
+          cid: 'image@review',
+        },
+      ],
+    });
   }
 
   private async newOrderEmail(
@@ -248,6 +304,12 @@ export class OrdersService {
 
     if (authUser.role !== RoleEnum.SELLER) {
       findManyQuery = await findManyOrdersQuery(filterOrderArgs, this.database);
+    } else {
+      findManyQuery = await findManyOrdersQueryForSeller(
+        authUser,
+        filterOrderArgs,
+        this.database,
+      );
     }
 
     const paginatedOrders = await paginate<
@@ -327,28 +389,23 @@ export class OrdersService {
     }
 
     // ? Find Company and Update
-    await this.companiesService
-      .findOne({
-        where: { id: orderData.companyId },
-      })
-      .then(async (company) => {
-        await this.database.company.update({
-          where: { id: company.id },
-          data: { clientId: clientEntity.id },
-        });
-      });
+    const company = await this.database.company.update({
+      where: { id: orderData.companyId, clientId: clientEntity.id },
+      data: { clientId: clientEntity.id },
+    });
 
-    const orderReviewsCount = await this.database.orderReview.count({
+    const orderReviews = await this.database.orderReview.findMany({
       where: { orderId: id },
     });
 
     let updatedOrder = await this.database.order.update({
-      where: { id },
+      where: { id, clientId: clientEntity.id },
       data: {
         ...orderData,
+        companyId: company.id,
         clientId: clientEntity.id,
         ...(orderData.unit_cost && {
-          total_price: orderReviewsCount * orderData.unit_cost,
+          total_price: orderReviews.length * orderData.unit_cost,
         }),
       },
     });
@@ -361,12 +418,81 @@ export class OrdersService {
       );
     }
 
+    if (orderData.send_confirmation) {
+      const reviewers = orderReviews.map((reviewer) => reviewer.name);
+
+      await this.sendConfirmationEmail(
+        clientEntity,
+        sellerEntity,
+        reviewers,
+        orderData.unit_cost ?? +updatedOrder.unit_cost,
+        company.name,
+      );
+
+      // ? Create a Log for the Order
+      await this.orderLogsService.createLog(updatedOrder.id, authUser, {
+        action: 'order confirmation sent',
+      });
+    }
+
     // ? Create a Log for the Order
     await this.orderLogsService.createLog(updatedOrder.id, authUser, {
       action: 'order updated',
     });
 
     return updatedOrder;
+  }
+
+  async generateInvoicePDFBuffer(order: OrderEntity) {
+    const htmlPDF = new PuppeteerHTMLPDF();
+    htmlPDF.setOptions({ format: 'A4' });
+
+    const templatePath = 'src/templates/pdf/invoice-pdf.hbs';
+    const templateContent = await htmlPDF.readFile(templatePath, 'utf-8');
+    const compiledTemplate = handlebars.compile(templateContent);
+
+    const brand = order.client.clientInfo.brand;
+    const currency = brand.currency;
+    const currencySymbol = currency === 'USD' ? '$' : '€';
+    const currentDate = format(new Date(), 'MMM dd, yyyy');
+    const paid_to_date = 0.0;
+    const invoice = await this.invoicesService.create({ orderId: order.id });
+    const amount = +invoice.amount;
+
+    const orderData = {
+      invoice_no: invoice.invoiceId,
+      to_company: order.company.name,
+      date: currentDate,
+      invoice_due: null,
+      descriptions: invoice.review_names,
+      qty: invoice.quantity,
+      rate: invoice.rate,
+      amount,
+      total: amount,
+      paid_to_date,
+      balance: amount - paid_to_date,
+      currency,
+      currencySymbol,
+    };
+
+    const htmlContent = compiledTemplate(orderData);
+
+    const pdfBuffer = await htmlPDF.create(htmlContent);
+    // Define the folder where you want to store the PDFs
+    const folderPath = 'public/pdf';
+
+    // Create the folder if it doesn't exist
+    await fs.mkdir(folderPath, { recursive: true });
+
+    // Generate the file name based on the order ID
+    const fileName = `order-#${order.id}_invoice-${invoice.invoiceId}.pdf`;
+
+    // Combine the folder path and file name to get the full file path
+    const filePath = join(folderPath, fileName);
+
+    await htmlPDF.writeFile(pdfBuffer, filePath);
+
+    return pdfBuffer;
   }
 
   private async updatePaymentStatus(
