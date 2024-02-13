@@ -92,17 +92,6 @@ export class OrdersController {
     );
   }
 
-  @Get('deleted')
-  @ApiOffsetPageResponse(OrderEntity)
-  async findAllDeleted(
-    @AuthUser() user: UserEntity,
-    @Query() offsetPageArgsDto: OffsetPageArgsDto,
-  ) {
-    return await this.ordersService.findAllDeletedWithPagination(
-      offsetPageArgsDto,
-    );
-  }
-
   @Get('report')
   @ApiOkResponse({ type: OrderReportEntity })
   async getOrderReport(@Query() orderReportDto: OrderReportDateRangeDto) {

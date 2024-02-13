@@ -16,4 +16,8 @@ export abstract class FilterDto {
   @IsDate()
   @ApiPropertyOptional()
   to?: Date;
+
+  @IsOptional()
+  @ApiPropertyOptional()
+  options?: any;
 }

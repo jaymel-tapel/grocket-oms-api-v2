@@ -9,7 +9,12 @@ async function baseFindManyQuery(
   database: DatabaseService,
   seller?: UserEntity,
 ) {
+  const { from, to, code } = findManyArgs;
+
   let findManyQuery: Prisma.ClientFindManyArgs = {
+    where: {
+      clientInfo: { brand: { code } },
+    },
     include: {
       clientInfo: {
         include: { source: true, industry: true },
@@ -18,18 +23,22 @@ async function baseFindManyQuery(
       companies: true,
     },
     orderBy: {
-      createdAt: 'asc',
+      createdAt: 'desc',
     },
   };
 
   if (seller) {
     findManyQuery = {
       ...findManyQuery,
-      where: { sellerId: seller.id },
+      where: { ...findManyQuery.where, sellerId: seller.id },
     };
   }
 
-  const range = await dateRange(findManyArgs, database, 'client');
+  const range = await dateRange(
+    { from, to, options: { code } },
+    database,
+    'client',
+  );
 
   if (range.startDate !== undefined && range.endDate !== undefined) {
     findManyQuery = {
@@ -51,10 +60,10 @@ export async function findManyClients(
   findManyArgs: FilterClientsDto,
   database: DatabaseService,
 ) {
-  const { keyword, clientLoggedIn, filter, from, to } = findManyArgs;
+  const { keyword, clientLoggedIn, filter } = findManyArgs;
 
   // TODO: Include: Companies, Clients' Orders, Client
-  let findManyQuery = await baseFindManyQuery({ from, to }, database);
+  let findManyQuery = await baseFindManyQuery(findManyArgs, database);
 
   if (filter === FilterClientEnum.SELLER) {
     findManyQuery = {
@@ -92,10 +101,10 @@ export async function sellerFindManyClients(
   findManyArgs: FilterClientsDto,
   database: DatabaseService,
 ) {
-  const { keyword, clientLoggedIn, from, to } = findManyArgs;
+  const { keyword, clientLoggedIn } = findManyArgs;
 
   // TODO: Include: Companies, Clients' Orders, Client
-  let findManyQuery = await baseFindManyQuery({ from, to }, database, seller);
+  let findManyQuery = await baseFindManyQuery(findManyArgs, database, seller);
 
   if (keyword) {
     findManyQuery = await queryFindManyForSeller(keyword, findManyQuery);

@@ -4,4 +4,5 @@ export interface IOrderReport {
   startRange: Date;
   endRange: Date;
   orderQuery: Prisma.OrderFindManyArgs;
+  showDeleted?: boolean;
 }

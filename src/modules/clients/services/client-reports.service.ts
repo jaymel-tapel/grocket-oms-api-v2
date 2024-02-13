@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client';
 import { addDays, eachDayOfInterval, subDays } from 'date-fns';
 import { dateRange } from '@src/common/helpers/date-range';
 import { IClientReport } from '../interfaces/client-report.interface';
+import { merge } from 'lodash';
 
 @Injectable()
 export class ClientReportsService {
@@ -14,9 +15,14 @@ export class ClientReportsService {
   async report(dateRangeDto: ClientReportDateRangeDto) {
     const baseReport = await this.baseReport(dateRangeDto);
 
-    const total_clients = await this.database.client.count();
+    const total_clients = await this.database.client.count({
+      where: {
+        ...baseReport.clientQuery.where,
+      },
+    });
+
     const clients_logged_in = await this.database.clientInfo.count({
-      where: { hasLoggedIn: true },
+      where: { hasLoggedIn: true, brand: { code: dateRangeDto.code } },
     });
 
     const currentDate = new Date();
@@ -35,10 +41,12 @@ export class ClientReportsService {
       {
         ...baseReport,
         clientQuery: {
-          where: {
-            ...baseReport.clientQuery.where,
-            clientInfo: { status: 'DELETED' },
-          },
+          ...baseReport.clientQuery,
+          where: merge(baseReport.clientQuery.where, {
+            clientInfo: {
+              status: 'DELETED',
+            },
+          }),
         },
       },
       true,
@@ -114,8 +122,12 @@ export class ClientReportsService {
   }
 
   private async baseReport(dateRangeDto: ClientReportDateRangeDto) {
-    let { startRange, endRange, sellerId } = dateRangeDto;
-    let clientQuery: Prisma.ClientFindManyArgs = {};
+    let { startRange, endRange, sellerId, code } = dateRangeDto;
+    let clientQuery: Prisma.ClientFindManyArgs = {
+      where: {
+        clientInfo: { brand: { code } },
+      },
+    };
 
     // ? Last 30 Days
     if (!startRange && !endRange) {
@@ -133,7 +145,7 @@ export class ClientReportsService {
 
     if (sellerId) {
       clientQuery = {
-        where: { sellerId },
+        where: { ...clientQuery.where, sellerId },
       };
     }
 

@@ -19,8 +19,8 @@ export class OrderReportsService {
     const foundPaidOrders = await this.findAllOrdersByRange({
       ...baseReport,
       orderQuery: {
-        ...baseReport.orderQuery.where,
-        where: { payment_status: 'PAID' },
+        ...baseReport.orderQuery,
+        where: { ...baseReport.orderQuery.where, payment_status: 'PAID' },
       },
     });
 
@@ -155,8 +155,13 @@ export class OrderReportsService {
   }
 
   private async baseReport(dateRangeDto: OrderReportDateRangeDto) {
-    let { startRange, endRange, sellerId } = dateRangeDto;
-    let orderQuery: Prisma.OrderFindManyArgs = {};
+    let { startRange, endRange, sellerId, code } = dateRangeDto;
+    let orderQuery: Prisma.OrderFindManyArgs = {
+      where: {
+        brand: { code },
+      },
+      orderBy: { createdAt: 'asc' },
+    };
 
     // ? Last 30 Days
     if (!startRange && !endRange) {
@@ -174,9 +179,19 @@ export class OrderReportsService {
 
     if (sellerId) {
       orderQuery = {
-        where: { sellerId },
+        where: { ...orderQuery.where, sellerId },
       };
     }
+
+    /* if (showDeleted) {
+      orderQuery = {
+        ...orderQuery,
+        where: {
+          ...orderQuery.where,
+          deletedAt: { not: null },
+        },
+      };
+    } */
 
     return { startRange, endRange, orderQuery };
   }
@@ -185,9 +200,14 @@ export class OrderReportsService {
     startRange,
     endRange,
     orderQuery,
+    showDeleted,
   }: IOrderReport) {
-    const database = await this.database.softDelete();
+    const database = showDeleted
+      ? this.database
+      : await this.database.softDelete();
+
     return await database.order.findMany({
+      ...orderQuery,
       where: {
         ...orderQuery.where,
         createdAt: {
