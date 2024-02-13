@@ -2,7 +2,11 @@ import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exception.filter';
-import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Logger,
+  ValidationPipe,
+} from '@nestjs/common';
 import { useContainer } from 'class-validator';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
@@ -41,5 +45,7 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
+
+  Logger.log(`Database URL: ${process.env.DATABASE_URL}`);
 }
 bootstrap();
