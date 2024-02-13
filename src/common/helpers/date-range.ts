@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client';
 type TableNameTypes = Prisma.TypeMap['meta']['modelProps'];
 
 export async function dateRange(
-  { from, to }: FilterDto,
+  { from, to, options }: FilterDto,
   database: DatabaseService,
   tableName: TableNameTypes,
   showDeleted?: boolean,
@@ -23,10 +23,20 @@ export async function dateRange(
           : { status: 'ACTIVE' };
         break;
       case 'client':
-        whereClause = { clientInfo: { status: 'ACTIVE' } };
+        whereClause = {
+          clientInfo: { status: 'ACTIVE', brand: { code: options?.code } },
+        };
         break;
       case 'order':
-        whereClause = { deletedAt: null };
+        whereClause = showDeleted
+          ? {
+              deletedAt: { not: null },
+              brand: { code: options?.code },
+            }
+          : {
+              deletedAt: null,
+              brand: { code: options?.code },
+            };
         break;
       default:
         throw new Error(`Invalid table name: ${tableName}`);

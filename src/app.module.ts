@@ -18,6 +18,7 @@ import { join } from 'path';
 import { EmailModule } from './modules/mail/email.module';
 import { ValidatorConstraints } from './common/validators';
 import { CustomHandlebarsAdapter } from './common/helpers/handlebars';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { SellersModule } from './modules/sellers/sellers.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { InvoicesModule } from './modules/invoices/invoices.module';
@@ -60,6 +61,7 @@ import { InvoicesModule } from './modules/invoices/invoices.module';
     SellersModule,
     BrandsModule,
     EmailModule,
+    DashboardModule,
     InvoicesModule,
   ],
   providers: [...ValidatorConstraints, ...Commands],

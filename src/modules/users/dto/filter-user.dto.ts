@@ -15,11 +15,6 @@ export class FilterUsersDto extends FilterDto {
   filter?: FilterUserEnum;
 
   @IsOptional()
-  @IsString()
-  @ApiPropertyOptional()
-  keyword?: string;
-
-  @IsOptional()
   @IsBoolean()
   @ToBoolean()
   @ApiPropertyOptional()
