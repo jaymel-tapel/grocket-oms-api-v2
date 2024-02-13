@@ -155,7 +155,7 @@ export class OrderReportsService {
   }
 
   private async baseReport(dateRangeDto: OrderReportDateRangeDto) {
-    let { startRange, endRange, sellerId, showDeleted, code } = dateRangeDto;
+    let { startRange, endRange, sellerId, code } = dateRangeDto;
     let orderQuery: Prisma.OrderFindManyArgs = {
       where: {
         brand: { code },
@@ -183,7 +183,7 @@ export class OrderReportsService {
       };
     }
 
-    if (showDeleted) {
+    /* if (showDeleted) {
       orderQuery = {
         ...orderQuery,
         where: {
@@ -191,7 +191,7 @@ export class OrderReportsService {
           deletedAt: { not: null },
         },
       };
-    }
+    } */
 
     return { startRange, endRange, orderQuery };
   }
