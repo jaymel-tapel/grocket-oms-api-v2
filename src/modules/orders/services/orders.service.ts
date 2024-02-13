@@ -316,6 +316,8 @@ export class OrdersService {
       );
     }
 
+    console.log(findManyQuery);
+
     const paginatedOrders = await paginate<
       OrderEntity,
       Prisma.OrderFindManyArgs
