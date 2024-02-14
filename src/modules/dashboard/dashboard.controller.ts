@@ -31,4 +31,16 @@ export class DashboardController {
   async adminGraph(@Body() range?: DateRangeDto) {
     return await this.dashboardService.adminGraph(range);
   }
+
+  @Get('seller')
+  @ApiBody({ type: DateRangeDto, required: false })
+  async seller(@Body() range?: DateRangeDto) {
+    return await this.dashboardService.seller(range);
+  }
+
+  @Get('seller/graph')
+  @ApiBody({ type: DateRangeDto, required: false })
+  async sellerGraph(@Body() range?: DateRangeDto) {
+    return await this.dashboardService.sellerGraph(range);
+  }
 }
