@@ -81,17 +81,13 @@ export class DashboardService {
 
           review.createdAt.setUTCHours(0, 0, 0, 0);
           const date = review.createdAt.toISOString();
-          if (date in paidReviewsObject) {
-            paidReviewsObject[date]++;
-          }
+          if (date in paidReviewsObject) paidReviewsObject[date]++;
         } else {
           unpaidAmount += +order.unit_cost;
 
           review.createdAt.setUTCHours(0, 0, 0, 0);
           const date = review.createdAt.toISOString();
-          if (date in paidReviewsObject) {
-            unpaidReviewsObject[date]++;
-          }
+          if (date in unpaidReviewsObject) unpaidReviewsObject[date]++;
         }
       });
     });
@@ -196,7 +192,7 @@ export class DashboardService {
     orders.forEach((order) => {
       order.order_date.setUTCHours(0, 0, 0, 0);
       const date = order.order_date.toISOString();
-      newOrders[date]++;
+      if (date in newOrders) newOrders[date]++;
     });
 
     const newOrdersStat = Object.keys(newOrders).map((date) => ({
