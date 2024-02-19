@@ -1,6 +1,6 @@
 import { DatabaseService } from '@modules/database/services/database.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { eachDayOfInterval, subDays } from 'date-fns';
+import { addDays, eachDayOfInterval, isAfter, subDays } from 'date-fns';
 import { DateRangeDto } from '../dto/date-range.dto';
 
 @Injectable()
@@ -30,10 +30,10 @@ export class SellersReportService {
   async getChartDetail(data?: DateRangeDto) {
     if (Object.entries(data).length === 0) {
       // default to now and the past 30 days
-      const endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      const startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+      const today = new Date();
+      const priorDate = subDays(today, 30);
 
-      return await this.chartList(startRange, endRange);
+      return await this.chartList(priorDate, today);
     }
 
     if (!(data.startRange && data.endRange)) {
@@ -147,12 +147,12 @@ export class SellersReportService {
 
   private async sellerCount(startRange?: Date, endRange?: Date) {
     if (!(startRange && endRange)) {
-      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
-    } else {
-      endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
-      startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
+      endRange = new Date();
+      startRange = subDays(endRange, 30);
     }
+
+    endRange.setUTCHours(23, 59, 59, 999);
+    startRange.setUTCHours(0, 0, 0, 0);
 
     const allSellers = (await this.allSellers(startRange, endRange)).length;
     const activeSellers = (await this.activeSellers(startRange, endRange))
@@ -169,22 +169,19 @@ export class SellersReportService {
 
   private async chartList(startRange?: Date, endRange?: Date) {
     if (!(startRange && endRange)) {
-      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
-    } else {
-      endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
-      startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
+      startRange = new Date();
+      endRange = subDays(startRange, 30);
     }
+
+    endRange.setUTCHours(23, 59, 59, 999);
+    startRange.setUTCHours(0, 0, 0, 0);
 
     // Get the list of sellers active/inactive
     const activeSellers = await this.activeSellers(startRange, endRange);
     const inactiveSellers = await this.inactiveSellers(startRange, endRange);
 
     // Creates an array of dates from the startRange until to the endRange
-    const datesArray = eachDayOfInterval({
-      start: startRange.setUTCHours(0, 0, 0, 0),
-      end: endRange.setUTCHours(0, 0, 0, 0),
-    });
+    const datesArray = eachDayOfInterval({ start: startRange, end: endRange });
     const activeSellersObject: { [key: string]: number } = {};
 
     datesArray.forEach((date) => {
@@ -199,18 +196,14 @@ export class SellersReportService {
       seller.createdAt.setUTCHours(0, 0, 0, 0);
 
       const date = seller.createdAt.toISOString();
-      if (date in activeSellersObject) {
-        activeSellersObject[date]++;
-      }
+      activeSellersObject[date]++;
     });
 
     inactiveSellers.forEach((seller) => {
       seller.deletedAt.setUTCHours(0, 0, 0, 0);
 
       const date = seller.deletedAt.toISOString();
-      if (date in inactiveSellerObject) {
-        inactiveSellerObject[date]++;
-      }
+      inactiveSellerObject[date]++;
     });
 
     // Initiallizing a new object with an array of dates and seller count
