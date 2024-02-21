@@ -29,10 +29,10 @@ import { TaskEntity } from './entities/task.entity';
 import { ForbiddenError } from '@casl/ability';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { PageEntity } from '@modules/page/page.entity';
-import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 import { CreatedByEnum } from '@prisma/client';
 import { taskIncludeHelper } from './helpers/task-include.helper';
 import { FetchCompletedTasksDto } from './dto/fetch-completed-tasks.dto';
+import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 
 @UseGuards(JwtGuard)
 @ApiTags('tasks')
@@ -61,12 +61,12 @@ export class TasksController {
   @CheckAbilities({ action: Action.Read, subject: TaskEntity })
   async findAll(
     @AuthUser() authUser: UserEntity,
-    @Query() connectionArgs: ConnectionArgsDto,
+    @Query() offsetPageArgsDto: OffsetPageArgsDto,
     @Query() { completed }: FetchCompletedTasksDto,
   ) {
     return await this.tasksService.findAllWithPagination(
       authUser,
-      connectionArgs,
+      offsetPageArgsDto,
       completed,
     );
   }

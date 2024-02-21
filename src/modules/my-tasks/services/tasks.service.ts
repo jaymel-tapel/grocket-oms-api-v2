@@ -13,12 +13,12 @@ import { TaskEntity } from '../entities/task.entity';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { AbilityFactory, Action } from '@modules/casl/ability.factory';
 import { ForbiddenError } from '@casl/ability';
-import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 import { TaskSellersService } from './task-sellers.service';
 import { TaskAccountantsService } from './task-accountants.service';
 import { dd } from '@src/common/helpers/debug';
 import { taskIncludeHelper } from '../helpers/task-include.helper';
 import { taskRelationHelper } from '../helpers/task-relation-table.helper';
+import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 
 @Injectable()
 export class TasksService {
@@ -100,19 +100,19 @@ export class TasksService {
 
   async findAllWithPagination(
     authUser: UserEntity,
-    connectionArgs: ConnectionArgsDto,
+    offsetPageArgsDto: OffsetPageArgsDto,
     completed?: boolean,
   ) {
     if (authUser.role === RoleEnum.ACCOUNTANT) {
       return await this.taskAccountantsService.paginate(
         authUser,
-        connectionArgs,
+        offsetPageArgsDto,
         completed,
       );
     } else {
       return await this.taskSellersService.paginate(
         authUser,
-        connectionArgs,
+        offsetPageArgsDto,
         completed,
       );
     }
