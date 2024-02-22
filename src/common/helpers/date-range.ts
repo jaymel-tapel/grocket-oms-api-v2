@@ -54,7 +54,7 @@ export async function dateRange(
     startDate = new Date(from ?? null);
     endDate = new Date(to ?? Date.now());
 
-    console.log(endDate);
+    // console.log(startDate, endDate);
     if (startDate > endDate) {
       throw new HttpException(
         `Start Date (${startDate.toDateString()}) should not be greater than End Date (${endDate.toDateString()})`,

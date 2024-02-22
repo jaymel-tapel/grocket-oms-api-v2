@@ -24,19 +24,37 @@ export class OrderReportsService {
       },
     });
 
+    const utcStartDate = new Date(
+      baseReport.startRange.getUTCFullYear(),
+      baseReport.startRange.getUTCMonth(),
+      baseReport.startRange.getUTCDate(),
+    );
+
+    const utcEndDate = new Date(
+      baseReport.endRange.getUTCFullYear(),
+      baseReport.endRange.getUTCMonth(),
+      baseReport.endRange.getUTCDate(),
+    );
+
+    console.log(utcStartDate, utcEndDate);
     const datesArray = eachDayOfInterval({
-      start: baseReport.startRange,
-      end: baseReport.endRange,
+      start: utcStartDate,
+      end: utcEndDate,
     });
+
+    // console.log(datesArray);
 
     const ordersObj: { [key: string]: number } = {};
     const paidOrdersObj = { ...ordersObj };
 
     datesArray.forEach((date) => {
       date = addDays(date.setUTCHours(0, 0, 0, 0), 1);
+      console.log(date);
       ordersObj[date.toISOString()] = 0;
       paidOrdersObj[date.toISOString()] = 0;
     });
+
+    console.log(ordersObj);
 
     for (const order of foundOrders) {
       order.createdAt.setUTCHours(0, 0, 0, 0);
@@ -165,8 +183,8 @@ export class OrderReportsService {
 
     // ? Last 30 Days
     if (!startRange && !endRange) {
-      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
-      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date(), 30);
+      endRange = new Date();
     } else {
       const dateRangeHelper = await dateRange(
         { from: startRange, to: endRange },
@@ -176,6 +194,8 @@ export class OrderReportsService {
       startRange = dateRangeHelper.startDate;
       endRange = dateRangeHelper.endDate;
     }
+
+    // startRange = addDays(startRange.setUTCHours(0, 0, 0, 0), 1);
 
     if (sellerId) {
       orderQuery = {
