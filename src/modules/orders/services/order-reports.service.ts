@@ -206,6 +206,8 @@ export class OrderReportsService {
       ? this.database
       : await this.database.softDelete();
 
+    endRange = addDays(endRange, 1);
+
     return await database.order.findMany({
       ...orderQuery,
       where: {

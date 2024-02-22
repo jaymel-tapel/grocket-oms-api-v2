@@ -52,8 +52,9 @@ export async function dateRange(
     endDate = new Date(to.setUTCHours(23, 59, 59, 999));
   } else if (from || to) {
     startDate = new Date(from ?? null);
-    endDate = new Date(to?.setUTCHours(23, 59, 59, 999) ?? Date.now());
+    endDate = new Date(to ?? Date.now());
 
+    console.log(endDate);
     if (startDate > endDate) {
       throw new HttpException(
         `Start Date (${startDate.toDateString()}) should not be greater than End Date (${endDate.toDateString()})`,
