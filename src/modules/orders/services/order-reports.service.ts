@@ -2,7 +2,7 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { Injectable } from '@nestjs/common';
 import { OrderReportDateRangeDto } from '../dto/get-order-report.dto';
 import { OrderReviewStatus, PaymentStatusEnum, Prisma } from '@prisma/client';
-import { addDays, eachDayOfInterval, subDays } from 'date-fns';
+import { addDays, eachDayOfInterval, startOfDay, subDays } from 'date-fns';
 import { dateRange } from '@src/common/helpers/date-range';
 import * as _ from 'lodash';
 import { IOrderReport } from '../interfaces/order-report.interface';
@@ -24,32 +24,42 @@ export class OrderReportsService {
       },
     });
 
-    const utcStartDate = new Date(
-      baseReport.startRange.getUTCFullYear(),
-      baseReport.startRange.getUTCMonth(),
-      baseReport.startRange.getUTCDate(),
-    );
+    // console.log(baseReport.startRange, baseReport.endRange);
 
-    const utcEndDate = new Date(
-      baseReport.endRange.getUTCFullYear(),
-      baseReport.endRange.getUTCMonth(),
-      baseReport.endRange.getUTCDate(),
-    );
+    // const utcStartDate = new Date(
+    //   baseReport.startRange.getUTCFullYear(),
+    //   baseReport.startRange.getUTCMonth(),
+    //   baseReport.startRange.getUTCDate(),
+    // );
 
-    console.log(utcStartDate, utcEndDate);
-    const datesArray = eachDayOfInterval({
-      start: utcStartDate,
-      end: utcEndDate,
-    });
+    // const utcEndDate = new Date(
+    //   baseReport.endRange.getUTCFullYear(),
+    //   baseReport.endRange.getUTCMonth(),
+    //   baseReport.endRange.getUTCDate(),
+    // );
 
-    // console.log(datesArray);
+    // utcStartDate.setUTCHours(0, 0, 0, 0);
+    // utcEndDate.setUTCHours(23, 59, 59, 999);
+
+    // const datesArray = eachDayOfInterval({
+    //   start: utcStartDate,
+    //   end: utcEndDate,
+    // });
+
+    const datesArray: Date[] = [];
+    let tempStartDate: Date = baseReport.startRange;
+
+    while (tempStartDate <= baseReport.endRange) {
+      datesArray.push(tempStartDate);
+      tempStartDate = addDays(tempStartDate, 1);
+    }
+
+    console.log(datesArray);
 
     const ordersObj: { [key: string]: number } = {};
     const paidOrdersObj = { ...ordersObj };
 
     datesArray.forEach((date) => {
-      date = addDays(date.setUTCHours(0, 0, 0, 0), 1);
-      console.log(date);
       ordersObj[date.toISOString()] = 0;
       paidOrdersObj[date.toISOString()] = 0;
     });
@@ -228,6 +238,7 @@ export class OrderReportsService {
 
     endRange = addDays(endRange, 1);
 
+    console.log(`In Find All Orders Query: `, startRange, endRange);
     return await database.order.findMany({
       ...orderQuery,
       where: {
