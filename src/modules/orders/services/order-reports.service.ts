@@ -205,7 +205,8 @@ export class OrderReportsService {
       endRange = dateRangeHelper.endDate;
     }
 
-    // startRange = addDays(startRange.setUTCHours(0, 0, 0, 0), 1);
+    startRange.setUTCHours(0, 0, 0, 0);
+    endRange.setUTCHours(23, 59, 59, 999);
 
     if (sellerId) {
       orderQuery = {
@@ -236,7 +237,7 @@ export class OrderReportsService {
       ? this.database
       : await this.database.softDelete();
 
-    endRange = addDays(endRange, 1);
+    // endRange = addDays(endRange, 1);
 
     console.log(`In Find All Orders Query: `, startRange, endRange);
     return await database.order.findMany({
