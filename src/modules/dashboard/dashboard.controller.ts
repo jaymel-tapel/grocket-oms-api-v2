@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { DateRangeDto } from './dto/date-range.dto';
+import { DashboardDateRangeDto } from './dto/date-range.dto';
 import { DashboardService } from './service/dashboard.service';
 import { JwtGuard } from '@modules/auth/guard';
 import {
@@ -20,28 +20,28 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get('admin')
-  @ApiQuery({ type: DateRangeDto, required: false })
+  @ApiQuery({ type: DashboardDateRangeDto, required: false })
   @ApiOkResponse({ type: AdminDashboardEntity })
-  async admin(@Query() range?: DateRangeDto) {
+  async admin(@Query() range?: DashboardDateRangeDto) {
     return await this.dashboardService.admin(range);
   }
 
   @Get('admin/graph')
-  @ApiQuery({ type: DateRangeDto, required: false })
+  @ApiQuery({ type: DashboardDateRangeDto, required: false })
   @ApiOkResponse({ type: AdminGraphEntity })
-  async adminGraph(@Query() range?: DateRangeDto) {
+  async adminGraph(@Query() range?: DashboardDateRangeDto) {
     return await this.dashboardService.adminGraph(range);
   }
 
   @Get('seller')
-  @ApiQuery({ type: DateRangeDto, required: false })
-  async seller(@Query() range?: DateRangeDto) {
+  @ApiQuery({ type: DashboardDateRangeDto, required: false })
+  async seller(@Query() range?: DashboardDateRangeDto) {
     return await this.dashboardService.seller(range);
   }
 
   @Get('seller/graph')
-  @ApiQuery({ type: DateRangeDto, required: false })
-  async sellerGraph(@Query() range?: DateRangeDto) {
+  @ApiQuery({ type: DashboardDateRangeDto, required: false })
+  async sellerGraph(@Query() range?: DashboardDateRangeDto) {
     return await this.dashboardService.sellerGraph(range);
   }
 }

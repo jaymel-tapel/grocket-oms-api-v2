@@ -1,151 +1,18 @@
 import { DatabaseService } from '@modules/database/services/database.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { eachDayOfInterval, subDays } from 'date-fns';
+import { addDays, eachDayOfInterval, subDays } from 'date-fns';
 import { DateRangeDto } from '../dto/date-range.dto';
+import { SellerReportDto } from '../dto/seller-report.dto';
+import { isNotEmpty, isEmpty } from 'class-validator';
+import { StatusEnum } from '@prisma/client';
 
 @Injectable()
 export class SellersReportService {
   constructor(private readonly database: DatabaseService) {}
 
-  async getSellerCount(data?: DateRangeDto) {
-    if (Object.entries(data).length === 0) {
-      // default to now and the past 30 days
-      const count = await this.sellerCount();
-      return count;
-    }
+  async getSellerCount(data?: SellerReportDto) {
+    let { startRange, endRange, code } = data;
 
-    if (!(data.startRange && data.endRange)) {
-      throw new BadRequestException(
-        'startRange and endRange should both be filled',
-      );
-    }
-
-    const count = await this.sellerCount(data.startRange, data.endRange);
-    return count;
-  }
-
-  // get startRange and endRange
-  // default is now and the past 30 days
-  // give number of active/inactive accounts by the day
-  async getChartDetail(data?: DateRangeDto) {
-    if (Object.entries(data).length === 0) {
-      // default to now and the past 30 days
-      const endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      const startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
-
-      return await this.chartList(startRange, endRange);
-    }
-
-    if (!(data.startRange && data.endRange)) {
-      throw new BadRequestException(
-        'startRange and endRange should both be filled',
-      );
-    }
-
-    return await this.chartList(data.startRange, data.endRange);
-  }
-
-  // async getChartDetail(data: ChartDto) {
-  //   const startDate = data.startRange;
-  //   const endDate = data.endRange;
-
-  //   data.startRange.setUTCHours(0, 0, 0, 0);
-  //   data.endRange.setUTCHours(23, 59, 59, 999);
-
-  //   const inactiveSeller = data.getInactive;
-
-  //   // Start and end range cannot be the same
-  //   // No result will be found
-  //   const result = await this.database.user.findMany({
-  //     where: {
-  //       role: 'SELLER',
-  //       ...(!inactiveSeller && {
-  //         createdAt: { gte: new Date(startDate), lte: new Date(endDate) },
-  //         status: 'ACTIVE',
-  //       }),
-  //       ...(inactiveSeller && {
-  //         deletedAt: { gte: new Date(startDate), lte: new Date(endDate) },
-  //         status: 'DELETED',
-  //       }),
-  //     },
-  //   });
-
-  //   const sellersByDate = {};
-  //   result.forEach((seller) => {
-  //     inactiveSeller
-  //       ? seller.deletedAt.setUTCHours(0, 0, 0, 0)
-  //       : seller.createdAt.setUTCHours(0, 0, 0, 0);
-
-  //     // Sort by day
-  //     if (data.interval === 'day') {
-  //       let date = inactiveSeller
-  //         ? seller.deletedAt.toISOString()
-  //         : seller.createdAt.toISOString();
-  //       sellersByDate[date] = (sellersByDate[date] || 0) + 1;
-  //     }
-
-  //     // Sort by week
-  //     else if (data.interval === 'week') {
-  //       const date = inactiveSeller
-  //         ? `${getWeek(seller.deletedAt)} (${seller.deletedAt.getFullYear()})`
-  //         : `${getWeek(seller.createdAt)} (${seller.createdAt.getFullYear()})`;
-  //       sellersByDate[date] = (sellersByDate[date] || 0) + 1;
-  //     }
-
-  //     // Sort by month
-  //     else if (data.interval === 'month') {
-  //       inactiveSeller
-  //         ? seller.deletedAt.setDate(1)
-  //         : seller.createdAt.setDate(1);
-
-  //       const week = inactiveSeller
-  //         ? seller.deletedAt.toISOString()
-  //         : seller.createdAt.toISOString();
-  //       sellersByDate[week] = (sellersByDate[week] || 0) + 1;
-  //     }
-  //   });
-
-  //   const sellerCount = Object.keys(sellersByDate).map((date) => ({
-  //     date,
-  //     sellerCount: sellersByDate[date],
-  //   }));
-
-  //   return { sellerCount };
-  // }
-
-  private async allSellers(startRange?: Date, endRange?: Date) {
-    return await this.database.user.findMany({
-      where: {
-        role: 'SELLER',
-        ...(startRange &&
-          endRange && { createdAt: { gte: startRange, lte: endRange } }),
-      },
-    });
-  }
-
-  private async activeSellers(startRange?: Date, endRange?: Date) {
-    return await this.database.user.findMany({
-      where: {
-        role: 'SELLER',
-        ...(startRange &&
-          endRange && { createdAt: { gte: startRange, lte: endRange } }),
-        status: 'ACTIVE',
-      },
-    });
-  }
-
-  private async inactiveSellers(startRange?: Date, endRange?: Date) {
-    return await this.database.user.findMany({
-      where: {
-        role: 'SELLER',
-        ...(startRange &&
-          endRange && { deletedAt: { gte: startRange, lte: endRange } }),
-        status: 'DELETED',
-      },
-    });
-  }
-
-  private async sellerCount(startRange?: Date, endRange?: Date) {
     if (!(startRange && endRange)) {
       endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
       startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
@@ -154,11 +21,13 @@ export class SellersReportService {
       startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
     }
 
-    const allSellers = (await this.allSellers(startRange, endRange)).length;
-    const activeSellers = (await this.activeSellers(startRange, endRange))
+    const allSellers = (await this.allSellers(code, startRange, endRange))
       .length;
-    const inactiveSellers = (await this.inactiveSellers(startRange, endRange))
+    const activeSellers = (await this.activeSellers(code, startRange, endRange))
       .length;
+    const inactiveSellers = (
+      await this.inactiveSellers(code, startRange, endRange)
+    ).length;
 
     return {
       allSellers,
@@ -167,32 +36,43 @@ export class SellersReportService {
     };
   }
 
-  private async chartList(startRange?: Date, endRange?: Date) {
+  // get startRange and endRange
+  // default is now and the past 30 days
+  // give number of active/inactive accounts by the day
+  async getChartDetail(data?: SellerReportDto) {
+    let { startRange, endRange, code } = data;
+
     if (!(startRange && endRange)) {
-      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
       startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
     } else {
-      endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
       startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
+      endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
     }
 
     // Get the list of sellers active/inactive
-    const activeSellers = await this.activeSellers(startRange, endRange);
-    const inactiveSellers = await this.inactiveSellers(startRange, endRange);
+    const activeSellers = await this.activeSellers(code, startRange, endRange);
+    const inactiveSellers = await this.inactiveSellers(
+      code,
+      startRange,
+      endRange,
+    );
 
     // Creates an array of dates from the startRange until to the endRange
     const datesArray = eachDayOfInterval({
       start: startRange.setUTCHours(0, 0, 0, 0),
       end: endRange.setUTCHours(0, 0, 0, 0),
     });
+
     const activeSellersObject: { [key: string]: number } = {};
+    const inactiveSellersObject = { ...activeSellersObject };
 
     datesArray.forEach((date) => {
-      date.setUTCHours(0, 0, 0, 0);
+      date = addDays(date.setUTCHours(0, 0, 0, 0), 1);
       activeSellersObject[date.toISOString()] = 0;
+      inactiveSellersObject[date.toISOString()] = 0;
     });
-
-    const inactiveSellerObject = { ...activeSellersObject };
+    datesArray.shift();
 
     // Increments the count if the date are the same as the key
     activeSellers.forEach((seller) => {
@@ -208,8 +88,8 @@ export class SellersReportService {
       seller.deletedAt.setUTCHours(0, 0, 0, 0);
 
       const date = seller.deletedAt.toISOString();
-      if (date in inactiveSellerObject) {
-        inactiveSellerObject[date]++;
+      if (date in inactiveSellersObject) {
+        inactiveSellersObject[date]++;
       }
     });
 
@@ -219,13 +99,60 @@ export class SellersReportService {
       activeSellerCount: activeSellersObject[date],
     }));
 
-    const inactiveSellerCount = Object.keys(inactiveSellerObject).map(
+    const inactiveSellerCount = Object.keys(inactiveSellersObject).map(
       (date) => ({
         date: new Date(date),
-        inactiveSellerCount: inactiveSellerObject[date],
+        inactiveSellerCount: inactiveSellersObject[date],
       }),
     );
 
     return { activeSellerCount, inactiveSellerCount };
   }
+
+  private async allSellers(code: string, startRange?: Date, endRange?: Date) {
+    return await this.database.client.findMany({
+      include: { clientInfo: { include: { brand: true } }, seller: true },
+      where: {
+        createdAt: { gte: startRange, lte: endRange },
+        clientInfo: { brand: { code: code } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  private async activeSellers(
+    code: string,
+    startRange?: Date,
+    endRange?: Date,
+  ) {
+    return await this.database.client.findMany({
+      include: { clientInfo: { include: { brand: true } }, seller: true },
+      where: {
+        createdAt: { gte: startRange, lte: endRange },
+        clientInfo: { brand: { code: code } },
+        seller: { status: StatusEnum.ACTIVE },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  private async inactiveSellers(
+    code: string,
+    startRange?: Date,
+    endRange?: Date,
+  ) {
+    return await this.database.client.findMany({
+      include: { clientInfo: { include: { brand: true } }, seller: true },
+      where: {
+        createdAt: { gte: startRange, lte: endRange },
+        clientInfo: { brand: { code: code } },
+        seller: { status: StatusEnum.DELETED },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  private async sellerCount(code: string, startRange?: Date, endRange?: Date) {}
+
+  private async chartList(startRange?: Date, endRange?: Date) {}
 }
