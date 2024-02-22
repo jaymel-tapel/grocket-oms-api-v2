@@ -10,6 +10,7 @@ import { FilterSellersDto } from './dto/filter-seller.dto';
 import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { ApiOffsetPageResponse } from '@modules/offset-page/api-offset-page-response.decorator';
 import { SellerEntity } from './entity/seller.entity';
+import { SellerReportDto } from './dto/seller-report.dto';
 
 @UseGuards(JwtGuard)
 @Controller('sellers')
@@ -32,13 +33,13 @@ export class SellersController {
 
   @Get('count')
   @ApiOkResponse({ type: SellerCountEntity })
-  async getSellerCount(@Query() data?: DateRangeDto) {
+  async getSellerCount(@Query() data?: SellerReportDto) {
     return await this.sellerReportService.getSellerCount(data);
   }
 
   @Get('chart')
   @ApiOkResponse({ type: ChartDetailEntity })
-  async getChartDetail(@Query() data?: DateRangeDto) {
+  async getChartDetail(@Query() data?: SellerReportDto) {
     return new ChartDetailEntity(
       await this.sellerReportService.getChartDetail(data),
     );

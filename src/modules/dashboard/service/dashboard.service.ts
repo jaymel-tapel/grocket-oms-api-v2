@@ -1,14 +1,14 @@
 import { DatabaseService } from '@modules/database/services/database.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { DateRangeDto } from '../dto/date-range.dto';
-import { eachDayOfInterval, subDays } from 'date-fns';
+import { DashboardDateRangeDto } from '../dto/date-range.dto';
+import { addDays, eachDayOfInterval, subDays } from 'date-fns';
 import { OrderReviewStatus, PaymentStatusEnum } from '@prisma/client';
 
 @Injectable()
 export class DashboardService {
   constructor(private readonly database: DatabaseService) {}
 
-  async admin(range?: DateRangeDto) {
+  async admin(range?: DashboardDateRangeDto) {
     if (Object.entries(range).length === 0) {
       return {
         ordersOverview: await this.getOrderPercentage(),
@@ -32,7 +32,7 @@ export class DashboardService {
     };
   }
 
-  async adminGraph(range?: DateRangeDto) {
+  async adminGraph(range?: DashboardDateRangeDto) {
     if (Object.entries(range).length === 0) {
       let endRange = new Date();
       let startRange = subDays(endRange, 30);
@@ -46,8 +46,8 @@ export class DashboardService {
       );
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
 
     const orders = await this.database.order.findMany({
       where: { createdAt: { gte: range.startRange, lte: range.endRange } },
@@ -55,22 +55,19 @@ export class DashboardService {
     });
 
     const datesArray = eachDayOfInterval({
-      start: range.startRange,
-      end: range.endRange,
+      start: range.startRange.setUTCHours(0, 0, 0, 0),
+      end: range.endRange.setUTCHours(0, 0, 0, 0),
     });
-
-    if (datesArray) {
-      datesArray.shift();
-    }
 
     const paidReviewsObject: { [key: string]: number } = {};
+    const unpaidReviewsObject = { ...paidReviewsObject };
 
     datesArray.forEach((date) => {
-      date.setUTCHours(0, 0, 0, 0);
+      date = addDays(date.setUTCHours(0, 0, 0, 0), 1);
       paidReviewsObject[date.toISOString()] = 0;
+      unpaidReviewsObject[date.toISOString()] = 0;
     });
-
-    const unpaidReviewsObject = { ...paidReviewsObject };
+    datesArray.shift();
 
     let receivedAmount: number = 0;
     let unpaidAmount: number = 0;
@@ -105,7 +102,7 @@ export class DashboardService {
     return { receivedAmount, unpaidAmount, paidReviews, unpaidReviews };
   }
 
-  async seller(range?: DateRangeDto) {
+  async seller(range?: DashboardDateRangeDto) {
     if (Object.entries(range).length === 0) {
       return {
         newOrdersCount: (await this.getOrders()).length,
@@ -131,16 +128,16 @@ export class DashboardService {
     };
   }
 
-  private async getOrders(range?: DateRangeDto) {
+  private async getOrders(range?: DashboardDateRangeDto) {
     if (!range) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
 
       range = { startRange, endRange };
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     return await this.database.order.findMany({
       where: {
@@ -149,10 +146,10 @@ export class DashboardService {
     });
   }
 
-  async sellerGraph(range?: DateRangeDto) {
+  async sellerGraph(range?: DashboardDateRangeDto) {
     if (Object.entries(range).length === 0) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
 
       range = { startRange, endRange };
     }
@@ -163,8 +160,8 @@ export class DashboardService {
       );
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
       where: {
@@ -174,20 +171,17 @@ export class DashboardService {
     });
 
     const datesArray = eachDayOfInterval({
-      start: range.startRange,
-      end: range.endRange,
+      start: range.startRange.setUTCHours(0, 0, 0, 0),
+      end: range.endRange.setUTCHours(0, 0, 0, 0),
     });
-
-    if (datesArray) {
-      datesArray.shift();
-    }
 
     const newOrders: { [key: string]: number } = {};
 
     datesArray.forEach((date) => {
-      date.setUTCHours(0, 0, 0, 0);
+      date = addDays(date.setUTCHours(0, 0, 0, 0), 1);
       newOrders[date.toISOString()] = 0;
     });
+    datesArray.shift();
 
     orders.forEach((order) => {
       order.order_date.setUTCHours(0, 0, 0, 0);
@@ -203,16 +197,16 @@ export class DashboardService {
     return { newOrdersStat };
   }
 
-  private async getOrderPercentage(range?: DateRangeDto) {
+  private async getOrderPercentage(range?: DashboardDateRangeDto) {
     if (!range) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
 
       range = { startRange, endRange };
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.getOrders(range);
 
@@ -260,16 +254,19 @@ export class DashboardService {
     };
   }
 
-  private async getActiveClients(range?: DateRangeDto, getAll?: boolean) {
+  private async getActiveClients(
+    range?: DashboardDateRangeDto,
+    getAll?: boolean,
+  ) {
     if (!range) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
 
       range = { startRange, endRange };
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     return await this.database.client.findMany({
       where: {
@@ -286,7 +283,7 @@ export class DashboardService {
     });
   }
 
-  private async clientDashboardInfo(range?: DateRangeDto) {
+  private async clientDashboardInfo(range?: DashboardDateRangeDto) {
     const clients = await this.getActiveClients(range);
 
     const clientInfo = clients.map((client) => {
@@ -306,16 +303,16 @@ export class DashboardService {
     return clientInfo;
   }
 
-  private async getRevenue(range?: DateRangeDto) {
+  private async getRevenue(range?: DashboardDateRangeDto) {
     if (!range) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
 
       range = { startRange, endRange };
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
       where: { createdAt: { gte: range.startRange, lte: range.endRange } },
@@ -334,16 +331,16 @@ export class DashboardService {
     return revenue;
   }
 
-  private async getOrderInfo(range?: DateRangeDto) {
+  private async getOrderInfo(range?: DashboardDateRangeDto) {
     if (!range) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
 
       range = { startRange, endRange };
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
       where: { createdAt: { gte: range.startRange, lte: range.endRange } },
@@ -373,16 +370,16 @@ export class DashboardService {
     return orderInfos;
   }
 
-  private async getCommission(range?: DateRangeDto) {
+  private async getCommission(range?: DashboardDateRangeDto) {
     if (!range) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
 
       range = { startRange, endRange };
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
       where: { createdAt: { gte: range.startRange, lte: range.endRange } },

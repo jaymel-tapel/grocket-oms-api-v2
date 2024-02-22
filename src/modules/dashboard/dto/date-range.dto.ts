@@ -1,17 +1,3 @@
-import { ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsDate, IsOptional } from 'class-validator';
+import { DateRangeDto } from '@modules/sellers/dto/date-range.dto';
 
-export class DateRangeDto {
-  @IsDate()
-  @Type(() => Date)
-  @IsOptional()
-  @ApiPropertyOptional()
-  startRange?: Date;
-
-  @IsDate()
-  @Type(() => Date)
-  @IsOptional()
-  @ApiPropertyOptional()
-  endRange?: Date;
-}
+export class DashboardDateRangeDto extends DateRangeDto {}
