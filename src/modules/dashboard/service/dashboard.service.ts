@@ -54,20 +54,21 @@ export class DashboardService {
       include: { orderReviews: true },
     });
 
-    const datesArray = eachDayOfInterval({
-      start: range.startRange.setUTCHours(0, 0, 0, 0),
-      end: range.endRange.setUTCHours(0, 0, 0, 0),
-    });
+    const datesArray: Date[] = [];
+    let tempStartDate: Date = range.startRange;
+
+    while (tempStartDate <= range.endRange) {
+      datesArray.push(tempStartDate);
+      tempStartDate = addDays(tempStartDate, 1);
+    }
 
     const paidReviewsObject: { [key: string]: number } = {};
     const unpaidReviewsObject = { ...paidReviewsObject };
 
     datesArray.forEach((date) => {
-      date = addDays(date.setUTCHours(0, 0, 0, 0), 1);
       paidReviewsObject[date.toISOString()] = 0;
       unpaidReviewsObject[date.toISOString()] = 0;
     });
-    datesArray.shift();
 
     let receivedAmount: number = 0;
     let unpaidAmount: number = 0;
@@ -170,18 +171,19 @@ export class DashboardService {
       },
     });
 
-    const datesArray = eachDayOfInterval({
-      start: range.startRange.setUTCHours(0, 0, 0, 0),
-      end: range.endRange.setUTCHours(0, 0, 0, 0),
-    });
+    const datesArray: Date[] = [];
+    let tempStartDate: Date = range.startRange;
+
+    while (tempStartDate <= range.endRange) {
+      datesArray.push(tempStartDate);
+      tempStartDate = addDays(tempStartDate, 1);
+    }
 
     const newOrders: { [key: string]: number } = {};
 
     datesArray.forEach((date) => {
-      date = addDays(date.setUTCHours(0, 0, 0, 0), 1);
       newOrders[date.toISOString()] = 0;
     });
-    datesArray.shift();
 
     orders.forEach((order) => {
       order.order_date.setUTCHours(0, 0, 0, 0);
