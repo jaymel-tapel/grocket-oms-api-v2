@@ -1,9 +1,7 @@
 import { DatabaseService } from '@modules/database/services/database.service';
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { addDays, eachDayOfInterval, subDays } from 'date-fns';
-import { DateRangeDto } from '../dto/date-range.dto';
+import { Injectable } from '@nestjs/common';
+import { addDays, subDays } from 'date-fns';
 import { SellerReportDto } from '../dto/seller-report.dto';
-import { isNotEmpty, isEmpty } from 'class-validator';
 import { StatusEnum } from '@prisma/client';
 
 @Injectable()
@@ -59,20 +57,21 @@ export class SellersReportService {
     );
 
     // Creates an array of dates from the startRange until to the endRange
-    const datesArray = eachDayOfInterval({
-      start: startRange.setUTCHours(0, 0, 0, 0),
-      end: endRange.setUTCHours(0, 0, 0, 0),
-    });
+    const datesArray: Date[] = [];
+    let tempStartDate: Date = startRange;
+
+    while (tempStartDate <= endRange) {
+      datesArray.push(tempStartDate);
+      tempStartDate = addDays(tempStartDate, 1);
+    }
 
     const activeSellersObject: { [key: string]: number } = {};
     const inactiveSellersObject = { ...activeSellersObject };
 
     datesArray.forEach((date) => {
-      date = addDays(date.setUTCHours(0, 0, 0, 0), 1);
       activeSellersObject[date.toISOString()] = 0;
       inactiveSellersObject[date.toISOString()] = 0;
     });
-    datesArray.shift();
 
     // Increments the count if the date are the same as the key
     activeSellers.forEach((seller) => {
