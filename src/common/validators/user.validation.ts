@@ -14,13 +14,13 @@ import { ITable } from './interface/table.interface';
 export class DoesExistConstraint implements ValidatorConstraintInterface {
   constructor(private readonly database: DatabaseService) {}
   async validate(value: any, args?: ValidationArguments): Promise<boolean> {
-    const { tableName, column }: ITable = args.constraints[0];
+    const { tableName, column, includeDeleted }: ITable = args.constraints[0];
 
     const doesExist = await(this.database[tableName] as any).findFirst({
       where: { [column]: value },
     });
 
-    if (!doesExist) {
+    if (!doesExist && !includeDeleted) {
       return false;
     }
 
