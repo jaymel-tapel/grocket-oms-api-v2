@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { LoginService } from '../../services/login.service';
+import { ClientEntity } from '@modules/clients/entities/client.entity';
 
 @Injectable()
 export class LocalClientStrategy extends PassportStrategy(Strategy, 'client') {
@@ -18,6 +19,6 @@ export class LocalClientStrategy extends PassportStrategy(Strategy, 'client') {
       });
     }
 
-    return client;
+    return new ClientEntity(client);
   }
 }

@@ -3,6 +3,7 @@ import { ValidateClientDto, ValidateUserDto } from '../dto/login-auth.dto';
 import { DatabaseService } from '@modules/database/services/database.service';
 import { HashService } from './hash.service';
 import { JwtService } from '@nestjs/jwt';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class LoginService {
@@ -30,6 +31,7 @@ export class LoginService {
   async validateClient(email: string, password: string): Promise<any> {
     const client = await this.database.client.findFirst({
       where: { email: { equals: email, mode: 'insensitive' } },
+      include: { clientInfo: true },
     });
 
     if (
@@ -51,11 +53,10 @@ export class LoginService {
   }
 
   async loginClient(credential: ValidateClientDto) {
-    console.log(credential);
-    delete credential.password;
+    let convertedCredential = instanceToPlain(credential);
     return {
-      ...credential,
-      access_token: this.jwt.sign(credential),
+      ...convertedCredential,
+      access_token: this.jwt.sign(convertedCredential),
     };
   }
 }
