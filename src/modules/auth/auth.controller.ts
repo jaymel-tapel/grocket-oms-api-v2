@@ -8,6 +8,7 @@ import { ResetDto } from './dto/reset-auth.dto';
 import { ResetService } from './services/reset.service';
 import { LocalGuard } from './guard/local.guard';
 import { LoginDto } from './dto/login-auth.dto';
+import { LocalClientGuard } from './guard/clients/local-client.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -24,6 +25,14 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   async login(@Req() req: any) {
     return await this.loginService.login(req.user);
+  }
+
+  @Post('login/client')
+  @UseGuards(LocalClientGuard)
+  @ApiOkResponse({ type: LoginEntity })
+  @ApiBody({ type: LoginDto })
+  async loginClient(@Req() req: any) {
+    return await this.loginService.loginClient(req.user);
   }
 
   @Post('forgot')
