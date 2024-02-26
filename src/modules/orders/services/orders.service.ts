@@ -297,12 +297,13 @@ export class OrdersService {
     filterOrderArgs: FilterOrderDto,
     offsetPageArgsDto: OffsetPageArgsDto,
   ) {
-    const { perPage } = offsetPageArgsDto;
+    const { perPage, page } = offsetPageArgsDto;
+
     const database = filterOrderArgs.showDeleted
       ? this.database
       : await this.database.softDelete();
 
-    const paginate = createPaginator({ perPage });
+    const paginate = createPaginator({ perPage, page });
 
     let findManyQuery: Prisma.OrderFindManyArgs = {};
 
@@ -315,8 +316,6 @@ export class OrdersService {
         this.database,
       );
     }
-
-    console.log(findManyQuery);
 
     const paginatedOrders = await paginate<
       OrderEntity,
