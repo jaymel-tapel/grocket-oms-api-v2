@@ -187,6 +187,11 @@ export class CSVService {
     return { message: 'Imported CSV Successfully!' };
   }
 
+  protected async getOrderIds() {
+    const orders = await this.database.order.findMany({});
+    return orders.map((order) => order.id);
+  }
+
   private async createManyUsers(data: UserEntity[]) {
     return await this.database.$transaction(async (tx) => {
       return await tx.user.createMany({ data });
@@ -281,31 +286,25 @@ export class CSVService {
   }
 
   private async createManyOrderLogs(data: any[]) {
-    // const batchSize = 3000;
+    const orders = await this.database.order.findMany({});
 
-    // for (let i = 0; i < data.length; i += batchSize) {
-    //   const currentBatch = data.slice(i, i + batchSize);
+    const orderIds = orders.map((order) => order.id);
 
-    //   await this.database.$transaction(async (tx) => {
-    //     return await tx.orderLog.createMany({ data: currentBatch });
-    //   });
-    // }
+    data = data.filter((log) => orderIds.includes(log.orderId));
 
-    for (const orderLog of data) {
-      try {
-        await this.database.$transaction(async (tx) => {
-          return await tx.orderLog.create({ data: orderLog });
-        });
-      } catch (error) {
-        console.error(`ERROR FOR ORDER LOG ID: ${orderLog.id}`, error.message);
-      }
+    const batchSize = 10000;
+
+    for (let i = 0; i < data.length; i += batchSize) {
+      const currentBatch = data.slice(i, i + batchSize);
+
+      await this.database.$transaction(async (tx) => {
+        return await tx.orderLog.createMany({ data: currentBatch });
+      });
     }
   }
 
   private async createManyOrderReviews(data: OrderReviewEntity[]) {
-    const orders = await this.database.order.findMany({});
-
-    const orderIds = orders.map((order) => order.id);
+    const orderIds = await this.getOrderIds();
 
     data = data
       .filter((review) => orderIds.includes(review.orderId))
@@ -317,29 +316,8 @@ export class CSVService {
   }
 
   private async createManyTasks(data: TaskEntity[]) {
-    /* const taskArr = [];
-    const uniqueOrderIds = Array.from(
-      new Set(data.map((task) => task.orderId)),
-    ).filter(Boolean);
+    const orderIds = await this.getOrderIds();
 
-    for (const orderId of uniqueOrderIds) {
-      const taskWithSameOrderId = data.filter(
-        (task) => task.orderId === orderId,
-      );
-
-      taskArr.push(taskWithSameOrderId);
-    }
-
-    const groupedTasks = _.groupBy(_.flatten(taskArr), 'orderId');
-
-    const taskWithSameOrderIds = _.pickBy(
-      groupedTasks,
-      (tasks) => tasks.length > 1,
-    ); */
-
-    const orders = await this.database.order.findMany({});
-
-    const orderIds = orders.map((order) => order.id);
     data = data.filter(
       (task) =>
         (task.orderId && orderIds.includes(task.orderId)) ||
