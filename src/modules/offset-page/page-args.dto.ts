@@ -5,7 +5,7 @@ export class OffsetPageArgsDto {
   @IsOptional()
   @IsNumber()
   @ApiPropertyOptional()
-  page?: number;
+  page?: number = 1;
 
   @IsOptional()
   @IsNumber()
