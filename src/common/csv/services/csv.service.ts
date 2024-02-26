@@ -457,13 +457,19 @@ export class CSVService {
 
       return roleMap[value];
     } else if (
-      (fieldName === 'status' &&
-        (table === 'user' || table === 'client' || table === 'company')) ||
-      (fieldName === 'is_archived' && table === 'order')
+      fieldName === 'status' &&
+      (table === 'user' || table === 'client' || table === 'company')
     ) {
       const statusMap = {
         '0': StatusEnum.DELETED,
         '1': StatusEnum.ACTIVE,
+      };
+
+      return statusMap[value];
+    } else if (fieldName === 'is_archived' && table === 'order') {
+      const statusMap = {
+        '1': StatusEnum.DELETED,
+        '0': StatusEnum.ACTIVE,
       };
 
       return statusMap[value];
