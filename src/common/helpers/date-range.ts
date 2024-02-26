@@ -63,8 +63,8 @@ export async function dateRange(
     }
   }
 
-  startDate.setUTCHours(0, 0, 0, 0);
-  endDate.setUTCHours(23, 59, 59, 999);
+  startDate?.setUTCHours(0, 0, 0, 0);
+  endDate?.setUTCHours(23, 59, 59, 999);
 
   return { startDate, endDate };
 }
