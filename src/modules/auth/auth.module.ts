@@ -6,9 +6,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategy';
 import { ForgotService } from './services/forgot.service';
 import { ResetService } from './services/reset.service';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { LocalStrategy } from './strategy/local.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { LocalClientStrategy } from './strategy/clients/local-client.strategy';
+import { JwtClientStrategy } from './strategy/clients/jwt-client.strategy';
 
 @Module({
   imports: [
@@ -25,6 +26,8 @@ import { PassportModule } from '@nestjs/passport';
     ResetService,
     JwtStrategy,
     LocalStrategy,
+    JwtClientStrategy,
+    LocalClientStrategy,
   ],
   exports: [LoginService, HashService, ForgotService, ResetService],
 })
