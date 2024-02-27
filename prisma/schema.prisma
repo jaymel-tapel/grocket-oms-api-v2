@@ -261,6 +261,7 @@ model ClientIndustry {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   clientInfo ClientInfo[]
+  prospects  Prospect[]
 }
 
 model Task {
@@ -363,4 +364,45 @@ model DailyRating {
   reviews          Int
   negative_reviews Int
   stars            Int[]
+}
+
+model Prospect {
+  id               Int              @id @default(autoincrement())
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  deletedAt        DateTime?
+  industryId       Int?
+  templateId       Int
+  name             String
+  email            String?
+  url              String?
+  phone            String?
+  note             String?
+  auto_send_email  Boolean          @default(false)
+  clientIndustry   ClientIndustry?  @relation(fields: [industryId], references: [id], onDelete: SetNull)
+  prospectTemplate ProspectTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  prospectLogs     ProspectLog[]
+}
+
+model ProspectTemplate {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+  name      String
+  subject   String
+  content   String?
+  prospects Prospect[]
+}
+
+model ProspectLog {
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  prospectId Int
+  prospect   Prospect  @relation(fields: [prospectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  template   String
+  by         String
+  action     String
 }
