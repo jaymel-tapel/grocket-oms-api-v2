@@ -1,7 +1,12 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { SellersReportService } from './services/sellers-report.service';
 import { JwtGuard } from '@modules/auth/guard';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SellerCountEntity } from './entity/seller-count.entity';
 import { ChartDetailEntity } from './entity/chart-detail.entity';
 import { SellersService } from './services/sellers.service';
