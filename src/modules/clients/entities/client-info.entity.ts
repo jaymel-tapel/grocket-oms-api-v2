@@ -52,6 +52,9 @@ export class ClientInfoEntity implements ClientInfo {
   @ApiProperty({ enum: $Enums.TierEnum })
   tier: $Enums.TierEnum;
 
+  @ApiProperty({ nullable: true, default: null })
+  profile_url: string;
+
   @ApiProperty()
   createdAt: Date;
 

@@ -1,11 +1,10 @@
-import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
 import { DatabaseService } from '@modules/database/services/database.service';
-import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
-import { PageEntity } from '@modules/page/page.entity';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { TaskAccountantEntity } from '../entities/task-accountant.entity';
+import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
+import { createPaginator } from 'prisma-pagination';
 
 @Injectable()
 export class TaskAccountantsService {
@@ -13,34 +12,25 @@ export class TaskAccountantsService {
 
   async paginate(
     authUser: UserEntity,
-    connectionArgs: ConnectionArgsDto,
+    offsetPageArgsDto: OffsetPageArgsDto,
     completed?: boolean,
   ) {
+    const { perPage } = offsetPageArgsDto;
     const database = await this.database.softDelete();
+    const paginate = createPaginator({ perPage });
+
     const findManyQuery = await this.findAllQuery(authUser, completed);
-    const page = await findManyCursorConnection(
-      async (args) => {
-        const { cursor, ...data } = args;
 
-        const findManyArgs: Prisma.TaskAccountantFindManyArgs = {
-          ...data,
-          ...(cursor ? { cursor: { id: parseInt(cursor.id, 10) } } : {}), // Convert id to number if cursor is defined
-          ...findManyQuery,
-        };
+    const paginatedTaskAccountants = await paginate<
+      TaskAccountantEntity,
+      Prisma.TaskAccountantFindManyArgs
+    >(database.taskAccountant, findManyQuery, offsetPageArgsDto);
 
-        return await this.findAllByCondition(findManyArgs);
-      },
-      () =>
-        database.taskAccountant.count({ where: { ...findManyQuery.where } }),
-      connectionArgs,
-      {
-        recordToEdge: (record) => ({
-          node: new TaskAccountantEntity(record),
-        }),
-      },
+    paginatedTaskAccountants.data = paginatedTaskAccountants.data.map(
+      (taskAccountant) => new TaskAccountantEntity(taskAccountant),
     );
 
-    return new PageEntity<TaskAccountantEntity>(page);
+    return paginatedTaskAccountants;
   }
 
   async findAllByCondition(args: Prisma.TaskAccountantFindManyArgs) {

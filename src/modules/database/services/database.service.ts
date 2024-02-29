@@ -3,7 +3,16 @@ import { PrismaClient } from '@prisma/client';
 import { createSoftDeleteExtension } from 'prisma-extension-soft-delete';
 
 @Injectable()
-export class DatabaseService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class DatabaseService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
+  // constructor() {
+  //   super({
+  //     log: ['query'],
+  //   });
+  // }
+
   async softDelete() {
     return this.$extends(
       createSoftDeleteExtension({
@@ -20,6 +29,9 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
           OrderLog: true,
           OrderReview: true,
           Brand: true,
+          Prospect: true,
+          ProspectTemplate: true,
+          ProspectLog: true,
         },
         defaultConfig: {
           field: 'deletedAt',

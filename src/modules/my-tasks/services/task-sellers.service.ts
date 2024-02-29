@@ -3,9 +3,8 @@ import { UserEntity } from '@modules/users/entities/user.entity';
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { TaskSellerEntity } from '../entities/task-seller.entity';
-import { PageEntity } from '@modules/page/page.entity';
-import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
-import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
+import { createPaginator } from 'prisma-pagination';
+import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 
 @Injectable()
 export class TaskSellersService {
@@ -13,33 +12,25 @@ export class TaskSellersService {
 
   async paginate(
     authUser: UserEntity,
-    connectionArgs: ConnectionArgsDto,
+    offsetPageArgsDto: OffsetPageArgsDto,
     completed?: boolean,
   ) {
+    const { perPage } = offsetPageArgsDto;
     const database = await this.database.softDelete();
+    const paginate = createPaginator({ perPage });
+
     const findManyQuery = await this.findAllQuery(authUser, completed);
-    const page = await findManyCursorConnection(
-      async (args) => {
-        const { cursor, ...data } = args;
 
-        const findManyArgs: Prisma.TaskSellerFindManyArgs = {
-          ...data,
-          ...(cursor ? { cursor: { id: parseInt(cursor.id, 10) } } : {}), // Convert id to number if cursor is defined
-          ...findManyQuery,
-        };
+    const paginatedTaskSellers = await paginate<
+      TaskSellerEntity,
+      Prisma.TaskSellerFindManyArgs
+    >(database.taskSeller, findManyQuery, offsetPageArgsDto);
 
-        return await this.findAllByCondition(findManyArgs);
-      },
-      () => database.taskSeller.count({ where: { ...findManyQuery.where } }),
-      connectionArgs,
-      {
-        recordToEdge: (record) => ({
-          node: new TaskSellerEntity(record),
-        }),
-      },
+    paginatedTaskSellers.data = paginatedTaskSellers.data.map(
+      (taskAccountant) => new TaskSellerEntity(taskAccountant),
     );
 
-    return new PageEntity<TaskSellerEntity>(page);
+    return paginatedTaskSellers;
   }
 
   async findAllByCondition(args: Prisma.TaskSellerFindManyArgs) {

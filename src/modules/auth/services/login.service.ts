@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { ValidateUserDto } from '../dto/login-auth.dto';
+import { ValidateClientDto, ValidateUserDto } from '../dto/login-auth.dto';
 import { DatabaseService } from '@modules/database/services/database.service';
 import { HashService } from './hash.service';
 import { JwtService } from '@nestjs/jwt';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class LoginService {
@@ -13,7 +14,9 @@ export class LoginService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.database.user.findFirst({ where: { email } });
+    const user = await this.database.user.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+    });
 
     if (
       user &&
@@ -21,6 +24,23 @@ export class LoginService {
     ) {
       return user;
     }
+
+    return null;
+  }
+
+  async validateClient(email: string, password: string): Promise<any> {
+    const client = await this.database.client.findFirst({
+      where: { email: { equals: email, mode: 'insensitive' } },
+      include: { clientInfo: true },
+    });
+
+    if (
+      client &&
+      (await this.hashService.comparePassword(password, client.password))
+    ) {
+      return client;
+    }
+
     return null;
   }
 
@@ -29,6 +49,14 @@ export class LoginService {
     return {
       ...credential,
       access_token: this.jwt.sign(credential),
+    };
+  }
+
+  async loginClient(credential: ValidateClientDto) {
+    let convertedCredential = instanceToPlain(credential);
+    return {
+      ...convertedCredential,
+      access_token: this.jwt.sign(convertedCredential),
     };
   }
 }

@@ -138,8 +138,8 @@ model Brand {
 
 model Client {
   id                   Int         @id @default(autoincrement())
-  name                 String
-  email                String
+  name                 String?
+  email                String?
   password             String
   forgot_password_code String?
   seller               User        @relation(fields: [sellerId], references: [id])
@@ -171,50 +171,53 @@ model ClientInfo {
   status            StatusEnum?     @default(ACTIVE)
   language          LanguageEnum?   @default(GERMAN)
   tier              TierEnum?       @default(FREE)
+  profile_url       String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   deletedAt         DateTime?
 }
 
 model Company {
-  id           Int       @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   clientId     Int
-  client       Client    @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  client       Client        @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   deletedAt    DateTime?
   name         String
   url          String
-  valid_url    Boolean   @default(false)
-  check_url    Boolean   @default(false)
-  latest_check Boolean   @default(false)
+  valid_url    Boolean       @default(false)
+  check_url    Boolean       @default(false)
+  latest_check Boolean       @default(false)
   orders       Order[]
+  ratings      Rating[]
+  dailyRatings DailyRating[]
 }
 
 model Order {
-  id                  Int                @id @default(autoincrement())
+  id                  Int                 @id @default(autoincrement())
   clientId            Int
   brandId             Int?
-  sellerId            Int                @default(1)
+  sellerId            Int                 @default(1)
   companyId           Int
-  client              Client             @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  seller              User               @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  company             Company            @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  brand               Brand?             @relation(fields: [brandId], references: [id])
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
+  client              Client              @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  seller              User                @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  company             Company             @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  brand               Brand?              @relation(fields: [brandId], references: [id])
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   deletedAt           DateTime?
-  order_date          DateTime?          @default(now())
-  createdBy           OrderCreatedByEnum
-  send_confirmation   Boolean?           @default(false)
-  unit_cost           Decimal            @default(0.00) @db.Money()
-  total_price         Decimal            @default(0.00) @db.Money()
+  order_date          DateTime?           @default(now())
+  createdBy           OrderCreatedByEnum?
+  send_confirmation   Boolean?            @default(false)
+  unit_cost           Decimal             @default(0.00) @db.Money()
+  total_price         Decimal             @default(0.00) @db.Money()
   remarks             String?
-  payment_status      PaymentStatusEnum? @default(NEW)
+  payment_status      PaymentStatusEnum?  @default(NEW)
   payment_status_date DateTime?
   date_paid           DateTime?
   invoice_image       String?
-  task                Task?
+  task                Task[]
   orderReviews        OrderReview[]
   orderLogs           OrderLog[]
   invoices            Invoice[]
@@ -258,13 +261,14 @@ model ClientIndustry {
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   clientInfo ClientInfo[]
+  prospects  Prospect[]
 }
 
 model Task {
   id             Int             @id @default(autoincrement())
   userId         Int
   clientId       Int?
-  orderId        Int?            @unique
+  orderId        Int?
   taskType       TaskTypeEnum?
   createdBy      CreatedByEnum?  @default(AUTO)
   user           User            @relation(fields: [userId], references: [id])
@@ -334,4 +338,72 @@ model Invoice {
   quantity     Int
   rate         Float
   amount       Decimal  @default(0.00) @db.Money()
+}
+
+model Rating {
+  id               Int      @id @default(autoincrement())
+  date             DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  companyId        Int
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  rating           Float
+  reviews          Int
+  negative_reviews Int
+  stars            Int[]
+}
+
+model DailyRating {
+  id               Int      @id @default(autoincrement())
+  date             DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  companyId        Int
+  company          Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  rating           Float
+  reviews          Int
+  negative_reviews Int
+  stars            Int[]
+}
+
+model Prospect {
+  id               Int              @id @default(autoincrement())
+  position         Int
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  deletedAt        DateTime?
+  industryId       Int?
+  templateId       Int
+  name             String
+  email            String?
+  url              String?
+  phone            String?
+  note             String?
+  auto_send_email  Boolean          @default(false)
+  clientIndustry   ClientIndustry?  @relation(fields: [industryId], references: [id], onDelete: SetNull)
+  prospectTemplate ProspectTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  prospectLogs     ProspectLog[]
+}
+
+model ProspectTemplate {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+  name      String
+  subject   String
+  content   String?
+  prospects Prospect[]
+}
+
+model ProspectLog {
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  prospectId Int
+  prospect   Prospect  @relation(fields: [prospectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  template   String
+  by         String
+  action     String
 }

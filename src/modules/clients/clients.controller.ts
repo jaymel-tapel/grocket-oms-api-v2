@@ -152,7 +152,7 @@ export class ClientsController {
   }
 
   @Post('transfer')
-  @ApiOkResponse({ type: ClientEntity })
+  @ApiOkResponse({ type: ClientEntity, isArray: true })
   async transferClients(@Body() transferClientsDto: TransferClientsDto) {
     const clients = await this.clientsService.transferClients(
       transferClientsDto,

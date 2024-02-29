@@ -2,7 +2,7 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { Injectable } from '@nestjs/common';
 import { OrderReportDateRangeDto } from '../dto/get-order-report.dto';
 import { OrderReviewStatus, PaymentStatusEnum, Prisma } from '@prisma/client';
-import { addDays, eachDayOfInterval, subDays } from 'date-fns';
+import { addDays, eachDayOfInterval, startOfDay, subDays } from 'date-fns';
 import { dateRange } from '@src/common/helpers/date-range';
 import * as _ from 'lodash';
 import { IOrderReport } from '../interfaces/order-report.interface';
@@ -24,19 +24,47 @@ export class OrderReportsService {
       },
     });
 
-    const datesArray = eachDayOfInterval({
-      start: baseReport.startRange,
-      end: baseReport.endRange,
-    });
+    // console.log(baseReport.startRange, baseReport.endRange);
+
+    // const utcStartDate = new Date(
+    //   baseReport.startRange.getUTCFullYear(),
+    //   baseReport.startRange.getUTCMonth(),
+    //   baseReport.startRange.getUTCDate(),
+    // );
+
+    // const utcEndDate = new Date(
+    //   baseReport.endRange.getUTCFullYear(),
+    //   baseReport.endRange.getUTCMonth(),
+    //   baseReport.endRange.getUTCDate(),
+    // );
+
+    // utcStartDate.setUTCHours(0, 0, 0, 0);
+    // utcEndDate.setUTCHours(23, 59, 59, 999);
+
+    // const datesArray = eachDayOfInterval({
+    //   start: utcStartDate,
+    //   end: utcEndDate,
+    // });
+
+    const datesArray: Date[] = [];
+    let tempStartDate: Date = baseReport.startRange;
+
+    while (tempStartDate <= baseReport.endRange) {
+      datesArray.push(tempStartDate);
+      tempStartDate = addDays(tempStartDate, 1);
+    }
+
+    console.log(datesArray);
 
     const ordersObj: { [key: string]: number } = {};
     const paidOrdersObj = { ...ordersObj };
 
     datesArray.forEach((date) => {
-      date = addDays(date.setUTCHours(0, 0, 0, 0), 1);
       ordersObj[date.toISOString()] = 0;
       paidOrdersObj[date.toISOString()] = 0;
     });
+
+    console.log(ordersObj);
 
     for (const order of foundOrders) {
       order.createdAt.setUTCHours(0, 0, 0, 0);
@@ -165,8 +193,8 @@ export class OrderReportsService {
 
     // ? Last 30 Days
     if (!startRange && !endRange) {
-      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
-      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date(), 30);
+      endRange = new Date();
     } else {
       const dateRangeHelper = await dateRange(
         { from: startRange, to: endRange },
@@ -176,6 +204,9 @@ export class OrderReportsService {
       startRange = dateRangeHelper.startDate;
       endRange = dateRangeHelper.endDate;
     }
+
+    startRange.setUTCHours(0, 0, 0, 0);
+    endRange.setUTCHours(23, 59, 59, 999);
 
     if (sellerId) {
       orderQuery = {
@@ -206,6 +237,9 @@ export class OrderReportsService {
       ? this.database
       : await this.database.softDelete();
 
+    // endRange = addDays(endRange, 1);
+
+    console.log(`In Find All Orders Query: `, startRange, endRange);
     return await database.order.findMany({
       ...orderQuery,
       where: {

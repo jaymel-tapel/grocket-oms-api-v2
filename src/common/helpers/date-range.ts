@@ -42,18 +42,19 @@ export async function dateRange(
         throw new Error(`Invalid table name: ${tableName}`);
     }
 
-    firstData = await (database[tableName] as any).findFirst({
+    firstData = await(database[tableName] as any).findFirst({
       where: whereClause,
       select: { createdAt: true },
       orderBy: { createdAt: 'asc' },
     });
 
     startDate = firstData?.createdAt ?? new Date();
-    endDate = new Date(to.setUTCHours(23, 59, 59, 999));
+    endDate = new Date(to);
   } else if (from || to) {
     startDate = new Date(from ?? null);
-    endDate = new Date(to?.setUTCHours(23, 59, 59, 999) ?? Date.now());
+    endDate = new Date(to ?? Date.now());
 
+    // console.log(startDate, endDate);
     if (startDate > endDate) {
       throw new HttpException(
         `Start Date (${startDate.toDateString()}) should not be greater than End Date (${endDate.toDateString()})`,
@@ -61,6 +62,9 @@ export async function dateRange(
       );
     }
   }
+
+  startDate?.setUTCHours(0, 0, 0, 0);
+  endDate?.setUTCHours(23, 59, 59, 999);
 
   return { startDate, endDate };
 }

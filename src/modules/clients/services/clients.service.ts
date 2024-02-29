@@ -168,13 +168,14 @@ export class ClientsService {
   }
 
   async update(id: number, updateClientDto: UpdateClientDto) {
-    const { name, email, ...clientInfoDto } = updateClientDto;
+    const { name, email, sellerId, ...clientInfoDto } = updateClientDto;
 
     const updatedClient = await this.database.client.update({
       where: { id },
       data: {
         name,
         email,
+        sellerId,
         clientInfo: {
           update: clientInfoDto,
         },
@@ -251,17 +252,23 @@ export class ClientsService {
 
     const clients = await Promise.all(
       ids.map(async (id) => {
-        const client = await this.findOne({ id });
+        let client = await this.findOne({ id });
 
         if (!client) {
           return null;
         }
 
-        // TODO: Update also their orders' sellerId
-
-        await this.database.client.update({
+        client = await this.database.client.update({
           where: { id },
-          data: { sellerId: seller.id },
+          data: {
+            sellerId: seller.id,
+            orders: {
+              updateMany: {
+                where: { clientId: id },
+                data: { sellerId: seller.id },
+              },
+            },
+          },
         });
 
         return client;

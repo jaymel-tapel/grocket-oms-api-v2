@@ -1,18 +1,18 @@
 import { DatabaseService } from '@modules/database/services/database.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { DateRangeDto } from '../dto/date-range.dto';
-import { eachDayOfInterval, subDays } from 'date-fns';
+import { DashboardDateRangeDto } from '../dto/date-range.dto';
+import { addDays, eachDayOfInterval, subDays } from 'date-fns';
 import { OrderReviewStatus, PaymentStatusEnum } from '@prisma/client';
 
 @Injectable()
 export class DashboardService {
   constructor(private readonly database: DatabaseService) {}
 
-  async admin(range?: DateRangeDto) {
+  async admin(range?: DashboardDateRangeDto) {
     if (Object.entries(range).length === 0) {
       return {
         ordersOverview: await this.getOrderPercentage(),
-        newclientCount: (await this.getActiveClients()).length,
+        newClientsCount: (await this.getActiveClients()).length,
         revenue: await this.getRevenue(),
         clientsOverview: await this.clientDashboardInfo(),
       };
@@ -26,13 +26,13 @@ export class DashboardService {
 
     return {
       ordersOverview: await this.getOrderPercentage(range),
-      newclientCount: (await this.getActiveClients(range)).length,
+      newClientsCount: (await this.getActiveClients(range)).length,
       revenue: await this.getRevenue(range),
       clientsOverview: await this.clientDashboardInfo(range),
     };
   }
 
-  async adminGraph(range?: DateRangeDto) {
+  async adminGraph(range?: DashboardDateRangeDto) {
     if (Object.entries(range).length === 0) {
       let endRange = new Date();
       let startRange = subDays(endRange, 30);
@@ -46,26 +46,29 @@ export class DashboardService {
       );
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
 
     const orders = await this.database.order.findMany({
       where: { createdAt: { gte: range.startRange, lte: range.endRange } },
       include: { orderReviews: true },
     });
 
-    const datesArray = eachDayOfInterval({
-      start: range.startRange,
-      end: range.endRange,
-    });
+    const datesArray: Date[] = [];
+    let tempStartDate: Date = range.startRange;
+
+    while (tempStartDate <= range.endRange) {
+      datesArray.push(tempStartDate);
+      tempStartDate = addDays(tempStartDate, 1);
+    }
+
     const paidReviewsObject: { [key: string]: number } = {};
+    const unpaidReviewsObject = { ...paidReviewsObject };
 
     datesArray.forEach((date) => {
-      date.setUTCHours(0, 0, 0, 0);
       paidReviewsObject[date.toISOString()] = 0;
+      unpaidReviewsObject[date.toISOString()] = 0;
     });
-
-    const unpaidReviewsObject = { ...paidReviewsObject };
 
     let receivedAmount: number = 0;
     let unpaidAmount: number = 0;
@@ -76,13 +79,13 @@ export class DashboardService {
 
           review.createdAt.setUTCHours(0, 0, 0, 0);
           const date = review.createdAt.toISOString();
-          paidReviewsObject[date]++;
+          if (date in paidReviewsObject) paidReviewsObject[date]++;
         } else {
           unpaidAmount += +order.unit_cost;
 
           review.createdAt.setUTCHours(0, 0, 0, 0);
           const date = review.createdAt.toISOString();
-          unpaidReviewsObject[date]++;
+          if (date in unpaidReviewsObject) unpaidReviewsObject[date]++;
         }
       });
     });
@@ -100,26 +103,114 @@ export class DashboardService {
     return { receivedAmount, unpaidAmount, paidReviews, unpaidReviews };
   }
 
-  private async getOrders(startRange: Date, endRange: Date) {
-    return await this.database.order.findMany({
-      where: {
-        createdAt: { gte: startRange, lte: endRange },
-      },
-    });
+  async seller(range?: DashboardDateRangeDto) {
+    if (Object.entries(range).length === 0) {
+      return {
+        newOrdersCount: (await this.getOrders()).length,
+        newClientsCount: (await this.getActiveClients()).length,
+        ...(await this.getCommission()),
+        ordersOverview: await this.getOrderInfo(),
+        clientsOverview: await this.clientDashboardInfo(),
+      };
+    }
+
+    if (!(range.startRange && range.endRange)) {
+      throw new BadRequestException(
+        'startRange and endRange should both be filled',
+      );
+    }
+
+    return {
+      newOrdersCount: (await this.getOrders(range)).length,
+      newClientsCount: (await this.getActiveClients(range)).length,
+      ...(await this.getCommission(range)),
+      ordersOverview: await this.getOrderInfo(range),
+      clientsOverview: await this.clientDashboardInfo(range),
+    };
   }
 
-  private async getOrderPercentage(range?: DateRangeDto) {
+  private async getOrders(range?: DashboardDateRangeDto) {
     if (!range) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
 
       range = { startRange, endRange };
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
-    const orders = await this.getOrders(range.startRange, range.endRange);
+    return await this.database.order.findMany({
+      where: {
+        createdAt: { gte: range.startRange, lte: range.endRange },
+      },
+    });
+  }
+
+  async sellerGraph(range?: DashboardDateRangeDto) {
+    if (Object.entries(range).length === 0) {
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+
+      range = { startRange, endRange };
+    }
+
+    if (!(range.startRange && range.endRange)) {
+      throw new BadRequestException(
+        'startRange and endRange should both be filled',
+      );
+    }
+
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+
+    const orders = await this.database.order.findMany({
+      where: {
+        createdAt: { gte: range.startRange, lte: range.endRange },
+        payment_status: PaymentStatusEnum.NEW,
+      },
+    });
+
+    const datesArray: Date[] = [];
+    let tempStartDate: Date = range.startRange;
+
+    while (tempStartDate <= range.endRange) {
+      datesArray.push(tempStartDate);
+      tempStartDate = addDays(tempStartDate, 1);
+    }
+
+    const newOrders: { [key: string]: number } = {};
+
+    datesArray.forEach((date) => {
+      newOrders[date.toISOString()] = 0;
+    });
+
+    orders.forEach((order) => {
+      order.order_date.setUTCHours(0, 0, 0, 0);
+      const date = order.order_date.toISOString();
+      if (date in newOrders) newOrders[date]++;
+    });
+
+    const newOrdersStat = Object.keys(newOrders).map((date) => ({
+      date: new Date(date),
+      paidReviewsCount: newOrders[date],
+    }));
+
+    return { newOrdersStat };
+  }
+
+  private async getOrderPercentage(range?: DashboardDateRangeDto) {
+    if (!range) {
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+
+      range = { startRange, endRange };
+    }
+
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+
+    const orders = await this.getOrders(range);
 
     const newOrders = orders.filter(
       (order) => order.payment_status === PaymentStatusEnum.NEW,
@@ -165,16 +256,19 @@ export class DashboardService {
     };
   }
 
-  private async getActiveClients(range?: DateRangeDto, getAll?: boolean) {
+  private async getActiveClients(
+    range?: DashboardDateRangeDto,
+    getAll?: boolean,
+  ) {
     if (!range) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
 
       range = { startRange, endRange };
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     return await this.database.client.findMany({
       where: {
@@ -191,7 +285,7 @@ export class DashboardService {
     });
   }
 
-  private async clientDashboardInfo(range?: DateRangeDto) {
+  private async clientDashboardInfo(range?: DashboardDateRangeDto) {
     const clients = await this.getActiveClients(range);
 
     const clientInfo = clients.map((client) => {
@@ -211,16 +305,16 @@ export class DashboardService {
     return clientInfo;
   }
 
-  private async getRevenue(range?: DateRangeDto) {
+  private async getRevenue(range?: DashboardDateRangeDto) {
     if (!range) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
 
       range = { startRange, endRange };
     }
 
-    range.startRange.setUTCHours(0, 0, 0, 0);
-    range.endRange.setUTCHours(23, 59, 59, 999);
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
       where: { createdAt: { gte: range.startRange, lte: range.endRange } },
@@ -237,5 +331,75 @@ export class DashboardService {
     });
 
     return revenue;
+  }
+
+  private async getOrderInfo(range?: DashboardDateRangeDto) {
+    if (!range) {
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+
+      range = { startRange, endRange };
+    }
+
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+
+    const orders = await this.database.order.findMany({
+      where: { createdAt: { gte: range.startRange, lte: range.endRange } },
+      include: { client: true, orderReviews: true },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+
+    const orderInfos = orders.map((order) => {
+      const date = order.createdAt;
+      const id = order.id;
+      const client = order.client.name;
+      const reviews = order.orderReviews.length;
+      const payment_status = order.payment_status;
+      const remarks = order.remarks;
+
+      let total: number = 0;
+      order.orderReviews.forEach((review) => {
+        if (review.status === OrderReviewStatus.GELOSCHT) {
+          total += +order.unit_cost;
+        }
+      });
+
+      return { date, id, client, total, reviews, payment_status, remarks };
+    });
+
+    return orderInfos;
+  }
+
+  private async getCommission(range?: DashboardDateRangeDto) {
+    if (!range) {
+      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+
+      range = { startRange, endRange };
+    }
+
+    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+
+    const orders = await this.database.order.findMany({
+      where: { createdAt: { gte: range.startRange, lte: range.endRange } },
+      include: { client: true, orderReviews: true },
+    });
+
+    let currentCommission: number = 0;
+    let unpaidCommission: number = 0;
+    orders.forEach((order) => {
+      order.orderReviews.forEach((review) => {
+        if (review.status === OrderReviewStatus.GELOSCHT) {
+          currentCommission += +order.unit_cost;
+        } else {
+          unpaidCommission += +order.unit_cost;
+        }
+      });
+    });
+
+    return { currentCommission, unpaidCommission };
   }
 }
