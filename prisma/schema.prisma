@@ -368,6 +368,7 @@ model DailyRating {
 
 model Prospect {
   id               Int              @id @default(autoincrement())
+  position         Int
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   deletedAt        DateTime?
