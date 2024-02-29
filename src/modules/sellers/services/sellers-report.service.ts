@@ -150,8 +150,4 @@ export class SellersReportService {
       orderBy: { createdAt: 'asc' },
     });
   }
-
-  private async sellerCount(code: string, startRange?: Date, endRange?: Date) {}
-
-  private async chartList(startRange?: Date, endRange?: Date) {}
 }
