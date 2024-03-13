@@ -366,20 +366,30 @@ model DailyRating {
   stars            Int[]
 }
 
+model ProspectSession {
+  id        Int        @id @default(autoincrement())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+  prospects Prospect[]
+}
+
 model Prospect {
   id               Int              @id @default(autoincrement())
   position         Int
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   deletedAt        DateTime?
+  sessionId        Int
   industryId       Int?
-  templateId       Int
+  templateId       Int              @default(1)
   name             String
-  email            String?
+  email            String[]
   url              String?
   phone            String?
   note             String?
   auto_send_email  Boolean          @default(false)
+  session          ProspectSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   clientIndustry   ClientIndustry?  @relation(fields: [industryId], references: [id], onDelete: SetNull)
   prospectTemplate ProspectTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
   prospectLogs     ProspectLog[]
