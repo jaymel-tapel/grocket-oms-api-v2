@@ -5,44 +5,47 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { Prisma } from '@prisma/client';
 import { ProspectLogsService } from './prospect-logs.service';
 import { UserEntity } from '@modules/users/entities/user.entity';
-import { ProspectSendMailService } from './prospect-send-email.service';
-import { ProspectEntity } from '../entities/prospect.entity';
 
 @Injectable()
 export class ProspectsService {
   constructor(
     private readonly database: DatabaseService,
     private readonly prospectLogsService: ProspectLogsService,
-    private readonly prospectSendMailService: ProspectSendMailService,
   ) {}
 
-  async create(createProspectDto: CreateProspectDto, authUser: UserEntity) {
-    const { templateId, industryId, ...data } = createProspectDto;
+  async create(createSessionDto: CreateProspectDto[], authUser: UserEntity) {
+    const templateId = 1;
+    let position = 1;
 
-    // * Increment other prospects' position by 1
-    await this.adjustPositions(templateId);
+    const newSessionMap = createSessionDto.map((session) => ({
+      ...session,
+      position: position++,
+    }));
 
-    data.position = 1;
+    // * Increment other prospects' positions by 1 based on the last position in the new session
+    await this.adjustPositions(templateId, position);
 
-    const newProspect = await this.database.$transaction(async (tx) => {
-      return await tx.prospect.create({
+    const newSession = await this.database.$transaction(async (tx) => {
+      return await tx.prospectSession.create({
         data: {
-          ...data,
-          ...(industryId && {
-            clientIndustry: { connect: { id: industryId } },
-          }),
-          position: data.position,
-          prospectTemplate: { connect: { id: templateId } },
+          prospects: {
+            create: newSessionMap,
+          },
         },
+        include: { prospects: true },
       });
     });
 
-    await this.prospectLogsService.createLog(newProspect.id, authUser, {
-      templateId,
-      action: 'prospect created',
-    });
+    await this.prospectLogsService.createLog(
+      newSession.prospects[0].id,
+      authUser,
+      {
+        templateId,
+        action: 'prospects created',
+      },
+    );
 
-    return newProspect;
+    return newSession;
   }
 
   async update(
@@ -50,8 +53,7 @@ export class ProspectsService {
     authUser: UserEntity,
     updateProspectDto: UpdateProspectDto,
   ) {
-    const { templateId, auto_send_email } = updateProspectDto;
-    let sentEmailMessage: string = null;
+    const { templateId } = updateProspectDto;
 
     if (templateId) {
       // * Increment other prospects' position by 1
@@ -73,35 +75,29 @@ export class ProspectsService {
       action,
     });
 
-    if (templateId && auto_send_email) {
-      sentEmailMessage = (
-        await this.prospectSendMailService.send(updatedProspect, authUser)
-      ).message;
-    }
-
-    return !sentEmailMessage
-      ? updatedProspect
-      : { message: sentEmailMessage, ...updatedProspect };
+    return updatedProspect;
   }
 
   // * Increment other prospects' position by 1
-  private async adjustPositions(templateId: number) {
+  private async adjustPositions(templateId: number, lastPosition?: number) {
     const prospectObjs = await this.database.prospect.findMany({
       where: { templateId },
       select: { id: true, position: true },
       orderBy: { position: 'asc' },
     });
 
-    let pos = 2;
+    if (prospectObjs.length > 0) {
+      let pos = lastPosition ?? 2;
 
-    return await Promise.all(
-      prospectObjs.map((existingProspect) =>
-        this.database.prospect.update({
-          where: { id: existingProspect.id },
-          data: { position: pos++ },
-        }),
-      ),
-    );
+      return await Promise.all(
+        prospectObjs.map((existingProspect) =>
+          this.database.prospect.update({
+            where: { id: existingProspect.id },
+            data: { position: pos++ },
+          }),
+        ),
+      );
+    }
   }
 
   async findAll(args?: Prisma.ProspectFindManyArgs) {
