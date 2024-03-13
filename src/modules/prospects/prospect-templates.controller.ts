@@ -4,13 +4,17 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   UseGuards,
 } from '@nestjs/common';
 import { ProspectTemplatesService } from './services/prospect-templates.service';
 import { CreateProspectTemplateDto } from './dto/create-template.dto';
-import { UpdateProspectsOrderByDto } from './dto/update-template.dto';
+import {
+  UpdateProspectTemplateDto,
+  UpdateProspectsOrderByDto,
+} from './dto/update-template.dto';
 import { JwtGuard } from '@modules/auth/guard';
 import {
   ApiBearerAuth,
@@ -31,14 +35,23 @@ export class ProspectTemplatesController {
 
   @Post()
   @ApiCreatedResponse({ type: ProspectTemplateEntity })
-  async createTemplate(@Body() createTemplateDto: CreateProspectTemplateDto) {
+  async create(@Body() createTemplateDto: CreateProspectTemplateDto) {
     return this.prospectTemplatesService.create(createTemplateDto);
   }
 
-  @Put(':id')
+  @Patch(':templateId')
+  @ApiOkResponse({ type: ProspectTemplateEntity })
+  async update(
+    @Param('templateId', ParseIntPipe) id: number,
+    @Body() updateProspectTemplateDto: UpdateProspectTemplateDto,
+  ) {
+    return this.prospectTemplatesService.update(id, updateProspectTemplateDto);
+  }
+
+  @Put('position/:templateId')
   @ApiOkResponse({ type: [ProspectTemplateEntity] })
   async updateProspectsPosition(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('templateId', ParseIntPipe) id: number,
     @Body() orderByDto: UpdateProspectsOrderByDto,
   ) {
     return this.prospectTemplatesService.updateProspectsPosition(
@@ -52,5 +65,13 @@ export class ProspectTemplatesController {
   async findAll() {
     const templates = await this.prospectTemplatesService.findAll();
     return templates.map((temp) => new ProspectTemplateEntity(temp));
+  }
+
+  @Get(':templateId')
+  @ApiOkResponse({ type: ProspectTemplateEntity })
+  async findOne(@Param('templateId', ParseIntPipe) id: number) {
+    return new ProspectTemplateEntity(
+      await this.prospectTemplatesService.findUnique(id),
+    );
   }
 }

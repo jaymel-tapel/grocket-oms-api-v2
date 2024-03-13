@@ -1,8 +1,7 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { CreateProspectTemplateDto } from './create-template.dto';
-import { IsArray, IsNumber, IsOptional } from 'class-validator';
+import { IsArray, IsNumber } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { DoesExist } from '@src/common/validators/user.validation';
 
 export class UpdateProspectTemplateDto extends PartialType(
   CreateProspectTemplateDto,
