@@ -23,6 +23,9 @@ export class ProspectEntity implements Prospect {
   @ApiProperty({ nullable: true, default: null })
   deletedAt: Date;
 
+  @ApiProperty()
+  sessionId: number;
+
   @ApiProperty({ nullable: true, default: null })
   industryId: number;
 
@@ -33,7 +36,7 @@ export class ProspectEntity implements Prospect {
   name: string;
 
   @ApiProperty({ nullable: true })
-  email: string;
+  email: string[];
 
   @ApiProperty({ nullable: true })
   url: string;

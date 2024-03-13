@@ -25,6 +25,7 @@ import { ProspectEntity } from './entities/prospect.entity';
 import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { SendManualEmailProspectDto } from './dto/send-email-prospect.dto';
+import { ProspectSessionEntity } from './entities/prospect-session.entity';
 
 @UseGuards(JwtGuard)
 @Controller('prospects')
@@ -38,12 +39,14 @@ export class ProspectsController {
   ) {}
 
   @Post()
-  @ApiCreatedResponse({ type: ProspectEntity })
+  @ApiCreatedResponse({ type: ProspectSessionEntity })
   async create(
     @AuthUser() user: UserEntity,
-    @Body() createProspectDto: CreateProspectDto,
+    @Body() createProspectSessionDto: CreateProspectDto[],
   ) {
-    return this.prospectsService.create(createProspectDto, user);
+    return new ProspectSessionEntity(
+      await this.prospectsService.create(createProspectSessionDto, user),
+    );
   }
 
   @Patch(':id')
@@ -55,13 +58,6 @@ export class ProspectsController {
   ) {
     return this.prospectsService.update(id, user, updateProspectDto);
   }
-
-  // @Get()
-  // @ApiOkResponse({ type: [ProspectEntity] })
-  // async findAll() {
-  //   const prospects = await this.prospectsService.findAll();
-  //   return prospects.map((pros) => new ProspectEntity(pros));
-  // }
 
   @Get('send-email/:id')
   async sendEmail(
