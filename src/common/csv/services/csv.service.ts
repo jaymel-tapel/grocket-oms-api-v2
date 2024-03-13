@@ -260,7 +260,7 @@ export class CSVService {
         delete data.status;
         return data;
       })
-      .filter((data) => data.clientId !== 0);
+      .filter((data) => data.clientId !== 0 && data.name && data.url);
 
     return await this.database.$transaction(async (tx) => {
       return await tx.company.createMany({ data });
@@ -270,25 +270,22 @@ export class CSVService {
   private async createManyOrders(csvData: any[]) {
     const companies = await this.database.company.findMany();
     const companyIds = companies.map((company) => company.id);
+    const sellers = await this.database.user.findMany();
+    const sellerIds = sellers.map((seller) => seller.id);
 
-    const data: Order[] = csvData.filter((data) =>
-      companyIds.includes(data.companyId),
+    const data: Order[] = csvData.filter(
+      (data) =>
+        companyIds.includes(data.companyId) &&
+        sellerIds.includes(data.sellerId),
     );
 
-    for (const order of data) {
-      try {
-        await this.database.order.create({ data: order });
-      } catch (error) {
-        console.error(`Error for Order ID: ${order.id}: ${error}`);
-        continue;
-      }
-    }
+    return await this.database.$transaction(async (tx) => {
+      return await tx.order.createMany({ data });
+    });
   }
 
   private async createManyOrderLogs(data: any[]) {
-    const orders = await this.database.order.findMany({});
-
-    const orderIds = orders.map((order) => order.id);
+    const orderIds = await this.getOrderIds();
 
     data = data.filter((log) => orderIds.includes(log.orderId));
 
