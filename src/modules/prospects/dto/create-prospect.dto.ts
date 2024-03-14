@@ -7,6 +7,10 @@ import { DoesExist } from '@src/common/validators/user.validation';
 import { IsArray, IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class CreateProspectDto {
+  constructor(data?: Partial<CreateProspectDto>) {
+    Object.assign(this, data);
+  }
+
   @IsString()
   @ApiProperty()
   name: string;
