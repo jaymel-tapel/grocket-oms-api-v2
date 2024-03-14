@@ -25,6 +25,21 @@ export class ProspectSessionEntity implements ProspectSession {
   @ApiProperty({ nullable: true })
   deletedAt: Date | null;
 
+  @ApiProperty()
+  keyword: string;
+
+  @ApiProperty()
+  location: string;
+
+  @ApiProperty()
+  limit: number;
+
+  @ApiProperty()
+  count: number;
+
+  @ApiProperty()
+  hasWebsites: boolean;
+
   @ApiProperty({ type: [ProspectEntity] })
   prospects?: ProspectEntity[];
 }

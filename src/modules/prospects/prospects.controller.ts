@@ -26,6 +26,7 @@ import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { SendManualEmailProspectDto } from './dto/send-email-prospect.dto';
 import { ProspectSessionEntity } from './entities/prospect-session.entity';
+import { CreateProspectSession } from './dto/create-prospect-session.dto';
 
 @UseGuards(JwtGuard)
 @Controller('prospects')
@@ -42,7 +43,7 @@ export class ProspectsController {
   @ApiCreatedResponse({ type: ProspectSessionEntity })
   async create(
     @AuthUser() user: UserEntity,
-    @Body() createProspectSessionDto: CreateProspectDto[],
+    @Body() createProspectSessionDto: CreateProspectSession,
   ) {
     return new ProspectSessionEntity(
       await this.prospectsService.create(createProspectSessionDto, user),

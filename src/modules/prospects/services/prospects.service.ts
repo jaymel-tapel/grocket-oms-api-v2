@@ -5,6 +5,7 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { Prisma } from '@prisma/client';
 import { ProspectLogsService } from './prospect-logs.service';
 import { UserEntity } from '@modules/users/entities/user.entity';
+import { CreateProspectSession } from '../dto/create-prospect-session.dto';
 
 @Injectable()
 export class ProspectsService {
@@ -13,11 +14,16 @@ export class ProspectsService {
     private readonly prospectLogsService: ProspectLogsService,
   ) {}
 
-  async create(createSessionDto: CreateProspectDto[], authUser: UserEntity) {
+  async create(
+    createProspectSessionDto: CreateProspectSession,
+    authUser: UserEntity,
+  ) {
+    const { prospects, ...data } = createProspectSessionDto;
+
     const templateId = 1;
     let position = 1;
 
-    const newSessionMap = createSessionDto.map((session) => ({
+    const newProspectsMap = prospects.map((session) => ({
       ...session,
       position: position++,
     }));
@@ -28,8 +34,9 @@ export class ProspectsService {
     const newSession = await this.database.$transaction(async (tx) => {
       return await tx.prospectSession.create({
         data: {
+          ...data,
           prospects: {
-            create: newSessionMap,
+            create: newProspectsMap,
           },
         },
         include: { prospects: true },
