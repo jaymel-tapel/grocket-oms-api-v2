@@ -367,11 +367,16 @@ model DailyRating {
 }
 
 model ProspectSession {
-  id        Int        @id @default(autoincrement())
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  deletedAt DateTime?
-  prospects Prospect[]
+  id          Int        @id @default(autoincrement())
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+  keyword     String
+  location    String
+  limit       Int
+  count       Int
+  hasWebsites Boolean
+  prospects   Prospect[]
 }
 
 model Prospect {
