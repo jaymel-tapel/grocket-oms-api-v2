@@ -32,6 +32,7 @@ export class DatabaseService
           Prospect: true,
           ProspectTemplate: true,
           ProspectLog: true,
+          ProspectSession: true,
         },
         defaultConfig: {
           field: 'deletedAt',
