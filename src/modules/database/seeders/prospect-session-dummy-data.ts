@@ -28,13 +28,13 @@ export class ProspectsDummyDataCommand extends CommandRunner {
       }),
     );
 
-    await this.database.prospectSession.create({
-      data: {
-        prospects: {
-          create: dummyData,
-        },
-      },
-    });
+    // await this.database.prospectSession.create({
+    //   data: {
+    //     prospects: {
+    //       create: dummyData,
+    //     },
+    //   },
+    // });
 
     console.log(`SUCCESS!`);
   }
