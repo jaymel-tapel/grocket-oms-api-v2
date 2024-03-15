@@ -7,7 +7,7 @@ import { ProspectSessionEntity } from './entities/prospect-session.entity';
 
 @UseGuards(JwtGuard)
 @Controller('session')
-@ApiTags('session')
+@ApiTags('prospect session')
 @ApiBearerAuth()
 export class ProspectSessionController {
   constructor(
