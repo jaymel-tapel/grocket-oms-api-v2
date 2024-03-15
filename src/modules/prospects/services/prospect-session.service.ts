@@ -61,7 +61,7 @@ export class ProspectSessionService {
   }
 
   async findOne(
-    args?: Prisma.ProspectSessionFindFirstArgs,
+    args: Prisma.ProspectSessionFindFirstArgs,
     opts?: IPrismaOptionsQuery,
   ) {
     const database = opts?.withTrashed
