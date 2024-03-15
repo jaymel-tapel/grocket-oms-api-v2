@@ -27,6 +27,7 @@ import { UserEntity } from '@modules/users/entities/user.entity';
 import { SendManualEmailProspectDto } from './dto/send-email-prospect.dto';
 import { ProspectSessionEntity } from './entities/prospect-session.entity';
 import { CreateProspectSession } from './dto/create-prospect-session.dto';
+import { ProspectSessionService } from './services/prospect-session.service';
 
 @UseGuards(JwtGuard)
 @Controller('prospects')
@@ -35,6 +36,7 @@ import { CreateProspectSession } from './dto/create-prospect-session.dto';
 export class ProspectsController {
   constructor(
     private readonly prospectsService: ProspectsService,
+    private readonly prospectSessionService: ProspectSessionService,
     private readonly prospectTemplatesService: ProspectTemplatesService,
     private readonly prospectSendMailService: ProspectSendMailService,
   ) {}
@@ -46,7 +48,7 @@ export class ProspectsController {
     @Body() createProspectSessionDto: CreateProspectSession,
   ) {
     return new ProspectSessionEntity(
-      await this.prospectsService.create(createProspectSessionDto, user),
+      await this.prospectSessionService.create(createProspectSessionDto, user),
     );
   }
 

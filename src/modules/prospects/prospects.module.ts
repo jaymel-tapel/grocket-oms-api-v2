@@ -5,6 +5,7 @@ import { ProspectTemplatesService } from './services/prospect-templates.service'
 import { ProspectSendMailService } from './services/prospect-send-email.service';
 import { ProspectLogsService } from './services/prospect-logs.service';
 import { ProspectTemplatesController } from './prospect-templates.controller';
+import { ProspectSessionService } from './services/prospect-session.service';
 
 @Module({
   controllers: [ProspectsController, ProspectTemplatesController],
@@ -13,11 +14,13 @@ import { ProspectTemplatesController } from './prospect-templates.controller';
     ProspectTemplatesService,
     ProspectSendMailService,
     ProspectLogsService,
+    ProspectSessionService,
   ],
   exports: [
     ProspectsService,
     ProspectTemplatesService,
     ProspectSendMailService,
+    ProspectSessionService,
   ],
 })
 export class ProspectsModule {}
