@@ -34,5 +34,5 @@ export class CreateProspectSession {
 
     return [];
   })
-  prospects?: CreateProspectDto[];
+  prospects: CreateProspectDto[];
 }
