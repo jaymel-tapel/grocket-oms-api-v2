@@ -1,4 +1,7 @@
 export interface IPrismaOptionsQuery {
-  latest?: boolean;
   withTrashed?: boolean;
+}
+
+export interface IPrismaOptionsManyQuery extends IPrismaOptionsQuery {
+  latest?: boolean;
 }
