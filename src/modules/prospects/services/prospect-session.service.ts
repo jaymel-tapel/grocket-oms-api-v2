@@ -5,6 +5,8 @@ import { CreateProspectSession } from '../dto/create-prospect-session.dto';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { ProspectSessionEntity } from '../entities/prospect-session.entity';
 import { ProspectLogsService } from './prospect-logs.service';
+import { Prisma } from '@prisma/client';
+import { IPrismaOptionsQuery } from '@src/common/interfaces/prisma-query.interface';
 
 @Injectable()
 export class ProspectSessionService {
@@ -53,5 +55,22 @@ export class ProspectSessionService {
     );
 
     return newSession;
+  }
+
+  async findOne(
+    args?: Prisma.ProspectSessionFindFirstArgs,
+    opts?: IPrismaOptionsQuery,
+  ) {
+    const database = opts?.withTrashed
+      ? this.database
+      : await this.database.softDelete();
+
+    return await database.prospectSession.findFirst({
+      ...args,
+      orderBy: {
+        ...(opts?.latest && { createdAt: 'desc' }),
+        ...args?.orderBy,
+      },
+    });
   }
 }
