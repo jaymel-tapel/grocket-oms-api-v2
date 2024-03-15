@@ -391,6 +391,7 @@ model Prospect {
   name             String
   email            String[]
   url              String?
+  mapsUrl          String?
   phone            String?
   note             String?
   auto_send_email  Boolean          @default(false)

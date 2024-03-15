@@ -45,6 +45,9 @@ export class ProspectEntity implements Prospect {
   phone: string;
 
   @ApiProperty({ nullable: true })
+  mapsUrl: string;
+
+  @ApiProperty({ nullable: true })
   note: string;
 
   @ApiProperty({ default: false })
