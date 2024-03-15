@@ -16,7 +16,7 @@ import {
 } from './dto/filter-session.dto';
 
 @UseGuards(JwtGuard)
-@Controller('session')
+@Controller('sessions')
 @ApiTags('prospect session')
 @ApiBearerAuth()
 export class ProspectSessionController {
