@@ -4,6 +4,7 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { Prisma } from '@prisma/client';
 import { ProspectLogsService } from './prospect-logs.service';
 import { UserEntity } from '@modules/users/entities/user.entity';
+import { FilterProspectDto } from '../dto/filter-prospect.dto';
 
 @Injectable()
 export class ProspectsService {
@@ -64,10 +65,18 @@ export class ProspectsService {
     }
   }
 
-  async findAll(args?: Prisma.ProspectFindManyArgs) {
+  async findAll(
+    filterProspects?: FilterProspectDto,
+    args?: Prisma.ProspectFindManyArgs,
+  ) {
+    const { sessionId } = filterProspects;
     const database = await this.database.softDelete();
     return await database.prospect.findMany({
       ...args,
+      where: {
+        ...(sessionId && { sessionId }),
+        ...args?.where,
+      },
       orderBy: { position: 'asc' },
     });
   }

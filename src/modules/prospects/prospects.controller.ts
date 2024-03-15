@@ -8,22 +8,19 @@ import {
   Delete,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ProspectsService } from './services/prospects.service';
 import { UpdateProspectDto } from './dto/update-prospect.dto';
 import { JwtGuard } from '@modules/auth/guard';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ProspectTemplatesService } from './services/prospect-templates.service';
 import { ProspectSendMailService } from './services/prospect-send-email.service';
 import { ProspectEntity } from './entities/prospect.entity';
 import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { SendManualEmailProspectDto } from './dto/send-email-prospect.dto';
+import { FilterProspectDto } from './dto/filter-prospect.dto';
 
 @UseGuards(JwtGuard)
 @Controller('prospects')
@@ -44,6 +41,12 @@ export class ProspectsController {
     @Body() updateProspectDto: UpdateProspectDto,
   ) {
     return this.prospectsService.update(id, user, updateProspectDto);
+  }
+
+  @Get()
+  @ApiOkResponse({ type: [ProspectEntity] })
+  async findAll(@Query() filterProspects: FilterProspectDto) {
+    return this.prospectsService.findAll(filterProspects);
   }
 
   @Get('send-email/:id')
