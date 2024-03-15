@@ -1,9 +1,19 @@
 import { JwtGuard } from '@modules/auth/guard';
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ProspectSessionService } from './services/prospect-session.service';
-import { FilterSessionDto } from './dto/filter-session.dto';
 import { ProspectSessionEntity } from './entities/prospect-session.entity';
+import {
+  FilterSessionManyOptions,
+  FilterSessionOptions,
+} from './dto/filter-session.dto';
 
 @UseGuards(JwtGuard)
 @Controller('session')
@@ -14,13 +24,31 @@ export class ProspectSessionController {
     private readonly prospectSessionService: ProspectSessionService,
   ) {}
 
-  @Get()
+  @Get(':id')
   @ApiOkResponse({ type: ProspectSessionEntity })
-  async findOne(@Query() filterArgs: FilterSessionDto) {
-    const session = await this.prospectSessionService.findOne({
-      where: { id: filterArgs.id },
-      include: { prospects: true },
-    });
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Query() filterOpts: FilterSessionOptions,
+  ) {
+    const session = await this.prospectSessionService.findOne(
+      {
+        where: { id },
+        include: { prospects: true },
+      },
+      filterOpts,
+    );
     return new ProspectSessionEntity(session);
+  }
+
+  @Get()
+  @ApiOkResponse({ type: [ProspectSessionEntity] })
+  async findMany(@Query() filterOpts: FilterSessionManyOptions) {
+    const sessions = await this.prospectSessionService.findMany(
+      {
+        include: { prospects: true },
+      },
+      filterOpts,
+    );
+    return sessions.map((session) => new ProspectSessionEntity(session));
   }
 }

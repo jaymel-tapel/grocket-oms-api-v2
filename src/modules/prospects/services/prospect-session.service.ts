@@ -6,7 +6,10 @@ import { UserEntity } from '@modules/users/entities/user.entity';
 import { ProspectSessionEntity } from '../entities/prospect-session.entity';
 import { ProspectLogsService } from './prospect-logs.service';
 import { Prisma } from '@prisma/client';
-import { IPrismaOptionsQuery } from '@src/common/interfaces/prisma-query.interface';
+import {
+  IPrismaOptionsManyQuery,
+  IPrismaOptionsQuery,
+} from '@src/common/interfaces/prisma-query.interface';
 
 @Injectable()
 export class ProspectSessionService {
@@ -65,7 +68,18 @@ export class ProspectSessionService {
       ? this.database
       : await this.database.softDelete();
 
-    return await database.prospectSession.findFirst({
+    return await database.prospectSession.findFirst(args);
+  }
+
+  async findMany(
+    args?: Prisma.ProspectSessionFindManyArgs,
+    opts?: IPrismaOptionsManyQuery,
+  ) {
+    const database = opts?.withTrashed
+      ? this.database
+      : await this.database.softDelete();
+
+    return await database.prospectSession.findMany({
       ...args,
       orderBy: {
         ...(opts?.latest && { createdAt: 'desc' }),
