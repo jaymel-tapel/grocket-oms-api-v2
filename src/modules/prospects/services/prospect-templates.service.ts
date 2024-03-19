@@ -8,7 +8,6 @@ import {
 import { Prisma } from '@prisma/client';
 import { ProspectTemplateEntity } from '../entities/prospect-template.entity';
 import { ProspectEntity } from '../entities/prospect.entity';
-import { merge } from 'lodash';
 
 @Injectable()
 export class ProspectTemplatesService {
@@ -50,6 +49,10 @@ export class ProspectTemplatesService {
         ),
     );
 
+    const prospectsOriginalList = await this.database.prospect.findMany({
+      where: { templateId },
+    });
+
     // ? Checked for overlooked old prospects to the new array
     for (const template of templatesEntity) {
       template.prospects.map((oldProspect) => {
@@ -62,27 +65,43 @@ export class ProspectTemplatesService {
       });
     }
 
-    let pos = 1;
+    const updateQuery = prospectsInDto
+      .map((newProspect, i) => {
+        const foundOrig = prospectsOriginalList.find(
+          (orig) => orig.id === newProspect.id,
+        );
 
-    // TODO: Update All Position for each Templates whenever transferring a prospect to a new template
+        // ? New Element Found
+        if (!foundOrig) {
+          const newPosition = i + 1;
 
-    const updateQuery = prospectsInDto.map((prospect) => {
-      let result: Prisma.ProspectUpdateArgs = {
-        where: { id: prospect.id },
-        data: { position: pos++ },
-      };
+          const result: Prisma.ProspectUpdateArgs = {
+            where: { id: newProspect.id },
+            data: {
+              position: newPosition,
+              prospectTemplate: { connect: { id: templateId } },
+            },
+          };
+          return result;
+        } else {
+          const newPosition =
+            prospectsInDto.findIndex((newPros) => newPros.id === foundOrig.id) +
+            1;
 
-      if (prospect.templateId !== templateId) {
-        result = {
-          ...result,
-          data: merge(result.data, {
-            prospectTemplate: { connect: { id: templateId } },
-          }),
-        };
-      }
-
-      return result;
-    });
+          if (
+            newPosition !== foundOrig.position &&
+            newProspect.position === foundOrig.position
+          ) {
+            return {
+              where: { id: foundOrig.id },
+              data: {
+                position: newPosition,
+              },
+            };
+          }
+        }
+      })
+      .filter(Boolean);
 
     await Promise.all(
       updateQuery.map((query) => this.database.prospect.update(query)),
