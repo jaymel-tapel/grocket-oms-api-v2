@@ -72,6 +72,6 @@ export class ScraperService {
       emails: responseData.emails,
     });
 
-    return prospect.emails;
+    return { emails: prospect.emails };
   }
 }
