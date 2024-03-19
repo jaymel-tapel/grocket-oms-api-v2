@@ -69,9 +69,9 @@ export class ScraperService {
     const responseData: ScraperEmailEntity = response.data;
 
     const prospect = await this.prospectsService.update(id, {
-      email: responseData.emails,
+      emails: responseData.emails,
     });
 
-    return prospect.email;
+    return prospect.emails;
   }
 }

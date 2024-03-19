@@ -389,7 +389,7 @@ model Prospect {
   industryId       Int?
   templateId       Int                @default(1)
   name             String
-  email            String[]
+  emails           String[]
   url              String?
   mapsUrl          String?
   phone            String?
