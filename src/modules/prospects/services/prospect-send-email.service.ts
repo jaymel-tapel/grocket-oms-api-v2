@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { ProspectEntity } from '../entities/prospect.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { compile } from 'handlebars';
@@ -19,19 +19,40 @@ export class ProspectSendMailService {
     const compiledTemplate = compile(template.content);
     const dynamicContent = compiledTemplate({ ...prospect });
 
-    await this.mailerService.sendMail({
-      to: prospect.emails,
-      subject: template.subject,
-      template: 'prospect-email-template',
-      context: { dynamicContent },
-    });
+    const emails = prospect.emails;
+    let ctr = 0;
 
-    await this.prospectLogsService.createLog(prospect.id, authUser, {
-      templateId: template.id,
-      action: `${template.name} template`,
-    });
+    if (emails?.length === 0) {
+      throw new HttpException(`No recipients defined`, 400);
+    }
 
-    return { message: `Email sent successfully!` };
+    for (const recipient of emails) {
+      try {
+        await this.mailerService.sendMail({
+          to: recipient,
+          subject: template.subject,
+          template: 'prospect-email-template',
+          context: { dynamicContent },
+        });
+
+        await this.prospectLogsService.createLog(prospect.id, authUser, {
+          templateId: template.id,
+          action: `${template.name} template`,
+        });
+      } catch (error) {
+        ctr++;
+        await this.prospectLogsService.createLog(prospect.id, authUser, {
+          templateId: template.id,
+          action: `Failed to send email`,
+        });
+        continue;
+      }
+    }
+
+    return {
+      message: `Email sent successfully!`,
+      errors_count: ctr,
+    };
   }
 
   async manualSend(
