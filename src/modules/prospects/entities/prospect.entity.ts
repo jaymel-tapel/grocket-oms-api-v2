@@ -11,7 +11,7 @@ export class ProspectEntity implements Prospect {
       this.prospectTemplate = data.prospectTemplate;
     }
 
-    if (data.reviewers.length > 0) {
+    if (data.reviewers?.length > 0) {
       this.reviewers = data.reviewers.map(
         (rev) => new ProspectReviewerEntity(rev),
       );
@@ -43,7 +43,7 @@ export class ProspectEntity implements Prospect {
   name: string;
 
   @ApiProperty({ nullable: true })
-  email: string[];
+  emails: string[];
 
   @ApiProperty({ nullable: true })
   url: string;

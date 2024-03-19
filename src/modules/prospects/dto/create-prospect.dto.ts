@@ -19,7 +19,7 @@ export class CreateProspectDto {
   @IsArray()
   @IsEmail({}, { each: true })
   @ApiPropertyOptional()
-  email?: string[];
+  emails?: string[];
 
   @IsOptional()
   @IsUrl()
