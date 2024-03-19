@@ -40,7 +40,7 @@ export class ProspectsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProspectDto: UpdateProspectDto,
   ) {
-    return this.prospectsService.update(id, user, updateProspectDto);
+    return this.prospectsService.update(id, updateProspectDto, user);
   }
 
   @Get()
