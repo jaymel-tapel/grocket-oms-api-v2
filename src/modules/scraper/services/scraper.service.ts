@@ -11,6 +11,7 @@ import { ScrapeWebsiteDto } from '../dto/scraper-website.dto';
 import { ScraperWebsiteEntity } from '../entities/scraper-website.entity';
 import { ScrapeEmailDto } from '../dto/scraper-email.dto';
 import { ScraperEmailEntity } from '../entities/scraper-email.entity';
+import { ProspectSessionEntity } from '@modules/prospects/entities/prospect-session.entity';
 
 @Injectable()
 export class ScraperService {
@@ -27,23 +28,55 @@ export class ScraperService {
 
     const data: ScraperSearchEntity = response.data;
 
+    const session = new ProspectSessionEntity(
+      await this.prospectSessionService.findOne({
+        where: {
+          keyword: { equals: data.message, mode: 'insensitive' },
+          location: { equals: scraperSearchDto.location, mode: 'insensitive' },
+        },
+        include: { prospects: true },
+      }),
+    );
+
     const prospects: CreateProspectDto[] = data.results.map((result) => ({
       name: result.businessName,
       mapsUrl: result.mapsUrl,
       url: result.website,
     }));
 
-    const createSession: CreateProspectSession = {
-      keyword: data.message,
-      location: scraperSearchDto.location,
-      limit: scraperSearchDto.limit,
-      count: data.count,
-      hasWebsites: data.hasWebSites,
-      prospects,
-    };
+    // * Create a new Session
+    if (!session) {
+      const createSession: CreateProspectSession = {
+        keyword: data.message,
+        location: scraperSearchDto.location,
+        limit: scraperSearchDto.limit,
+        count: data.count,
+        hasWebsites: data.hasWebSites,
+        prospects,
+      };
 
-    // ? Save it to the database
-    return await this.prospectSessionService.create(createSession, authUser);
+      // ? Save it to the database
+      return await this.prospectSessionService.create(createSession, authUser);
+    } else {
+      // * Insert prospects in Session that doesn't yet exist
+      // ? Filter out all the existing prospects and get only the non existing prospects in Session
+      const newProspects = prospects.filter(
+        (newPros) =>
+          !session.prospects.find(
+            (existingPros) =>
+              existingPros.name.toLowerCase() === newPros.name.toLowerCase(),
+          ),
+      );
+
+      return await this.prospectSessionService.update(
+        session.id,
+        {
+          count: newProspects.length + session.count,
+          prospects: newProspects,
+        },
+        authUser,
+      );
+    }
   }
 
   async getWebsite(id: number, { url }: ScrapeWebsiteDto) {
