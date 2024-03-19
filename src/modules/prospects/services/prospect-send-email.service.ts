@@ -20,7 +20,7 @@ export class ProspectSendMailService {
     const dynamicContent = compiledTemplate({ ...prospect });
 
     await this.mailerService.sendMail({
-      to: prospect.email,
+      to: prospect.emails,
       subject: template.subject,
       template: 'prospect-email-template',
       context: { dynamicContent },
@@ -43,7 +43,7 @@ export class ProspectSendMailService {
     const dynamicContent = compiledTemplate({ ...prospect });
 
     await this.mailerService.sendMail({
-      to: prospect.email,
+      to: prospect.emails,
       subject: template.subject,
       template: 'prospect-email-template',
       context: { dynamicContent },
