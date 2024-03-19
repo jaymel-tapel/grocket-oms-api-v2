@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Prospect, ProspectTemplate } from '@prisma/client';
 import { ProspectTemplateEntity } from './prospect-template.entity';
+import { ProspectReviewerEntity } from './prospect-reviewer.entity';
 
 export class ProspectEntity implements Prospect {
   constructor(data?: Partial<ProspectEntity>) {
@@ -8,6 +9,12 @@ export class ProspectEntity implements Prospect {
 
     if (data.prospectTemplate) {
       this.prospectTemplate = data.prospectTemplate;
+    }
+
+    if (data.reviewers.length > 0) {
+      this.reviewers = data.reviewers.map(
+        (rev) => new ProspectReviewerEntity(rev),
+      );
     }
   }
 
@@ -50,8 +57,17 @@ export class ProspectEntity implements Prospect {
   @ApiProperty({ nullable: true })
   note: string;
 
-  @ApiProperty({ default: false })
-  auto_send_email: boolean;
+  @ApiProperty({ nullable: true })
+  rating: number;
+
+  @ApiProperty({ nullable: true })
+  reviews: number;
+
+  @ApiProperty({ type: [Number] })
+  stars: number[];
+
+  @ApiProperty({ type: [ProspectReviewerEntity] })
+  reviewers?: ProspectReviewerEntity[];
 
   @ApiProperty({ type: ProspectTemplateEntity })
   prospectTemplate?: ProspectTemplate;

@@ -15,10 +15,10 @@ export class ProspectsService {
 
   async update(
     id: number,
-    authUser: UserEntity,
     updateProspectDto: UpdateProspectDto,
+    authUser?: UserEntity,
   ) {
-    const { templateId } = updateProspectDto;
+    const { templateId, reviewers, ...data } = updateProspectDto;
 
     if (templateId) {
       // * Increment other prospects' position by 1
@@ -29,16 +29,48 @@ export class ProspectsService {
     const updatedProspect = await this.database.$transaction(async (tx) => {
       return await tx.prospect.update({
         where: { id },
-        data: updateProspectDto,
+        data,
+        include: { reviewers: true },
       });
     });
 
-    const action = templateId ? 'status updated' : 'prospect updated';
+    if (reviewers?.length > 0) {
+      await Promise.all(
+        reviewers.map(async (reviewer) => {
+          const foundReviewer = await this.database.prospectReviewer.findFirst({
+            where: {
+              google_review_id: reviewer.google_review_id,
+              prospectId: id,
+            },
+          });
 
-    await this.prospectLogsService.createLog(id, authUser, {
-      templateId,
-      action,
-    });
+          // ? Update Details of Reviewer
+          if (foundReviewer) {
+            return await this.database.prospectReviewer.update({
+              where: { id: foundReviewer.id },
+              data: reviewer,
+            });
+          } else {
+            // ? Create Details of Reviewer
+            return await this.database.prospectReviewer.create({
+              data: {
+                prospectId: id,
+                ...reviewer,
+              },
+            });
+          }
+        }),
+      );
+    }
+
+    if (authUser) {
+      const action = templateId ? 'status updated' : 'prospect updated';
+
+      await this.prospectLogsService.createLog(id, authUser, {
+        templateId,
+        action,
+      });
+    }
 
     return updatedProspect;
   }
