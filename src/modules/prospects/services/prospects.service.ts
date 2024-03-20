@@ -35,7 +35,7 @@ export class ProspectsService {
     });
 
     if (reviewers?.length > 0) {
-      await Promise.all(
+      updatedProspect.reviewers = await Promise.all(
         reviewers.map(async (reviewer) => {
           const foundReviewer = await this.database.prospectReviewer.findFirst({
             where: {
