@@ -12,6 +12,7 @@ import { ScraperWebsiteEntity } from '../entities/scraper-website.entity';
 import { ScrapeEmailDto } from '../dto/scraper-email.dto';
 import { ScraperEmailEntity } from '../entities/scraper-email.entity';
 import { ProspectSessionEntity } from '@modules/prospects/entities/prospect-session.entity';
+import { isEmpty } from 'lodash';
 
 @Injectable()
 export class ScraperService {
@@ -45,7 +46,7 @@ export class ScraperService {
     }));
 
     // * Create a new Session
-    if (!session) {
+    if (isEmpty(session)) {
       const createSession: CreateProspectSession = {
         keyword: data.message,
         location: scraperSearchDto.location,

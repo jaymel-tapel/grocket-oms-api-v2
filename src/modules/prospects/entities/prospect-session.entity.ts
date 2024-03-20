@@ -6,7 +6,7 @@ export class ProspectSessionEntity implements ProspectSession {
   constructor(data?: Partial<ProspectSessionEntity>) {
     Object.assign(this, data);
 
-    if (data.prospects) {
+    if (data?.prospects?.length > 0) {
       this.prospects = data.prospects.map(
         (prospect) => new ProspectEntity(prospect),
       );
