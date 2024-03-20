@@ -12,6 +12,7 @@ import { ScraperWebsiteEntity } from '../entities/scraper-website.entity';
 import { ScrapeEmailDto } from '../dto/scraper-email.dto';
 import { ScraperEmailEntity } from '../entities/scraper-email.entity';
 import { ProspectSessionEntity } from '@modules/prospects/entities/prospect-session.entity';
+import { isEmpty } from 'lodash';
 
 @Injectable()
 export class ScraperService {
@@ -45,7 +46,7 @@ export class ScraperService {
     }));
 
     // * Create a new Session
-    if (!session) {
+    if (isEmpty(session)) {
       const createSession: CreateProspectSession = {
         keyword: data.message,
         location: scraperSearchDto.location,
@@ -81,30 +82,38 @@ export class ScraperService {
 
   async getWebsite(id: number, { url }: ScrapeWebsiteDto) {
     const prospect = await this.prospectsService.findOne({ where: { id } });
-
-    const response = await axios.post(process.env.SCRAPER_WEBSITE, { url });
+    const response = await axios.post(process.env.SCRAPER_WEBSITE, {
+      url: url ?? prospect.mapsUrl,
+    });
 
     const responseData: ScraperWebsiteEntity = response.data;
 
     const { website, reviewsInfo, ...data } = responseData;
 
     // ? Update Prospect's Data
-    return await this.prospectsService.update(prospect.id, {
+    const updatedProspect = await this.prospectsService.update(prospect.id, {
       url: website,
       stars: reviewsInfo,
       ...data,
     });
+
+    return updatedProspect;
   }
 
   async getEmails(id: number, { url }: ScrapeEmailDto) {
-    const response = await axios.post(process.env.SCRAPER_EMAIL, { url });
+    const prospect = await this.prospectsService.findOneOrThrow({
+      where: { id },
+    });
+    const response = await axios.post(process.env.SCRAPER_EMAIL, {
+      url: url ?? prospect.url,
+    });
 
     const responseData: ScraperEmailEntity = response.data;
 
-    const prospect = await this.prospectsService.update(id, {
+    const updatedProspect = await this.prospectsService.update(id, {
       emails: responseData.emails,
     });
 
-    return { emails: prospect.emails };
+    return { emails: updatedProspect.emails };
   }
 }

@@ -1,8 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsUrl } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsUrl } from 'class-validator';
 
 export class ScrapeWebsiteDto {
+  @IsOptional()
   @IsUrl()
-  @ApiProperty()
-  url: string;
+  @ApiPropertyOptional()
+  url?: string;
 }
