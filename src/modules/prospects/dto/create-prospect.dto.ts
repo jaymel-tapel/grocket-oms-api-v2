@@ -27,6 +27,11 @@ export class CreateProspectDto {
   url?: string;
 
   @IsOptional()
+  @IsUrl()
+  @ApiPropertyOptional()
+  mapsUrl?: string;
+
+  @IsOptional()
   @IsString()
   @ApiPropertyOptional()
   phone?: string;
