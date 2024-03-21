@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Prospect, ProspectTemplate } from '@prisma/client';
+import { ProspectTemplate } from '@prisma/client';
 import { ProspectEntity } from './prospect.entity';
 
 export class ProspectTemplateEntity implements ProspectTemplate {
@@ -35,5 +35,5 @@ export class ProspectTemplateEntity implements ProspectTemplate {
   content: string;
 
   @ApiProperty({ type: [ProspectEntity] })
-  prospects?: Prospect[];
+  prospects?: ProspectEntity[];
 }

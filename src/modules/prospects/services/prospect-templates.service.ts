@@ -118,6 +118,10 @@ export class ProspectTemplatesService {
         ...args?.include,
         prospects: { orderBy: { position: 'asc' } },
       },
+      orderBy: {
+        id: 'asc',
+        ...args?.orderBy,
+      },
     });
   }
 
