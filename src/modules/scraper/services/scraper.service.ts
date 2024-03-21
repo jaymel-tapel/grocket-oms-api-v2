@@ -14,6 +14,7 @@ import { ScraperEmailEntity } from '../entities/scraper-email.entity';
 import { ProspectSessionEntity } from '@modules/prospects/entities/prospect-session.entity';
 import { isEmpty } from 'lodash';
 import { UpdateProspectSession } from '@modules/prospects/dto/update-prospect-session.dto';
+import { ScraperEstimateDto } from '../dto/scraper-estimate.dto';
 
 @Injectable()
 export class ScraperService {
@@ -130,5 +131,69 @@ export class ScraperService {
     });
 
     return { emails: updatedProspect.emails };
+  }
+
+  async estimate(estimateDto: ScraperEstimateDto) {
+    const { limit, no_of_cities } = estimateDto;
+    const AVG_TIME_SEARCH = 137.464; // 137.464 - 1000 limit;
+    const AVG_TIME_WEB = 13.6;
+    const AVG_TIME_EMAIL = 1.97;
+
+    const total_estimated_prospects = limit * no_of_cities;
+
+    const total_estimated_search = total_estimated_prospects / 1000;
+    const total_estimated_websites = total_estimated_prospects;
+    const total_estimated_emails = total_estimated_prospects;
+
+    const search_in_seconds = +(
+      AVG_TIME_SEARCH * total_estimated_search
+    ).toFixed(2);
+    const web_in_seconds = AVG_TIME_WEB * total_estimated_websites;
+    const email_in_seconds = AVG_TIME_EMAIL * total_estimated_emails;
+
+    const estimated_search = this.formatTime(search_in_seconds);
+    const estimated_web = this.formatTime(web_in_seconds);
+    const estimated_email = this.formatTime(email_in_seconds);
+
+    const total_seconds = search_in_seconds + web_in_seconds + email_in_seconds;
+    const total_estimated_time = this.formatTime(total_seconds);
+
+    return {
+      estimated_search,
+      estimated_web,
+      estimated_email,
+      total_estimated_time,
+    };
+  }
+
+  private formatTime(seconds: number): string {
+    const days = +(seconds / (3600 * 24)).toFixed(0);
+    const remainingSecondsAfterDays = seconds % (3600 * 24);
+    const hours = Math.floor(remainingSecondsAfterDays / 3600);
+    const remainingSecondsAfterHours = remainingSecondsAfterDays % 3600;
+    const minutes = Math.floor(remainingSecondsAfterHours / 60);
+    const remainingSeconds = Math.floor(remainingSecondsAfterHours % 60);
+
+    const timeParts = [];
+    let unit: string;
+
+    if (days > 0) {
+      unit = days === 1 ? `day` : `days`;
+      timeParts.push(`${days} ${unit}`);
+    }
+    if (hours > 0) {
+      unit = hours === 1 ? `hour` : `hours`;
+      timeParts.push(`${hours} ${unit}`);
+    }
+    if (minutes > 0) {
+      unit = minutes === 1 ? `minute` : `minutes`;
+      timeParts.push(`${minutes} ${unit}`);
+    }
+    if (remainingSeconds > 0) {
+      unit = remainingSeconds === 1 ? `second` : `seconds`;
+      timeParts.push(`${remainingSeconds} ${unit}`);
+    }
+
+    return timeParts.join(' ');
   }
 }
