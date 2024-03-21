@@ -372,10 +372,14 @@ model ProspectSession {
   updatedAt   DateTime   @updatedAt
   deletedAt   DateTime?
   keyword     String
-  location    String
-  limit       Int
-  count       Int
+  city        String
+  country     String
+  orig_limit  Int
+  orig_count  Int
+  limit       Int?
+  count       Int?
   hasWebsites Boolean
+  counter     Int        @default(1)
   prospects   Prospect[]
 }
 
