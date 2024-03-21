@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ProspectTemplate } from '@prisma/client';
+import { ProspectSession } from '@prisma/client';
 import { ProspectEntity } from './prospect.entity';
 
-export class ProspectTemplateEntity implements ProspectTemplate {
-  constructor(data?: Partial<ProspectTemplateEntity>) {
+export class ProspectSessionEntity implements ProspectSession {
+  constructor(data?: Partial<ProspectSessionEntity>) {
     Object.assign(this, data);
 
-    if (data.prospects) {
+    if (data?.prospects?.length > 0) {
       this.prospects = data.prospects.map(
         (prospect) => new ProspectEntity(prospect),
       );
@@ -22,17 +22,23 @@ export class ProspectTemplateEntity implements ProspectTemplate {
   @ApiProperty()
   updatedAt: Date;
 
-  @ApiProperty({ nullable: true, default: null })
-  deletedAt: Date;
+  @ApiProperty({ nullable: true })
+  deletedAt: Date | null;
 
   @ApiProperty()
-  name: string;
+  keyword: string;
 
   @ApiProperty()
-  subject: string;
+  location: string;
 
   @ApiProperty()
-  content: string;
+  limit: number;
+
+  @ApiProperty()
+  count: number;
+
+  @ApiProperty()
+  hasWebsites: boolean;
 
   @ApiProperty({ type: [ProspectEntity] })
   prospects?: ProspectEntity[];

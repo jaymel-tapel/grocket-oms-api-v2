@@ -3,19 +3,23 @@ import {
   ApiProperty,
   ApiPropertyOptional,
 } from '@nestjs/swagger';
-import { ToBoolean } from '@src/common/helpers/toBoolean';
 import { DoesExist } from '@src/common/validators/user.validation';
-import { IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsArray, IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class CreateProspectDto {
+  constructor(data?: Partial<CreateProspectDto>) {
+    Object.assign(this, data);
+  }
+
   @IsString()
   @ApiProperty()
   name: string;
 
   @IsOptional()
-  @IsEmail()
+  @IsArray()
+  @IsEmail({}, { each: true })
   @ApiPropertyOptional()
-  email?: string;
+  emails?: string[];
 
   @IsOptional()
   @IsUrl()
@@ -36,15 +40,6 @@ export class CreateProspectDto {
   @DoesExist({ tableName: 'clientIndustry', column: 'id' })
   @ApiPropertyOptional()
   industryId?: number;
-
-  @DoesExist({ tableName: 'prospectTemplate', column: 'id' })
-  @ApiProperty()
-  templateId: number;
-
-  @IsOptional()
-  @ToBoolean()
-  @ApiPropertyOptional()
-  auto_send_email?: boolean;
 
   @ApiHideProperty()
   position?: number;

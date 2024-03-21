@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Prisma } from '@prisma/client';
+import { AxiosError } from 'axios';
 import { Response } from 'express';
 
 @Catch()
@@ -66,6 +67,8 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
       statusCode = 403;
       message = exception.message;
       stack = exception.stack.replace(/\n/g, '');
+    } else if (exception instanceof AxiosError) {
+      statusCode = exception?.response?.status ?? 500;
     } else {
       // Handle other types of exceptions
       message = exception.message || message; // Use the exception message if available

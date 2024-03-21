@@ -1,57 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { CreateProspectDto } from '../dto/create-prospect.dto';
 import { UpdateProspectDto } from '../dto/update-prospect.dto';
 import { DatabaseService } from '@modules/database/services/database.service';
 import { Prisma } from '@prisma/client';
 import { ProspectLogsService } from './prospect-logs.service';
 import { UserEntity } from '@modules/users/entities/user.entity';
-import { ProspectSendMailService } from './prospect-send-email.service';
-import { ProspectEntity } from '../entities/prospect.entity';
+import { FilterProspectDto } from '../dto/filter-prospect.dto';
 
 @Injectable()
 export class ProspectsService {
   constructor(
     private readonly database: DatabaseService,
     private readonly prospectLogsService: ProspectLogsService,
-    private readonly prospectSendMailService: ProspectSendMailService,
   ) {}
-
-  async create(createProspectDto: CreateProspectDto, authUser: UserEntity) {
-    const { templateId, industryId, ...data } = createProspectDto;
-
-    // * Increment other prospects' position by 1
-    await this.adjustPositions(templateId);
-
-    data.position = 1;
-
-    const newProspect = await this.database.$transaction(async (tx) => {
-      return await tx.prospect.create({
-        data: {
-          ...data,
-          ...(industryId && {
-            clientIndustry: { connect: { id: industryId } },
-          }),
-          position: data.position,
-          prospectTemplate: { connect: { id: templateId } },
-        },
-      });
-    });
-
-    await this.prospectLogsService.createLog(newProspect.id, authUser, {
-      templateId,
-      action: 'prospect created',
-    });
-
-    return newProspect;
-  }
 
   async update(
     id: number,
-    authUser: UserEntity,
     updateProspectDto: UpdateProspectDto,
+    authUser?: UserEntity,
   ) {
-    const { templateId, auto_send_email } = updateProspectDto;
-    let sentEmailMessage: string = null;
+    const { templateId, reviewers, ...data } = updateProspectDto;
 
     if (templateId) {
       // * Increment other prospects' position by 1
@@ -62,52 +29,86 @@ export class ProspectsService {
     const updatedProspect = await this.database.$transaction(async (tx) => {
       return await tx.prospect.update({
         where: { id },
-        data: updateProspectDto,
+        data,
+        include: { reviewers: true },
       });
     });
 
-    const action = templateId ? 'status updated' : 'prospect updated';
+    if (reviewers?.length > 0) {
+      updatedProspect.reviewers = await Promise.all(
+        reviewers.map(async (reviewer) => {
+          const foundReviewer = await this.database.prospectReviewer.findFirst({
+            where: {
+              google_review_id: reviewer.google_review_id,
+              prospectId: id,
+            },
+          });
 
-    await this.prospectLogsService.createLog(id, authUser, {
-      templateId,
-      action,
-    });
-
-    if (templateId && auto_send_email) {
-      sentEmailMessage = (
-        await this.prospectSendMailService.send(updatedProspect, authUser)
-      ).message;
+          // ? Update Details of Reviewer
+          if (foundReviewer) {
+            return await this.database.prospectReviewer.update({
+              where: { id: foundReviewer.id },
+              data: reviewer,
+            });
+          } else {
+            // ? Create Details of Reviewer
+            return await this.database.prospectReviewer.create({
+              data: {
+                prospectId: id,
+                ...reviewer,
+              },
+            });
+          }
+        }),
+      );
     }
 
-    return !sentEmailMessage
-      ? updatedProspect
-      : { message: sentEmailMessage, ...updatedProspect };
+    if (authUser) {
+      const action = templateId ? 'status updated' : 'prospect updated';
+
+      await this.prospectLogsService.createLog(id, authUser, {
+        templateId,
+        action,
+      });
+    }
+
+    return updatedProspect;
   }
 
   // * Increment other prospects' position by 1
-  private async adjustPositions(templateId: number) {
+  async adjustPositions(templateId: number, lastPosition?: number) {
     const prospectObjs = await this.database.prospect.findMany({
       where: { templateId },
       select: { id: true, position: true },
       orderBy: { position: 'asc' },
     });
 
-    let pos = 2;
+    if (prospectObjs.length > 0) {
+      let pos = lastPosition ?? 2;
 
-    return await Promise.all(
-      prospectObjs.map((existingProspect) =>
-        this.database.prospect.update({
-          where: { id: existingProspect.id },
-          data: { position: pos++ },
-        }),
-      ),
-    );
+      return await Promise.all(
+        prospectObjs.map((existingProspect) =>
+          this.database.prospect.update({
+            where: { id: existingProspect.id },
+            data: { position: pos++ },
+          }),
+        ),
+      );
+    }
   }
 
-  async findAll(args?: Prisma.ProspectFindManyArgs) {
+  async findAll(
+    filterProspects?: FilterProspectDto,
+    args?: Prisma.ProspectFindManyArgs,
+  ) {
+    const { sessionId } = filterProspects;
     const database = await this.database.softDelete();
     return await database.prospect.findMany({
       ...args,
+      where: {
+        ...(sessionId && { sessionId }),
+        ...args?.where,
+      },
       orderBy: { position: 'asc' },
     });
   }

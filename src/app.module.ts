@@ -24,6 +24,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { InvoicesModule } from './modules/invoices/invoices.module';
 import { CSVModule } from './common/csv/csv.module';
 import { ProspectsModule } from './modules/prospects/prospects.module';
+import { ScraperModule } from './modules/scraper/scraper.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { ProspectsModule } from './modules/prospects/prospects.module';
     InvoicesModule,
     CSVModule,
     ProspectsModule,
+    ScraperModule,
   ],
   providers: [...ValidatorConstraints, ...Commands],
 })
