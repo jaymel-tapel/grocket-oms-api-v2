@@ -9,7 +9,16 @@ export class CreateProspectSession {
   keyword: string;
 
   @IsString()
-  location: string;
+  country: string;
+
+  @IsString()
+  city: string;
+
+  @IsNumber()
+  orig_limit: number;
+
+  @IsNumber()
+  orig_count: number;
 
   @IsNumber()
   limit: number;

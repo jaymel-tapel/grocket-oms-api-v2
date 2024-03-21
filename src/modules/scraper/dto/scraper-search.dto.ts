@@ -4,7 +4,11 @@ import { IsNumber, IsString, Max, Min } from 'class-validator';
 export class ScraperSearchDto {
   @IsString()
   @ApiProperty()
-  location: string;
+  country: string;
+
+  @IsString()
+  @ApiProperty()
+  city: string;
 
   @IsString()
   @ApiProperty()

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
 import { ProspectSession } from '@prisma/client';
 import { ProspectEntity } from './prospect.entity';
 
@@ -29,7 +29,16 @@ export class ProspectSessionEntity implements ProspectSession {
   keyword: string;
 
   @ApiProperty()
-  location: string;
+  city: string;
+
+  @ApiProperty()
+  country: string;
+
+  @ApiProperty()
+  orig_limit: number;
+
+  @ApiProperty()
+  orig_count: number;
 
   @ApiProperty()
   limit: number;
@@ -39,6 +48,9 @@ export class ProspectSessionEntity implements ProspectSession {
 
   @ApiProperty()
   hasWebsites: boolean;
+
+  @ApiHideProperty()
+  counter: number;
 
   @ApiProperty({ type: [ProspectEntity] })
   prospects?: ProspectEntity[];

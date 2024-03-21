@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { UserEntity } from '../../users/entities/user.entity';
 import { ScraperSearchDto } from '../dto/scraper-search.dto';
 import { ScraperSearchEntity } from '../entities/scraper-search.entity';
@@ -13,6 +13,7 @@ import { ScrapeEmailDto } from '../dto/scraper-email.dto';
 import { ScraperEmailEntity } from '../entities/scraper-email.entity';
 import { ProspectSessionEntity } from '@modules/prospects/entities/prospect-session.entity';
 import { isEmpty } from 'lodash';
+import { UpdateProspectSession } from '@modules/prospects/dto/update-prospect-session.dto';
 
 @Injectable()
 export class ScraperService {
@@ -33,7 +34,7 @@ export class ScraperService {
       await this.prospectSessionService.findOne({
         where: {
           keyword: { equals: data.message, mode: 'insensitive' },
-          location: { equals: scraperSearchDto.location, mode: 'insensitive' },
+          country: { equals: scraperSearchDto.country, mode: 'insensitive' },
         },
         include: { prospects: true },
       }),
@@ -49,7 +50,10 @@ export class ScraperService {
     if (isEmpty(session)) {
       const createSession: CreateProspectSession = {
         keyword: data.message,
-        location: scraperSearchDto.location,
+        country: scraperSearchDto.country,
+        city: scraperSearchDto.city,
+        orig_limit: scraperSearchDto.limit,
+        orig_count: data.count,
         limit: scraperSearchDto.limit,
         count: data.count,
         hasWebsites: data.hasWebSites,
@@ -69,12 +73,23 @@ export class ScraperService {
           ),
       );
 
+      if (newProspects.length === 0) {
+        throw new HttpException(
+          'There are no new Prospects for this Session',
+          400,
+        );
+      }
+
+      const updateSession: UpdateProspectSession = {
+        limit: scraperSearchDto.limit + session.limit,
+        count: newProspects.length + session.prospects.length,
+        counter: session.counter + 1,
+        prospects: newProspects,
+      };
+
       return await this.prospectSessionService.update(
         session.id,
-        {
-          count: newProspects.length + session.count,
-          prospects: newProspects,
-        },
+        updateSession,
         authUser,
       );
     }
