@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   ParseIntPipe,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ScraperService } from './services/scraper.service';
@@ -17,6 +19,8 @@ import { ScrapeWebsiteDto } from './dto/scraper-website.dto';
 import { ProspectSessionEntity } from '@modules/prospects/entities/prospect-session.entity';
 import { ScraperEmailEntity } from './entities/scraper-email.entity';
 import { ScrapeEmailDto } from './dto/scraper-email.dto';
+import { ScraperEstimateDto } from './dto/scraper-estimate.dto';
+import { ScraperEstimateEntity } from './entities/scraper-estimate.entity';
 
 @UseGuards(JwtGuard)
 @Controller('scraper')
@@ -51,5 +55,11 @@ export class ScraperController {
     @Body() scrapeEmailDto: ScrapeEmailDto,
   ) {
     return await this.scraperService.getEmails(id, scrapeEmailDto);
+  }
+
+  @Get('estimate')
+  @ApiOkResponse({ type: ScraperEstimateEntity })
+  async estimate(@Query() estimateDto: ScraperEstimateDto) {
+    return this.scraperService.estimate(estimateDto);
   }
 }
