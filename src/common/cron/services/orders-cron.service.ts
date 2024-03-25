@@ -45,7 +45,7 @@ export class OrdersCronService {
     for (const client of clients) {
       try {
         logger.debug(`Client: ${client.name}`);
-        logger.debug(`${i++} out of ${total_clients}`);
+        logger.debug(`${++i} out of ${total_clients}`);
         const lastOrder = maxBy(client.orders, 'createdAt');
         const twoMonthsAgo = subMonths(new Date(), 2);
 
