@@ -75,10 +75,7 @@ export class ScraperService {
       );
 
       if (newProspects.length === 0) {
-        throw new HttpException(
-          'There are no new Prospects for this Session',
-          400,
-        );
+        return session;
       }
 
       const updateSession: UpdateProspectSession = {

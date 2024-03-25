@@ -9,7 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CloudinaryModule } from '@modules/cloudinary/cloudinary.module';
 import { TasksModule } from './modules/my-tasks/tasks.module';
 import { AbilityModule } from './modules/casl/ability.module';
-import { Commands } from '@modules/database/seeders';
+import { Commands } from '@src/common/console';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { CompaniesModule } from './modules/companies/companies.module';
 import { OrdersModule } from './modules/orders/orders.module';
@@ -25,6 +25,7 @@ import { InvoicesModule } from './modules/invoices/invoices.module';
 import { CSVModule } from './common/csv/csv.module';
 import { ProspectsModule } from './modules/prospects/prospects.module';
 import { ScraperModule } from './modules/scraper/scraper.module';
+import { CronModule } from './common/cron/cron.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { ScraperModule } from './modules/scraper/scraper.module';
     CSVModule,
     ProspectsModule,
     ScraperModule,
+    CronModule,
   ],
   providers: [...ValidatorConstraints, ...Commands],
 })

@@ -1,5 +1,5 @@
 import { Command, CommandRunner } from 'nest-commander';
-import { DatabaseService } from '../services/database.service';
+import { DatabaseService } from '../../../modules/database/services/database.service';
 
 @Command({
   name: 'client-industry-seed',
