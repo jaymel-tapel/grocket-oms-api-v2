@@ -12,7 +12,7 @@ export class CheckOrderCommand extends CommandRunner {
     super();
   }
 
-  // @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async run(
     passedParams: string[],
     options?: Record<string, any>,
