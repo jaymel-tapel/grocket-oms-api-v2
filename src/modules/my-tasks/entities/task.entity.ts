@@ -4,15 +4,15 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreatedByEnum, Task, TaskTypeEnum } from '@prisma/client';
 
 export class TaskEntity implements Task {
-  constructor({ user, client, ...partial }: Partial<TaskEntity>) {
-    Object.assign(this, partial);
+  constructor(data?: Partial<TaskEntity>) {
+    Object.assign(this, data);
 
-    if (user) {
-      this.user = new UserEntity(user);
+    if (data?.user) {
+      this.user = new UserEntity(data?.user);
     }
 
-    if (client) {
-      this.client = new ClientEntity(client);
+    if (data?.client) {
+      this.client = new ClientEntity(data?.client);
     }
   }
 
