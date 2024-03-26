@@ -7,10 +7,10 @@ export class ProspectEntity implements Prospect {
   constructor(data?: Partial<ProspectEntity>) {
     Object.assign(this, data);
 
-    const { stars, reviews, rating, phone } = data;
+    const { stars, reviews, rating } = data;
 
-    if (![reviews, rating, phone].every((field) => field) && !stars?.length) {
-      delete this.url;
+    if (![reviews, rating].every((field) => field) && !stars?.length) {
+      this.url = null;
     }
 
     if (data.prospectTemplate) {
