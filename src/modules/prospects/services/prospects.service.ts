@@ -23,7 +23,7 @@ export class ProspectsService {
     if (templateId) {
       // * Increment other prospects' position by 1
       await this.adjustPositions(templateId);
-      updateProspectDto.position = 1;
+      data.position = 1;
     }
 
     const updatedProspect = await this.database.$transaction(async (tx) => {

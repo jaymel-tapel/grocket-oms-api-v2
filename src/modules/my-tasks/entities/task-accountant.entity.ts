@@ -3,11 +3,11 @@ import { $Enums, TaskAccountant } from '@prisma/client';
 import { TaskEntity } from './task.entity';
 
 export class TaskAccountantEntity implements TaskAccountant {
-  constructor({ task, ...partial }: Partial<TaskAccountantEntity>) {
-    Object.assign(this, partial);
+  constructor(data?: Partial<TaskAccountantEntity>) {
+    Object.assign(this, data);
 
-    if (task) {
-      this.task = new TaskEntity(task);
+    if (data?.task) {
+      this.task = new TaskEntity(data?.task);
     }
   }
 
@@ -44,6 +44,6 @@ export class TaskAccountantEntity implements TaskAccountant {
   @ApiPropertyOptional({ nullable: true, default: null })
   deletedAt: Date | null;
 
-  @ApiProperty()
+  @ApiProperty({ type: () => TaskEntity })
   task?: TaskEntity;
 }
