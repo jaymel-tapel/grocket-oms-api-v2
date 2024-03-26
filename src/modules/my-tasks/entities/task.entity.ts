@@ -2,6 +2,8 @@ import { ClientEntity } from '@modules/clients/entities/client.entity';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreatedByEnum, Task, TaskTypeEnum } from '@prisma/client';
+import { TaskAccountantEntity } from './task-accountant.entity';
+import { TaskSellerEntity } from './task-seller.entity';
 
 export class TaskEntity implements Task {
   constructor(data?: Partial<TaskEntity>) {
@@ -13,6 +15,14 @@ export class TaskEntity implements Task {
 
     if (data?.client) {
       this.client = new ClientEntity(data?.client);
+    }
+
+    if (data?.taskAccountant) {
+      this.taskAccountant = new TaskAccountantEntity(data?.taskAccountant);
+    }
+
+    if (data?.taskSeller) {
+      this.taskSeller = new TaskSellerEntity(data?.taskSeller);
     }
   }
 
@@ -42,6 +52,12 @@ export class TaskEntity implements Task {
 
   @ApiPropertyOptional({ nullable: true, default: null })
   deletedAt: Date | null;
+
+  @ApiPropertyOptional({ type: TaskAccountantEntity })
+  taskAccountant?: TaskAccountantEntity;
+
+  @ApiPropertyOptional({ type: TaskSellerEntity })
+  taskSeller?: TaskSellerEntity;
 
   @ApiPropertyOptional({ type: UserEntity })
   user?: UserEntity | null;

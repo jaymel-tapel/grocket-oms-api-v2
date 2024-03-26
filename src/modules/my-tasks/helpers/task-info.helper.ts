@@ -1,14 +1,12 @@
 import { TaskTypeEnum } from '@prisma/client';
 
 export const taskTypeNameHelper = (taskType: TaskTypeEnum) => {
-  const taskTypeEnum = TaskTypeEnum;
-
   const taskTypeMap: Record<string, string> = {
-    [taskTypeEnum.PR1]: 'Payment Reminder 1',
-    [taskTypeEnum.PR2]: 'Payment Reminder 2',
-    [taskTypeEnum.TWO_MTFU]: '2 Months to Follow Up',
-    [taskTypeEnum.SENT_INVOICE]: 'Sent Invoice',
-    [taskTypeEnum.UNPAID]: 'Unpaid',
+    [TaskTypeEnum.PR1]: 'Payment Reminder 1',
+    [TaskTypeEnum.PR2]: 'Payment Reminder 2',
+    [TaskTypeEnum.TWO_MTFU]: '2 Months to Follow Up',
+    [TaskTypeEnum.SENT_INVOICE]: 'Sent Invoice',
+    [TaskTypeEnum.UNPAID]: 'Unpaid',
   };
 
   let taskTypeName: string | undefined;
@@ -18,4 +16,13 @@ export const taskTypeNameHelper = (taskType: TaskTypeEnum) => {
   }
 
   return taskTypeName;
+};
+
+export const newTaskTypeHelper = (taskType: TaskTypeEnum) => {
+  const taskTypeMap: Record<string, TaskTypeEnum> = {
+    [TaskTypeEnum.SENT_INVOICE]: 'PR1',
+    [TaskTypeEnum.PR1]: 'PR2',
+  };
+
+  return taskTypeMap[taskType] || 'UNPAID';
 };
