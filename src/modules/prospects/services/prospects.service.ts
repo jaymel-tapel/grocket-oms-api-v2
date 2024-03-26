@@ -18,7 +18,8 @@ export class ProspectsService {
     updateProspectDto: UpdateProspectDto,
     authUser?: UserEntity,
   ) {
-    const { templateId, reviewers, ...data } = updateProspectDto;
+    const { reviewers, ...data } = updateProspectDto;
+    const templateId = data.templateId;
 
     if (templateId) {
       // * Increment other prospects' position by 1
