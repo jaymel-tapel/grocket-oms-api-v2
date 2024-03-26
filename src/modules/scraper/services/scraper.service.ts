@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserEntity } from '../../users/entities/user.entity';
 import { ScraperSearchDto } from '../dto/scraper-search.dto';
 import { ScraperSearchEntity } from '../entities/scraper-search.entity';
