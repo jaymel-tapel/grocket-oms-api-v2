@@ -7,12 +7,14 @@ import { ProspectLogsService } from './services/prospect-logs.service';
 import { ProspectTemplatesController } from './prospect-templates.controller';
 import { ProspectSessionService } from './services/prospect-session.service';
 import { ProspectSessionController } from './prospect-session.controller';
+import { ProspectLogsController } from './prospect-logs.controller';
 
 @Module({
   controllers: [
     ProspectsController,
     ProspectTemplatesController,
     ProspectSessionController,
+    ProspectLogsController,
   ],
   providers: [
     ProspectsService,
