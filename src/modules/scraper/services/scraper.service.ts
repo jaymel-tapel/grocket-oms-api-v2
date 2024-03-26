@@ -132,21 +132,42 @@ export class ScraperService {
 
   async estimate(estimateDto: ScraperEstimateDto) {
     const { limit, no_of_cities } = estimateDto;
-    const AVG_TIME_SEARCH = 137.464; // 137.464 - 1000 limit;
+    const AVG_TIME_SEARCH = 15.52;
+    const AVG_TIME_SEARCH_MAX = 137.464; // 137.464 - 1000 limit;
     const AVG_TIME_WEB = 13.6;
     const AVG_TIME_EMAIL = 1.97;
 
     const total_estimated_prospects = limit * no_of_cities;
+    let search_qty: number, search_in_seconds: number;
 
-    const total_estimated_search = total_estimated_prospects / 1000;
-    const total_estimated_websites = total_estimated_prospects;
-    const total_estimated_emails = total_estimated_prospects;
+    if (total_estimated_prospects <= 350) {
+      search_qty = Math.floor(total_estimated_prospects / 10);
+      const half_search_qty = Number((search_qty / 2).toFixed(0));
 
-    const search_in_seconds = +(
-      AVG_TIME_SEARCH * total_estimated_search
-    ).toFixed(2);
-    const web_in_seconds = AVG_TIME_WEB * total_estimated_websites;
-    const email_in_seconds = AVG_TIME_EMAIL * total_estimated_emails;
+      let total_estimated_search: number;
+
+      if (total_estimated_prospects <= 20) {
+        total_estimated_search = search_qty;
+      } else if (search_qty > 1 && search_qty <= 19) {
+        total_estimated_search = half_search_qty * 8.5;
+      } else if (search_qty >= 20 && search_qty <= 24) {
+        total_estimated_search = half_search_qty * 10;
+      } else if (search_qty >= 25 && search_qty <= 29) {
+        total_estimated_search = half_search_qty * 8.25;
+      } else {
+        total_estimated_search = half_search_qty * 8;
+      }
+
+      search_in_seconds = Number(
+        (AVG_TIME_SEARCH + total_estimated_search).toFixed(2),
+      );
+    } else {
+      search_qty = Math.ceil(total_estimated_prospects / 1000);
+      search_in_seconds = Number((AVG_TIME_SEARCH_MAX * search_qty).toFixed(2));
+    }
+
+    const web_in_seconds = AVG_TIME_WEB * total_estimated_prospects;
+    const email_in_seconds = AVG_TIME_EMAIL * total_estimated_prospects;
 
     const estimated_search = this.formatTime(search_in_seconds);
     const estimated_web = this.formatTime(web_in_seconds);
@@ -169,7 +190,7 @@ export class ScraperService {
     const hours = Math.floor(remainingSecondsAfterDays / 3600);
     const remainingSecondsAfterHours = remainingSecondsAfterDays % 3600;
     const minutes = Math.floor(remainingSecondsAfterHours / 60);
-    const remainingSeconds = Math.floor(remainingSecondsAfterHours % 60);
+    const remainingSeconds = Number((remainingSecondsAfterHours % 60).toFixed(2));
 
     const timeParts = [];
     let unit: string;
