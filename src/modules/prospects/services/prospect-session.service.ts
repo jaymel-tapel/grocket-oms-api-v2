@@ -58,7 +58,7 @@ export class ProspectSessionService {
       }),
     );
 
-    return newSession;
+    return new ProspectSessionEntity(newSession);
   }
 
   async update(
