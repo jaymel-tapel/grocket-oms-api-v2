@@ -10,6 +10,7 @@ import { OrderReviewsService } from './services/order-reviews.service';
 import { OrderReviewsController } from './order-reviews.controller';
 import { OrderReportsService } from './services/order-reports.service';
 import { InvoicesModule } from '@modules/invoices/invoices.module';
+import { TasksModule } from '@modules/my-tasks/tasks.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { InvoicesModule } from '@modules/invoices/invoices.module';
     CompaniesModule,
     CloudinaryModule,
     InvoicesModule,
+    TasksModule,
   ],
   controllers: [OrdersController, OrderReviewsController],
   providers: [

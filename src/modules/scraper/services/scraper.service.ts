@@ -24,22 +24,24 @@ export class ScraperService {
   ) {}
 
   async search(authUser: UserEntity, scraperSearchDto: ScraperSearchDto) {
-    const response = await axios.post(process.env.SCRAPER_SEARCH, {
-      userId: authUser.id,
-      ...scraperSearchDto,
-    });
-
-    const data: ScraperSearchEntity = response.data;
-
     const session = new ProspectSessionEntity(
       await this.prospectSessionService.findOne({
         where: {
-          keyword: { equals: data.message, mode: 'insensitive' },
+          keyword: { equals: scraperSearchDto.search, mode: 'insensitive' },
+          city: { equals: scraperSearchDto.city, mode: 'insensitive' },
           country: { equals: scraperSearchDto.country, mode: 'insensitive' },
         },
         include: { prospects: true },
       }),
     );
+
+    const response = await axios.post(process.env.SCRAPER_SEARCH, {
+      userId: authUser.id,
+      location: scraperSearchDto.city,
+      ...scraperSearchDto,
+    });
+
+    const data: ScraperSearchEntity = response.data;
 
     const prospects: CreateProspectDto[] = data.results.map((result) => ({
       name: result.businessName,
@@ -190,7 +192,9 @@ export class ScraperService {
     const hours = Math.floor(remainingSecondsAfterDays / 3600);
     const remainingSecondsAfterHours = remainingSecondsAfterDays % 3600;
     const minutes = Math.floor(remainingSecondsAfterHours / 60);
-    const remainingSeconds = Number((remainingSecondsAfterHours % 60).toFixed(2));
+    const remainingSeconds = Number(
+      (remainingSecondsAfterHours % 60).toFixed(2),
+    );
 
     const timeParts = [];
     let unit: string;
