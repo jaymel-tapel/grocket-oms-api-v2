@@ -57,4 +57,9 @@ export class CreateTaskDto {
   @IsEnum($Enums.CreatedByEnum)
   @ApiHideProperty()
   createdBy?: $Enums.CreatedByEnum;
+
+  @IsOptional()
+  @IsEnum($Enums.TaskTypeEnum)
+  @ApiHideProperty()
+  taskType?: $Enums.TaskTypeEnum;
 }
