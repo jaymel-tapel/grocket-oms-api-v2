@@ -30,60 +30,97 @@ export class TasksService {
   ) {}
 
   async create(authUser: UserEntity, createTaskDto: CreateTaskDto) {
-    const { note, client_email, ...data } = createTaskDto;
+    const {
+      note,
+      client_email,
+      createdBy: createdByDto,
+      orderId,
+      taskType,
+      ...data
+    } = createTaskDto;
 
-    return await this.database.$transaction(async (tx) => {
-      let client: ClientEntity;
+    let client: ClientEntity;
 
-      if (client_email) {
-        client = await tx.client.findFirstOrThrow({
-          where: { email: client_email },
-        });
-      }
+    if (client_email) {
+      client = await this.database.client.findFirstOrThrow({
+        where: { email: client_email },
+      });
+    }
 
-      const createdBy =
+    let createdBy: CreatedByEnum;
+
+    if (createdByDto) {
+      createdBy = createdByDto;
+    } else {
+      createdBy =
         authUser.role === RoleEnum.SELLER
           ? CreatedByEnum.SELLER
           : CreatedByEnum.ACCOUNTANT;
+    }
 
-      const newTask = await tx.task.create({
-        data: {
-          user: { connect: { id: authUser.id } },
-          createdBy,
-          ...(client_email && {
-            client: {
-              connect: {
-                id: client.id,
-              },
+    const newTask = await this.database.task.create({
+      data: {
+        user: { connect: { id: authUser.id } },
+        createdBy,
+        ...(taskType && { taskType }),
+        ...(orderId && { order: { connect: { id: orderId }}}),
+        ...(client_email && {
+          client: {
+            connect: {
+              id: client.id,
             },
-          }),
-          ...(note && {
-            taskNotes: {
-              create: { note, user: { connect: { id: authUser.id } } },
-            },
-          }),
-        },
-        include: taskIncludeHelper(authUser, { includeTaskNotes: true }),
-      });
-
-      if (authUser.role === RoleEnum.ACCOUNTANT) {
-        await tx.taskAccountant.create({
-          data: {
-            taskId: newTask.id,
-            ...data,
           },
-        });
-      } else {
-        await tx.taskSeller.create({
-          data: {
-            taskId: newTask.id,
-            ...data,
+        }),
+        ...(note && {
+          taskNotes: {
+            create: { note, user: { connect: { id: authUser.id } } },
           },
-        });
-      }
-
-      return newTask;
+        }),
+      },
+      include: taskIncludeHelper(authUser, { includeTaskNotes: true }),
     });
+
+    await this.updateOrCreateTaskAccountantAndSeller(newTask, data, authUser);
+
+    return newTask;
+  }
+
+  private async updateOrCreateTaskAccountantAndSeller(task: TaskEntity, taskDto: CreateTaskDto | UpdateTaskDto, authUser: UserEntity) {
+    const {
+      note,
+      client_email,
+      createdBy: createdByDto,
+      orderId,
+      ...data
+    } = taskDto;
+    
+    const tx = await this.database.softDelete();
+
+    let upsertQuery: Prisma.TaskSellerUpsertArgs | Prisma.TaskAccountantUpsertArgs = {
+      where: { taskId: task.id },
+      update: data,
+      create: {
+        taskId: task.id,
+        ...data as CreateTaskDto,
+      },
+    };
+  
+    if (task.createdBy === 'AUTO') {
+      upsertQuery = {
+        ...upsertQuery,
+        update: {
+          ...upsertQuery.update,
+          status: 'ACTIVE'
+        }
+      };
+
+      await tx.taskAccountant.upsert(upsertQuery as Prisma.TaskAccountantUpsertArgs);
+      await tx.taskSeller.upsert(upsertQuery as Prisma.TaskSellerUpsertArgs);
+    } else if (authUser.role === RoleEnum.ACCOUNTANT) {
+      await tx.taskAccountant.upsert(upsertQuery as Prisma.TaskAccountantUpsertArgs);
+    } else {
+      await tx.taskSeller.upsert(upsertQuery as Prisma.TaskSellerUpsertArgs);
+    }
   }
 
   async findOne(args: Prisma.TaskFindFirstArgs) {
@@ -124,7 +161,7 @@ export class TasksService {
   }
 
   async update(authUser: UserEntity, id: number, updateTaskDTo: UpdateTaskDto) {
-    const { note, client_email, ...data } = updateTaskDTo;
+    const { note, client_email, createdBy, orderId, taskType, ...data } = updateTaskDTo;
     let client: ClientEntity;
 
     const ability = await this.abilityFactory.defineAbility(authUser);
@@ -144,22 +181,7 @@ export class TasksService {
         ...(client_email && {
           client: { connect: { id: client.id } },
         }),
-        ...(authUser.role === RoleEnum.ACCOUNTANT && {
-          taskAccountant: {
-            update: {
-              where: { taskId: id },
-              data,
-            },
-          },
-        }),
-        ...(authUser.role === RoleEnum.SELLER && {
-          taskSeller: {
-            update: {
-              where: { taskId: id },
-              data,
-            },
-          },
-        }),
+        ...(taskType && { taskType }),
         ...(note && {
           taskNotes: {
             upsert: {
@@ -172,6 +194,8 @@ export class TasksService {
       },
       include: taskIncludeHelper(authUser, { includeTaskNotes: true }),
     });
+
+    await this.updateOrCreateTaskAccountantAndSeller(updatedTask, data, authUser);
 
     return updatedTask;
   }
