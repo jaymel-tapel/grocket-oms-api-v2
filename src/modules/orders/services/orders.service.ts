@@ -9,7 +9,12 @@ import { UserEntity } from '../../users/entities/user.entity';
 import { ClientsService } from '@modules/clients/services/clients.service';
 import { ClientEntity } from '@modules/clients/entities/client.entity';
 import { UsersService } from '@modules/users/services/users.service';
-import { PaymentStatusEnum, Prisma, RoleEnum } from '@prisma/client';
+import {
+  PaymentStatusEnum,
+  Prisma,
+  RoleEnum,
+  TaskTypeEnum,
+} from '@prisma/client';
 import { CompaniesService } from '@modules/companies/services/companies.service';
 import { OrderEntity } from '../entities/order.entity';
 import { dd } from '@src/common/helpers/debug';
@@ -34,6 +39,8 @@ import handlebars from 'handlebars';
 import * as fs from 'fs/promises';
 import { join } from 'path';
 import { format } from 'date-fns';
+import { TasksService } from '@modules/my-tasks/services/tasks.service';
+import { isEmpty } from 'lodash';
 
 @Injectable()
 export class OrdersService {
@@ -46,6 +53,7 @@ export class OrdersService {
     private readonly invoicesService: InvoicesService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly mailerService: MailerService,
+    private readonly tasksService: TasksService,
   ) {}
 
   private async validateSellerAndClient(
@@ -57,17 +65,17 @@ export class OrdersService {
     }: CreateOrderDto | UpdateOrderDto,
   ) {
     let sellerEntity: UserEntity = await this.database.user.findFirst({
-      where: { email: seller_email },
+      where: { email: { equals: seller_email, mode: 'insensitive' } },
     });
 
     let alterAccount: AlternateEmailEntity =
       await this.database.alternateEmail.findFirst({
-        where: { email: seller_email },
+        where: { email: { equals: seller_email, mode: 'insensitive' } },
         include: { user: true },
       });
 
     let clientEntity: ClientEntity = await this.database.client.findFirst({
-      where: { email: client_email },
+      where: { email: { equals: client_email, mode: 'insensitive' } },
       include: { clientInfo: true },
     });
 
@@ -399,6 +407,7 @@ export class OrdersService {
       updatedOrder = await this.updatePaymentStatus(
         orderData.payment_status,
         updatedOrder,
+        clientEntity,
         authUser,
       );
     }
@@ -483,24 +492,71 @@ export class OrdersService {
   private async updatePaymentStatus(
     payment_status: PaymentStatusEnum,
     order: OrderEntity,
+    client: ClientEntity,
     authUser: UserEntity,
   ) {
     const isValidPaymentStatus = [
-      PaymentStatusEnum.NEW,
+      PaymentStatusEnum.SENT_INVOICE,
       PaymentStatusEnum.PR1,
       PaymentStatusEnum.PR2,
     ].some((value) => value === payment_status);
+
+    const foundTask = await this.tasksService.findOne({
+      where: { orderId: order.id, createdBy: 'AUTO' },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const title = paymentStatusNameHelper(payment_status);
+    const description =
+      payment_status === 'UNPAID'
+        ? `${client.name} is unpaid`
+        : `Payment status ${title} for ${client.name}`;
 
     if (payment_status === PaymentStatusEnum.PAID) {
       order = await this.database.order.update({
         where: { id: order.id },
         data: { date_paid: new Date() },
       });
+
+      const updateQuery: any = {
+        update: {
+          status: 'COMPLETED',
+          completedAt: new Date(),
+        },
+      };
+
+      if (isEmpty(foundTask)) {
+        await this.database.task.update({
+          where: { id: foundTask.id },
+          data: {
+            taskAccountant: updateQuery,
+            taskSeller: updateQuery,
+          },
+        });
+      }
     } else if (isValidPaymentStatus) {
       order = await this.database.order.update({
         where: { id: order.id },
         data: { payment_status_date: new Date(), date_paid: null },
       });
+
+      if (isEmpty(foundTask)) {
+        await this.tasksService.create(authUser, {
+          title,
+          description,
+          orderId: order.id,
+          taskType: payment_status as TaskTypeEnum,
+          client_email: client?.email,
+          createdBy: 'AUTO',
+        });
+      } else {
+        await this.tasksService.update(authUser, foundTask.id, {
+          title,
+          description,
+          taskType: payment_status as TaskTypeEnum,
+          client_email: client?.email,
+        });
+      }
     }
 
     // ? Create a Log for the Order

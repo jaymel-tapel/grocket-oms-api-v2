@@ -191,7 +191,7 @@ export class OrdersCronService {
     const description =
       newTaskType === 'UNPAID'
         ? `${clientName} is unpaid`
-        : `Send ${title} for ${clientName}`;
+        : `Payment status ${title} for ${clientName}`;
 
     return await this.database.task.update({
       where: { id: task.id },
