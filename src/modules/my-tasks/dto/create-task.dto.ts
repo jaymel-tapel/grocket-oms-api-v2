@@ -1,8 +1,14 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import { DoesExist } from '@src/common/validators/user.validation';
+import { $Enums } from '@prisma/client';
 import {
   IsDate,
   IsEmail,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
@@ -46,4 +52,9 @@ export class CreateTaskDto {
   @IsString()
   @ApiPropertyOptional()
   note?: string;
+
+  @IsOptional()
+  @IsEnum($Enums.CreatedByEnum)
+  @ApiHideProperty()
+  createdBy?: $Enums.CreatedByEnum;
 }
