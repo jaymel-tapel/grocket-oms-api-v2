@@ -37,6 +37,7 @@ export class ScraperService {
 
     const response = await axios.post(process.env.SCRAPER_SEARCH, {
       userId: authUser.id,
+      location: scraperSearchDto.city,
       ...scraperSearchDto,
     });
 
