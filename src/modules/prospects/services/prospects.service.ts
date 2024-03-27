@@ -27,12 +27,10 @@ export class ProspectsService {
       data.position = 1;
     }
 
-    const updatedProspect = await this.database.$transaction(async (tx) => {
-      return await tx.prospect.update({
-        where: { id },
-        data,
-        include: { reviewers: true },
-      });
+    const updatedProspect = await this.database.prospect.update({
+      where: { id },
+      data,
+      include: { reviewers: true },
     });
 
     if (reviewers?.length > 0) {
@@ -131,9 +129,6 @@ export class ProspectsService {
 
   async remove(id: number) {
     const database = await this.database.softDelete();
-
-    return await database.$transaction(
-      async (tx) => await tx.prospect.delete({ where: { id } }),
-    );
+    return await database.prospect.delete({ where: { id } })
   }
 }
