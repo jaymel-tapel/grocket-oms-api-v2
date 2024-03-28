@@ -131,7 +131,7 @@ export class OrdersController {
     res.setHeader('Content-Disposition', `attachment; filename=invoice.pdf`);
     res.setHeader('Content-Length', pdfBuffer.length);
 
-    res.end(pdfBuffer);
+    res.send(pdfBuffer);
   }
 
   @Get(':id')
