@@ -97,9 +97,9 @@ export class ClientsService {
     findManyArgs: FilterClientsDto,
     offsetPageArgsDto: OffsetPageArgsDto,
   ) {
-    const { perPage } = offsetPageArgsDto;
+    const { perPage, page } = offsetPageArgsDto;
     const database = await this.database.softDelete();
-    const paginate = createPaginator({ perPage });
+    const paginate = createPaginator({ perPage, page });
 
     let findManyQuery: Prisma.ClientFindManyArgs = {};
 
