@@ -37,16 +37,14 @@ export class ProspectSessionService {
     // * Increment other prospects' positions by 1 based on the last position in the new session
     await this.prospectsService.adjustPositions(templateId, position);
 
-    const newSession = await this.database.$transaction(async (tx) => {
-      return await tx.prospectSession.create({
-        data: {
-          ...data,
-          prospects: {
-            create: newProspectsMap,
-          },
+    const newSession = await this.database.prospectSession.create({
+      data: {
+        ...data,
+        prospects: {
+          create: newProspectsMap,
         },
-        include: { prospects: true },
-      });
+      },
+      include: { prospects: true },
     });
 
     await Promise.all(
@@ -81,19 +79,17 @@ export class ProspectSessionService {
       await this.prospectsService.adjustPositions(1, position);
     }
 
-    const updatedSession = await this.database.$transaction(async (tx) => {
-      return await tx.prospectSession.update({
-        where: { id },
-        data: {
-          ...sessionDto,
-          ...(newProspectsMap?.length > 0 && {
-            prospects: {
-              create: newProspectsMap,
-            },
-          }),
-        },
-        include: { prospects: { orderBy: { position: 'asc' } } },
-      });
+    const updatedSession = await this.database.prospectSession.update({
+      where: { id },
+      data: {
+        ...sessionDto,
+        ...(newProspectsMap?.length > 0 && {
+          prospects: {
+            create: newProspectsMap,
+          },
+        }),
+      },
+      include: { prospects: { orderBy: { position: 'asc' } } },
     });
 
     const sessionEntity = new ProspectSessionEntity(updatedSession);
