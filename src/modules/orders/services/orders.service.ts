@@ -535,7 +535,7 @@ export class OrdersService {
         },
       };
 
-      if (isEmpty(foundTask)) {
+      if (foundTask) {
         await this.database.task.update({
           where: { id: foundTask.id },
           data: {
