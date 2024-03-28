@@ -79,9 +79,6 @@ export async function findManyClients(
               ],
             },
           },
-          {
-            OR: [{ seller: { name: 'unassigned' } }, { seller: null }],
-          },
         ],
       },
     };
