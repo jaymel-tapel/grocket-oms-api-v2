@@ -68,7 +68,9 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
       message = exception.message;
       stack = exception.stack.replace(/\n/g, '');
     } else if (exception instanceof AxiosError) {
-      statusCode = exception?.response?.status ?? 500;
+      message = exception.response?.data?.message;
+      statusCode = exception.response?.status ?? 500;
+      stack = exception.response?.data?.stack;
     } else {
       // Handle other types of exceptions
       message = exception.message || message; // Use the exception message if available
