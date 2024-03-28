@@ -3,6 +3,7 @@
 /node_modules
 .env*
 public/
+.cache
 
 # Logs
 logs
