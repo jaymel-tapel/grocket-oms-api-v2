@@ -37,7 +37,7 @@ import { InvoicesService } from '@modules/invoices/services/invoices.service';
 import PuppeteerHTMLPDF from 'puppeteer-html-pdf';
 import handlebars from 'handlebars';
 import * as fs from 'fs/promises';
-import { join, resolve } from 'path';
+import { resolve } from 'path';
 import { format } from 'date-fns';
 import { TasksService } from '@modules/my-tasks/services/tasks.service';
 import { isEmpty } from 'lodash';
@@ -535,7 +535,7 @@ export class OrdersService {
         },
       };
 
-      if (foundTask) {
+      if (!isEmpty(foundTask)) {
         await this.database.task.update({
           where: { id: foundTask.id },
           data: {
