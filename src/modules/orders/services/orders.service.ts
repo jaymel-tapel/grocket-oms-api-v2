@@ -37,7 +37,7 @@ import { InvoicesService } from '@modules/invoices/services/invoices.service';
 import PuppeteerHTMLPDF from 'puppeteer-html-pdf';
 import handlebars from 'handlebars';
 import * as fs from 'fs/promises';
-import { join } from 'path';
+import { join, resolve } from 'path';
 import { format } from 'date-fns';
 import { TasksService } from '@modules/my-tasks/services/tasks.service';
 import { isEmpty } from 'lodash';
@@ -441,7 +441,17 @@ export class OrdersService {
     const htmlPDF = new PuppeteerHTMLPDF();
     htmlPDF.setOptions({ format: 'A4' });
 
-    const templatePath = 'src/templates/pdf/invoice-pdf.hbs';
+    // const templatePath = 'src/templates/pdf/invoice-pdf.hbs';
+    const templatePath = resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'templates',
+      'pdf',
+      'invoice-pdf.hbs',
+    );
+
     const templateContent = await htmlPDF.readFile(templatePath, 'utf-8');
     const compiledTemplate = handlebars.compile(templateContent);
 
