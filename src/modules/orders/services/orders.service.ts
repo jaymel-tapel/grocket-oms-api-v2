@@ -492,9 +492,9 @@ export class OrdersService {
     const fileName = `order-#${order.id}_invoice-${invoice.invoiceId}.pdf`;
 
     // Combine the folder path and file name to get the full file path
-    const filePath = join(folderPath, fileName);
+    // const filePath = join(folderPath, fileName);
 
-    await htmlPDF.writeFile(pdfBuffer, filePath);
+    // await htmlPDF.writeFile(pdfBuffer, filePath);
 
     return pdfBuffer;
   }
