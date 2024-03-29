@@ -49,12 +49,10 @@ export class CompaniesService {
 
   async update(id: number, updateCompanyDto: UpdateCompanyDto) {
     return await this.database.$transaction(async (tx) => {
-      {
-        return await tx.company.update({
-          where: { id },
-          data: updateCompanyDto,
-        });
-      }
+      return await tx.company.update({
+        where: { id },
+        data: updateCompanyDto,
+      });
     });
   }
 

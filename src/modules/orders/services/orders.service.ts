@@ -37,7 +37,7 @@ import { InvoicesService } from '@modules/invoices/services/invoices.service';
 import PuppeteerHTMLPDF from 'puppeteer-html-pdf';
 import handlebars from 'handlebars';
 import * as fs from 'fs/promises';
-import { join } from 'path';
+import { resolve } from 'path';
 import { format } from 'date-fns';
 import { TasksService } from '@modules/my-tasks/services/tasks.service';
 import { isEmpty } from 'lodash';
@@ -134,6 +134,7 @@ export class OrdersService {
       file,
       ...orderDto
     } = createOrderDto;
+
     let invoice_image: string;
 
     // ? Validate Seller and CLient
@@ -145,64 +146,57 @@ export class OrdersService {
     const unit_cost =
       orderDto.unit_cost ?? +clientEntity.clientInfo.default_unit_cost;
 
-    const newOrder = await this.database.$transaction(async (tx) => {
-      // TODO: Find a way to support Cross Module transaction using Prisma
-      if (!clientEntity) {
-        // ? Create new client
-        clientEntity = await this.clientService.create(sellerEntity, {
-          name: client_name,
-          email: client_email,
-          default_unit_cost: orderDto.unit_cost,
-          ...createOrderClientDto,
-        });
-      }
-
-      // ? Find Company
-      let companyEntity = await this.companiesService.findOne({
-        where: {
-          name: { equals: company_name, mode: 'insensitive' },
-          clientId: clientEntity.id,
-        },
+    if (!clientEntity) {
+      // ? Create new client
+      clientEntity = await this.clientService.create(sellerEntity, {
+        name: client_name,
+        email: client_email,
+        default_unit_cost: orderDto.unit_cost,
+        ...createOrderClientDto,
       });
+    }
 
-      if (!companyEntity) {
-        // ? Create new company
-        companyEntity = await this.companiesService.create({
-          clientId: clientEntity.id,
-          name: company_name,
-          url: company_url,
-        });
-      }
-
-      // ? Create new Order
-      const newOrder = await tx.order.create({
-        data: {
-          ...orderDto,
-          unit_cost,
-          createdBy: authUser.role,
-          client: {
-            connect: { id: clientEntity.id },
-          },
-          brand: { connect: { id: clientEntity.clientInfo.brandId } },
-          seller: { connect: { id: sellerEntity.id } },
-          company: {
-            connect: { id: companyEntity.id },
-          },
-          orderReviews: {
-            createMany: {
-              data: orderReviews,
-            },
-          },
-        },
-      });
-
-      if (file) {
-        invoice_image = (await this.cloudinaryService.uploadImage(file))
-          .secure_url;
-      }
-
-      return newOrder;
+    // ? Find Company
+    let companyEntity = await this.companiesService.findOne({
+      where: {
+        name: { equals: company_name, mode: 'insensitive' },
+        clientId: clientEntity.id,
+      },
     });
+
+    if (!companyEntity) {
+      // ? Create new company
+      companyEntity = await this.companiesService.create({
+        clientId: clientEntity.id,
+        name: company_name,
+        url: company_url,
+      });
+    }
+
+    // ? Create new Order
+    const newOrder = await this.database.order.create({
+      data: {
+        ...orderDto,
+        unit_cost,
+        createdBy: authUser.role,
+        client: { connect: { id: clientEntity.id } },
+        brand: { connect: { id: clientEntity.clientInfo.brandId } },
+        seller: { connect: { id: sellerEntity.id } },
+        company: {
+          connect: { id: companyEntity.id },
+        },
+        orderReviews: {
+          createMany: {
+            data: orderReviews,
+          },
+        },
+      },
+    });
+
+    if (file) {
+      invoice_image = (await this.cloudinaryService.uploadImage(file))
+        .secure_url;
+    }
 
     const updatedOrder = await this.database.order.update({
       where: { id: newOrder.id },
@@ -441,7 +435,17 @@ export class OrdersService {
     const htmlPDF = new PuppeteerHTMLPDF();
     htmlPDF.setOptions({ format: 'A4' });
 
-    const templatePath = 'src/templates/pdf/invoice-pdf.hbs';
+    // const templatePath = 'src/templates/pdf/invoice-pdf.hbs';
+    const templatePath = resolve(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'templates',
+      'pdf',
+      'invoice-pdf.hbs',
+    );
+
     const templateContent = await htmlPDF.readFile(templatePath, 'utf-8');
     const compiledTemplate = handlebars.compile(templateContent);
 
@@ -482,9 +486,9 @@ export class OrdersService {
     const fileName = `order-#${order.id}_invoice-${invoice.invoiceId}.pdf`;
 
     // Combine the folder path and file name to get the full file path
-    const filePath = join(folderPath, fileName);
+    // const filePath = join(folderPath, fileName);
 
-    await htmlPDF.writeFile(pdfBuffer, filePath);
+    // await htmlPDF.writeFile(pdfBuffer, filePath);
 
     return pdfBuffer;
   }
@@ -525,7 +529,7 @@ export class OrdersService {
         },
       };
 
-      if (isEmpty(foundTask)) {
+      if (!isEmpty(foundTask)) {
         await this.database.task.update({
           where: { id: foundTask.id },
           data: {

@@ -164,10 +164,12 @@ export class TasksService {
     const { note, client_email, createdBy, orderId, taskType, ...data } = updateTaskDTo;
     let client: ClientEntity;
 
-    const ability = await this.abilityFactory.defineAbility(authUser);
-    const foundTask = await this.findUniqueOrThrow({ where: { id } });
+    if (!taskType) {
+      const ability = await this.abilityFactory.defineAbility(authUser);
+      const foundTask = await this.findUniqueOrThrow({ where: { id } });
 
-    ForbiddenError.from(ability).throwUnlessCan(Action.Update, foundTask);
+      ForbiddenError.from(ability).throwUnlessCan(Action.Update, foundTask);
+    }
 
     if (client_email) {
       client = await this.database.client.findFirstOrThrow({
