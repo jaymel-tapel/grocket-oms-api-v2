@@ -27,7 +27,7 @@ export class BrandsService {
       const code = await tx.brand.findFirst({ where: { code: data.code } });
 
       if (code) {
-        return new ConflictException('Code already taken');
+        throw new ConflictException('Code already taken');
       }
 
       if (image) {
@@ -58,7 +58,7 @@ export class BrandsService {
       const brandInfo = await tx.brand.findUnique({ where: { id } });
 
       if (!brandInfo) {
-        return new NotFoundException('Brand not found');
+        throw new NotFoundException('Brand not found');
       }
 
       return await this.database.brand.update({
@@ -85,7 +85,7 @@ export class BrandsService {
       const brandInfo = await tx.brand.findUnique({ where: { id } });
 
       if (!brandInfo) {
-        return new NotFoundException('Brand not found');
+        throw new NotFoundException('Brand not found');
       }
 
       if (brandInfo.logo) {
@@ -106,7 +106,7 @@ export class BrandsService {
       const brandInfo = await tx.brand.findUnique({ where: { id } });
 
       if (!brandInfo) {
-        return new NotFoundException('Brand not found');
+        throw new NotFoundException('Brand not found');
       }
 
       if (brandInfo.logo) {
@@ -128,7 +128,7 @@ export class BrandsService {
       const brandInfo = await tx.brand.findUnique({ where: { id } });
 
       if (!brandInfo) {
-        return new NotFoundException('Brand not found');
+        throw new NotFoundException('Brand not found');
       }
 
       if (brandInfo.logo) {
