@@ -16,15 +16,13 @@ export class IsCorrectTypeForEachEnumConstraint
   async validate(value: any, args?: ValidationArguments): Promise<boolean> {
     let keyword = args.object['keyword'];
 
-    console.log(keyword);
-
     // Convert string value to number if the enum key is 'ID'
     if (
       value === FilterUserEnum.ID &&
       typeof value === 'string' &&
       !isNaN(parseInt(keyword))
     ) {
-      keyword = parseInt(args.object['keyword']);
+      keyword = parseInt(keyword);
     }
 
     if (value === FilterUserEnum.ID && typeof keyword === 'number') {
@@ -39,8 +37,6 @@ export class IsCorrectTypeForEachEnumConstraint
   defaultMessage?(args?: ValidationArguments): string {
     const objectKey = Object.keys(args.object)[0];
     const value = args.value;
-
-    console.log(args, objectKey);
 
     if (value === FilterUserEnum.ID) {
       return `${objectKey} should be a number`;
