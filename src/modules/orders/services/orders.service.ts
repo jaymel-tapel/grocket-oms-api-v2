@@ -134,6 +134,7 @@ export class OrdersService {
       file,
       ...orderDto
     } = createOrderDto;
+
     let invoice_image: string;
 
     // ? Validate Seller and CLient
@@ -145,64 +146,57 @@ export class OrdersService {
     const unit_cost =
       orderDto.unit_cost ?? +clientEntity.clientInfo.default_unit_cost;
 
-    const newOrder = await this.database.$transaction(async (tx) => {
-      // TODO: Find a way to support Cross Module transaction using Prisma
-      if (!clientEntity) {
-        // ? Create new client
-        clientEntity = await this.clientService.create(sellerEntity, {
-          name: client_name,
-          email: client_email,
-          default_unit_cost: orderDto.unit_cost,
-          ...createOrderClientDto,
-        });
-      }
-
-      // ? Find Company
-      let companyEntity = await this.companiesService.findOne({
-        where: {
-          name: { equals: company_name, mode: 'insensitive' },
-          clientId: clientEntity.id,
-        },
+    if (!clientEntity) {
+      // ? Create new client
+      clientEntity = await this.clientService.create(sellerEntity, {
+        name: client_name,
+        email: client_email,
+        default_unit_cost: orderDto.unit_cost,
+        ...createOrderClientDto,
       });
+    }
 
-      if (!companyEntity) {
-        // ? Create new company
-        companyEntity = await this.companiesService.create({
-          clientId: clientEntity.id,
-          name: company_name,
-          url: company_url,
-        });
-      }
-
-      // ? Create new Order
-      const newOrder = await tx.order.create({
-        data: {
-          ...orderDto,
-          unit_cost,
-          createdBy: authUser.role,
-          client: {
-            connect: { id: clientEntity.id },
-          },
-          brand: { connect: { id: clientEntity.clientInfo.brandId } },
-          seller: { connect: { id: sellerEntity.id } },
-          company: {
-            connect: { id: companyEntity.id },
-          },
-          orderReviews: {
-            createMany: {
-              data: orderReviews,
-            },
-          },
-        },
-      });
-
-      if (file) {
-        invoice_image = (await this.cloudinaryService.uploadImage(file))
-          .secure_url;
-      }
-
-      return newOrder;
+    // ? Find Company
+    let companyEntity = await this.companiesService.findOne({
+      where: {
+        name: { equals: company_name, mode: 'insensitive' },
+        clientId: clientEntity.id,
+      },
     });
+
+    if (!companyEntity) {
+      // ? Create new company
+      companyEntity = await this.companiesService.create({
+        clientId: clientEntity.id,
+        name: company_name,
+        url: company_url,
+      });
+    }
+
+    // ? Create new Order
+    const newOrder = await this.database.order.create({
+      data: {
+        ...orderDto,
+        unit_cost,
+        createdBy: authUser.role,
+        client: { connect: { id: clientEntity.id } },
+        brand: { connect: { id: clientEntity.clientInfo.brandId } },
+        seller: { connect: { id: sellerEntity.id } },
+        company: {
+          connect: { id: companyEntity.id },
+        },
+        orderReviews: {
+          createMany: {
+            data: orderReviews,
+          },
+        },
+      },
+    });
+
+    if (file) {
+      invoice_image = (await this.cloudinaryService.uploadImage(file))
+        .secure_url;
+    }
 
     const updatedOrder = await this.database.order.update({
       where: { id: newOrder.id },
