@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { FilterDto } from '@src/common/dtos/search-filter.dto';
 import { ToBoolean } from '@src/common/helpers/toBoolean';
+import { IsCorrectTypeForEachEnum } from '@src/common/validators/enum.validation';
 import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export enum FilterUserEnum {
@@ -11,7 +12,8 @@ export enum FilterUserEnum {
 export class FilterUsersDto extends FilterDto {
   @IsOptional()
   @IsEnum(FilterUserEnum)
-  @ApiPropertyOptional()
+  @IsCorrectTypeForEachEnum()
+  @ApiPropertyOptional({ enum: FilterUserEnum })
   filter?: FilterUserEnum;
 
   @IsOptional()
