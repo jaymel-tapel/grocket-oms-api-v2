@@ -66,7 +66,7 @@ export async function findManyUsers(
         ...findManyQuery,
         where: {
           ...findManyQuery.where,
-          id: Number(keyword),
+          id: parseInt(keyword),
         },
       };
     } else if (filter === FilterUserEnum.EMAIL) {
