@@ -26,6 +26,9 @@ import { CSVModule } from './common/csv/csv.module';
 import { ProspectsModule } from './modules/prospects/prospects.module';
 import { ScraperModule } from './modules/scraper/scraper.module';
 import { CronModule } from './common/cron/cron.module';
+import { configDotenv } from 'dotenv';
+
+configDotenv({ path: `.env.${process.env.NODE_ENV}` });
 
 @Module({
   imports: [
