@@ -47,6 +47,8 @@ export class ScraperService {
       name: result.businessName,
       mapsUrl: result.mapsUrl,
       url: result.website,
+      rating: result.rating,
+      reviews: result.reviews,
     }));
 
     // * Create a new Session
