@@ -14,8 +14,10 @@ import { JwtClientStrategy } from './strategy/clients/jwt-client.strategy';
 @Module({
   imports: [
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
+    JwtModule.registerAsync({
+      useFactory: async () => ({
+        secret: process.env.JWT_SECRET,
+      }),
     }),
   ],
   controllers: [AuthController],
