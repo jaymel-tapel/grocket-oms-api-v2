@@ -61,6 +61,9 @@ async function queryFindManyForSeller(
         { email: { contains: keyword, mode: 'insensitive' } },
       ],
     },
+    include: {
+      alternateEmails: true,
+    },
   };
 
   return findManyQuery;
