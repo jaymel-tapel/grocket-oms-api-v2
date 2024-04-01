@@ -7,6 +7,9 @@ export class ScraperSearchEntity {
   }
 
   @ApiProperty()
+  location: string;
+
+  @ApiProperty()
   message: string;
 
   @ApiProperty()

@@ -48,4 +48,10 @@ export class CreateProspectDto {
 
   @ApiHideProperty()
   position?: number;
+
+  @ApiHideProperty()
+  rating?: number;
+
+  @ApiHideProperty()
+  reviews?: number;
 }
