@@ -12,7 +12,7 @@ export enum FilterUserEnum {
 export class FilterUsersDto extends FilterDto {
   @IsOptional()
   @IsEnum(FilterUserEnum)
-  @IsCorrectTypeForEachEnum()
+  @IsCorrectTypeForEachEnum(FilterUserEnum)
   @ApiPropertyOptional({ enum: FilterUserEnum })
   filter?: FilterUserEnum;
 
