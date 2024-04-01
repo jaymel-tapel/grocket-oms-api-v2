@@ -5,10 +5,10 @@ export class IItem {
   businessName?: string;
 
   @ApiPropertyOptional()
-  rating?: string;
+  rating?: number;
 
   @ApiPropertyOptional()
-  reviews?: string;
+  reviews?: number;
 
   @ApiPropertyOptional()
   phone?: string;
