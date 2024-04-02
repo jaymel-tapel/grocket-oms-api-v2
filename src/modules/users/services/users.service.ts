@@ -19,31 +19,28 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     const database = await this.database.softDelete();
-    const result = await database.$transaction(async (tx) => {
-      const foundUser = await this.findOneWithDeleted({
-        email: createUserDto.email,
-      });
-
-      if (foundUser?.status === StatusEnum.BLOCKED) {
-        throw new HttpException('User is blocked', 400);
-      } else if (foundUser?.status === StatusEnum.DELETED) {
-        return await this.restore(foundUser?.id);
-      } else if (foundUser) {
-        throw new HttpException('User already exists', 409);
-      }
-
-      createUserDto.password = await this.hashService.hashPassword(
-        createUserDto.password,
-      );
-
-      const newUser = tx.user.create({
-        data: createUserDto,
-      });
-
-      return await newUser;
+    
+    const foundUser = await this.findOneWithDeleted({
+      email: createUserDto.email,
     });
 
-    return result;
+    if (foundUser?.status === StatusEnum.BLOCKED) {
+      throw new HttpException('User is blocked', 400);
+    } else if (foundUser?.status === StatusEnum.DELETED) {
+      return await this.restore(foundUser?.id);
+    } else if (foundUser) {
+      throw new HttpException('User already exists', 409);
+    }
+
+    createUserDto.password = await this.hashService.hashPassword(
+      createUserDto.password,
+    );
+
+    const newUser = await database.user.create({
+      data: createUserDto,
+    });
+
+    return newUser;
   }
 
   async findAll() {
