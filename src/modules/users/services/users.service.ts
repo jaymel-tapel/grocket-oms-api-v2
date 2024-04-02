@@ -138,34 +138,32 @@ export class UsersService {
   async remove(id: number) {
     const database = await this.database.softDelete();
 
-    return await database.$transaction(async (tx) => {
-      const foundUser = await tx.user.findUniqueOrThrow({
-        where: { id },
-        include: { clients: true },
-      });
-
-      if (foundUser.clients.length > 0) {
-        throw new HttpException(
-          `Unable to delete user with ${foundUser.clients.length} assigned clients.`,
-          400,
-        );
-      }
-
-      const user = await tx.user.delete({
-        where: { id },
-      });
-
-      await tx.user.update({
-        where: { id: user.id },
-        data: { status: 'DELETED' },
-      });
-
-      await tx.alternateEmail.deleteMany({
-        where: { userId: user.id, deletedAt: null },
-      });
-
-      return user;
+    const foundUser = await database.user.findUniqueOrThrow({
+      where: { id },
+      include: { clients: true },
     });
+
+    if (foundUser.clients.length > 0) {
+      throw new HttpException(
+        `Unable to delete user with ${foundUser.clients.length} assigned clients.`,
+        400,
+      );
+    }
+
+    const user = await database.user.delete({
+      where: { id },
+    });
+
+    await database.user.update({
+      where: { id: user.id },
+      data: { status: 'DELETED' },
+    });
+
+    await database.alternateEmail.deleteMany({
+      where: { userId: user.id, deletedAt: null },
+    });
+
+    return user;
   }
 
   async restore(id: number) {
