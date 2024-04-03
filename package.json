@@ -33,7 +33,9 @@
     "prisma:push": "npx prisma db push",
     "prisma:seed": "npx prisma db seed",
     "seed": "ts-node prisma/seed.ts",
-    "command": "ts-node -r tsconfig-paths/register ./src/main-cli.ts"
+    "command": "NODE_ENV=local ts-node -r tsconfig-paths/register ./src/main-cli.ts",
+    "command:dev": "NODE_ENV=development ts-node -r tsconfig-paths/register ./src/main-cli.ts",
+    "command:prod": "NODE_ENV=production ts-node -r tsconfig-paths/register ./src/main-cli.ts"
   },
   "dependencies": {
     "@casl/ability": "^6.5.0",
