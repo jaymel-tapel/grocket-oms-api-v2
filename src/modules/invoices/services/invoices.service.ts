@@ -29,26 +29,24 @@ export class InvoicesService {
     const quantity = orderReviewerNames.length;
     const amount = quantity * Number(order.unit_cost);
 
-    return await this.database.$transaction(async (tx) => {
-      const newInvoice = await tx.invoice.create({
-        data: {
-          order: { connect: { id: order.id } },
-          quantity,
-          amount,
-          rate: +order.unit_cost,
-          brand: { connect: { id: brand.id } },
-          review_names: orderReviewerNames,
-        },
-      });
+    const newInvoice = await this.database.invoice.create({
+      data: {
+        order: { connect: { id: order.id } },
+        quantity,
+        amount,
+        rate: +order.unit_cost,
+        brand: { connect: { id: brand.id } },
+        review_names: orderReviewerNames,
+      },
+    });
 
-      const invoiceId = this.generateInvoiceId(newInvoice.id);
+    const invoiceId = this.generateInvoiceId(newInvoice.id);
 
-      return await tx.invoice.update({
-        where: { id: newInvoice.id },
-        data: {
-          invoiceId,
-        },
-      });
+    return await this.database.invoice.update({
+      where: { id: newInvoice.id },
+      data: {
+        invoiceId,
+      },
     });
   }
 
