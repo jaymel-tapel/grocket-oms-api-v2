@@ -17,48 +17,44 @@ export class AlternateEmailsService {
   async upsert(user: UserEntity, alterEmailDto: AlternateEmailDto[]) {
     const emails: AlternateEmailEntity[] = [];
 
-    const result = await this.database.$transaction(async (tx) => {
-      // ? Force Delete All alternate emails that connects to the user
-      await tx.alternateEmail.deleteMany({
+    // ? Force Delete All alternate emails that connects to the user
+    await this.database.alternateEmail.deleteMany({
+      where: {
+        userId: user.id,
+      },
+    });
+
+    if (alterEmailDto.length === 0) {
+      return [];
+    }
+
+    for (const dto of alterEmailDto) {
+      const checkUser = await this.userService.findAllByCondition({
+        where: { email: { equals: dto.email, mode: 'insensitive' } },
+      });
+
+      const foundAlternateEmail = await this.findByCondition({
         where: {
-          userId: user.id,
+          userId: {
+            not: user.id,
+          },
+          email: { equals: dto.email, mode: 'insensitive' },
         },
       });
 
-      if (alterEmailDto.length === 0) {
-        return [];
-      }
-
-      for (const dto of alterEmailDto) {
-        const checkUser = await this.userService.findAllByCondition({
-          where: { email: dto.email },
-        });
-
-        const foundAlternateEmail = await this.findByCondition({
-          where: {
-            userId: {
-              not: user.id,
-            },
+      if (!foundAlternateEmail && checkUser.length === 0) {
+        // ? If alternate email doesn't exist yet, then Create new Alternate Email
+        const newAlternateEmail = await this.database.alternateEmail.create({
+          data: {
+            userId: user.id,
             email: dto.email,
           },
         });
-
-        if (!foundAlternateEmail && checkUser.length === 0) {
-          // ? If alternate email doesn't exist yet, then Create new Alternate Email
-          const newAlternateEmail = await tx.alternateEmail.create({
-            data: {
-              userId: user.id,
-              email: dto.email,
-            },
-          });
-          emails.push(newAlternateEmail);
-        }
+        emails.push(newAlternateEmail);
       }
+    }
 
-      return emails;
-    });
-
-    return result;
+    return emails;
   }
 
   async findAll(query: FindAlternateDto) {

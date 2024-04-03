@@ -14,7 +14,7 @@ export class ForgotService {
 
   async forgot(credential: ForgotPasswordDto) {
     const user = await this.database.user.findFirstOrThrow({
-      where: { email: credential.email },
+      where: { email: { equals: credential.email, mode: 'insensitive' } },
     });
 
     const forgot_password_code = await this.hashService.generatePasswordToken();
