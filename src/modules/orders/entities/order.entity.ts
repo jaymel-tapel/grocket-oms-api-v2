@@ -5,6 +5,7 @@ import { $Enums, Order, Prisma } from '@prisma/client';
 import { Transform, TransformFnParams } from 'class-transformer';
 import { OrderReviewEntity } from './order-review.entity';
 import { UserEntity } from '@modules/users/entities/user.entity';
+import { OrderLogEntity } from './order-log.entity';
 
 export class OrderEntity implements Order {
   constructor({
@@ -108,6 +109,9 @@ export class OrderEntity implements Order {
 
   @ApiPropertyOptional({ type: OrderReviewEntity, isArray: true })
   orderReviews?: OrderReviewEntity[];
+
+  @ApiPropertyOptional({ type: OrderLogEntity, isArray: true })
+  orderLogs?: OrderLogEntity[];
 
   @ApiPropertyOptional()
   orderReviewCount?: number;
