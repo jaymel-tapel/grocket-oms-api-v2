@@ -62,26 +62,27 @@ export async function findManyClients(
 ) {
   const { keyword, clientLoggedIn, filter } = findManyArgs;
 
-  // TODO: Include: Companies, Clients' Orders, Client
   let findManyQuery = await baseFindManyQuery(findManyArgs, database);
 
   if (filter === FilterClientEnum.SELLER) {
-    findManyQuery = {
-      ...findManyQuery,
-      where: {
-        ...findManyQuery.where,
-        OR: [
-          {
-            seller: {
-              OR: [
-                { name: { contains: keyword, mode: 'insensitive' } },
-                { email: { contains: keyword, mode: 'insensitive' } },
-              ],
-            },
+    findManyQuery = !keyword
+      ? await queryFindManyForSeller(keyword, findManyQuery)
+      : {
+          ...findManyQuery,
+          where: {
+            ...findManyQuery.where,
+            OR: [
+              {
+                seller: {
+                  OR: [
+                    { name: { contains: keyword, mode: 'insensitive' } },
+                    { email: { contains: keyword, mode: 'insensitive' } },
+                  ],
+                },
+              },
+            ],
           },
-        ],
-      },
-    };
+        };
   } else {
     findManyQuery = await queryFindManyForSeller(keyword, findManyQuery);
   }
@@ -100,7 +101,6 @@ export async function sellerFindManyClients(
 ) {
   const { keyword, clientLoggedIn } = findManyArgs;
 
-  // TODO: Include: Companies, Clients' Orders, Client
   let findManyQuery = await baseFindManyQuery(findManyArgs, database, seller);
 
   if (keyword) {

@@ -55,36 +55,36 @@ export class ClientsService {
       sellerId = foundSeller.id;
     }
 
-    return await this.database.$transaction(async (tx) => {
-      const foundClient = await this.findOneWithDeleted({ email });
-
-      const clientInfoObj = foundClient?.clientInfo;
-
-      if (clientInfoObj?.status === StatusEnum.BLOCKED) {
-        throw new HttpException('Client is blocked', 400);
-      } else if (clientInfoObj?.status === StatusEnum.DELETED) {
-        return await this.restore(foundClient.id);
-      } else if (clientInfoObj) {
-        throw new HttpException('Client already exists', 409);
-      }
-
-      const passwordObj = await this.hashService.generateAndHashPassword(
-        passDto ?? null,
-      );
-
-      const newClient = tx.client.create({
-        data: {
-          name,
-          email,
-          password: passwordObj.hash,
-          seller: { connect: { id: sellerId } },
-          clientInfo: { create: clientInfoDto },
-        },
-        include: { clientInfo: true },
-      });
-
-      return await newClient;
+    const foundClient = await this.findOneWithDeleted({
+      email: { equals: email, mode: 'insensitive' },
     });
+
+    const clientInfoObj = foundClient?.clientInfo;
+
+    if (clientInfoObj?.status === StatusEnum.BLOCKED) {
+      throw new HttpException('Client is blocked', 400);
+    } else if (clientInfoObj?.status === StatusEnum.DELETED) {
+      return await this.restore(foundClient.id);
+    } else if (clientInfoObj) {
+      throw new HttpException('Client already exists', 409);
+    }
+
+    const passwordObj = await this.hashService.generateAndHashPassword(
+      passDto ?? null,
+    );
+
+    const newClient = await this.database.client.create({
+      data: {
+        name,
+        email,
+        password: passwordObj.hash,
+        seller: { connect: { id: sellerId } },
+        clientInfo: { create: clientInfoDto },
+      },
+      include: { clientInfo: true },
+    });
+
+    return newClient;
   }
 
   async findAllByCondition(args: Prisma.ClientFindManyArgs) {
@@ -191,26 +191,24 @@ export class ClientsService {
   async remove(id: number) {
     const database = await this.database.softDelete();
 
-    return await database.$transaction(async (tx) => {
-      const client = await tx.client.findUniqueOrThrow({ where: { id } });
+    const client = await database.client.findUniqueOrThrow({ where: { id } });
 
-      await tx.clientInfo.delete({
-        where: { clientId: id },
-      });
-
-      await tx.client.delete({
-        where: { id: id },
-      });
-
-      await tx.clientInfo.update({
-        where: { clientId: id },
-        data: { status: 'DELETED' },
-      });
-
-      this.eventsService.emitDeleteClientEvent(client);
-
-      return client;
+    await database.clientInfo.delete({
+      where: { clientId: id },
     });
+
+    await database.client.delete({
+      where: { id: id },
+    });
+
+    await database.clientInfo.update({
+      where: { clientId: id },
+      data: { status: 'DELETED' },
+    });
+
+    this.eventsService.emitDeleteClientEvent(client);
+
+    return client;
   }
 
   async restore(id: number) {

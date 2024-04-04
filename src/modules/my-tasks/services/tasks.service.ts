@@ -43,7 +43,7 @@ export class TasksService {
 
     if (client_email) {
       client = await this.database.client.findFirstOrThrow({
-        where: { email: client_email },
+        where: { email: { equals: client_email, mode: 'insensitive' } },
       });
     }
 
@@ -173,7 +173,7 @@ export class TasksService {
 
     if (client_email) {
       client = await this.database.client.findFirstOrThrow({
-        where: { email: client_email },
+        where: { email: { equals: client_email, mode: 'insensitive' } },
       });
     }
 

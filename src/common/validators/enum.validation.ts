@@ -14,7 +14,7 @@ export class IsCorrectTypeForEachEnumConstraint
   implements ValidatorConstraintInterface
 {
   async validate(value: any, args?: ValidationArguments): Promise<boolean> {
-    let keyword = args.object['keyword'];
+    let { keyword }: any = args.object;
     const enumType = args.constraints[0];
 
     // ? Convert string value to number if the enum key is 'ID'

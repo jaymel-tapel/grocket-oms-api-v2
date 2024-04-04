@@ -19,31 +19,28 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     const database = await this.database.softDelete();
-    const result = await database.$transaction(async (tx) => {
-      const foundUser = await this.findOneWithDeleted({
-        email: createUserDto.email,
-      });
-
-      if (foundUser?.status === StatusEnum.BLOCKED) {
-        throw new HttpException('User is blocked', 400);
-      } else if (foundUser?.status === StatusEnum.DELETED) {
-        return await this.restore(foundUser?.id);
-      } else if (foundUser) {
-        throw new HttpException('User already exists', 409);
-      }
-
-      createUserDto.password = await this.hashService.hashPassword(
-        createUserDto.password,
-      );
-
-      const newUser = tx.user.create({
-        data: createUserDto,
-      });
-
-      return await newUser;
+    
+    const foundUser = await this.findOneWithDeleted({
+      email: createUserDto.email,
     });
 
-    return result;
+    if (foundUser?.status === StatusEnum.BLOCKED) {
+      throw new HttpException('User is blocked', 400);
+    } else if (foundUser?.status === StatusEnum.DELETED) {
+      return await this.restore(foundUser?.id);
+    } else if (foundUser) {
+      throw new HttpException('User already exists', 409);
+    }
+
+    createUserDto.password = await this.hashService.hashPassword(
+      createUserDto.password,
+    );
+
+    const newUser = await database.user.create({
+      data: createUserDto,
+    });
+
+    return newUser;
   }
 
   async findAll() {
@@ -138,34 +135,32 @@ export class UsersService {
   async remove(id: number) {
     const database = await this.database.softDelete();
 
-    return await database.$transaction(async (tx) => {
-      const foundUser = await tx.user.findUniqueOrThrow({
-        where: { id },
-        include: { clients: true },
-      });
-
-      if (foundUser.clients.length > 0) {
-        throw new HttpException(
-          `Unable to delete user with ${foundUser.clients.length} assigned clients.`,
-          400,
-        );
-      }
-
-      const user = await tx.user.delete({
-        where: { id },
-      });
-
-      await tx.user.update({
-        where: { id: user.id },
-        data: { status: 'DELETED' },
-      });
-
-      await tx.alternateEmail.deleteMany({
-        where: { userId: user.id, deletedAt: null },
-      });
-
-      return user;
+    const foundUser = await database.user.findUniqueOrThrow({
+      where: { id },
+      include: { clients: true },
     });
+
+    if (foundUser.clients.length > 0) {
+      throw new HttpException(
+        `Unable to delete user with ${foundUser.clients.length} assigned clients.`,
+        400,
+      );
+    }
+
+    const user = await database.user.delete({
+      where: { id },
+    });
+
+    await database.user.update({
+      where: { id: user.id },
+      data: { status: 'DELETED' },
+    });
+
+    await database.alternateEmail.deleteMany({
+      where: { userId: user.id, deletedAt: null },
+    });
+
+    return user;
   }
 
   async restore(id: number) {

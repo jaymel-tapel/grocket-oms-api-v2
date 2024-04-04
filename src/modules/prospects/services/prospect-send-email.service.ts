@@ -13,9 +13,11 @@ export class ProspectSendMailService {
     private readonly prospectLogsService: ProspectLogsService,
   ) {}
 
-  async send(prospect: ProspectEntity, authUser: UserEntity) {
-    const template = prospect.prospectTemplate;
-
+  async manualSend(
+    prospect: ProspectEntity,
+    template: ProspectTemplate,
+    authUser: UserEntity,
+  ) {
     const compiledTemplate = compile(template.content);
     const dynamicContent = compiledTemplate({ ...prospect });
 
@@ -89,28 +91,5 @@ export class ProspectSendMailService {
       message: `Email sent successfully!`,
       errors_count: ctr,
     };
-  }
-
-  async manualSend(
-    prospect: ProspectEntity,
-    template: ProspectTemplate,
-    authUser: UserEntity,
-  ) {
-    const compiledTemplate = compile(template.content);
-    const dynamicContent = compiledTemplate({ ...prospect });
-
-    await this.mailerService.sendMail({
-      to: prospect.emails,
-      subject: template.subject,
-      template: 'prospect-email-template',
-      context: { dynamicContent },
-    });
-
-    await this.prospectLogsService.createLog(prospect.id, authUser, {
-      templateId: template.id,
-      action: `${template.name} template`,
-    });
-
-    return { message: `Email sent successfully!` };
   }
 }
