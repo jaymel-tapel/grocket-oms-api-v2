@@ -15,7 +15,7 @@ export class ScraperSearchDto {
   search: string;
 
   @IsNumber()
-  @Max(1080)
+  @Max(3000)
   @Min(1)
   @ApiProperty()
   limit: number;
