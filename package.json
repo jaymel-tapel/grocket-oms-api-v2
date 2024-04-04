@@ -35,7 +35,7 @@
     "seed": "ts-node prisma/seed.ts",
     "command": "NODE_ENV=local ts-node -r tsconfig-paths/register ./src/main-cli.ts",
     "command:dev": "NODE_ENV=development node -r tsconfig-paths/register ./dist/src/main-cli",
-    "command:prod": "NODE_ENV=production ts-node -r tsconfig-paths/register ./src/main-cli.ts"
+    "command:prod": "NODE_ENV=production node -r tsconfig-paths/register ./dist/src/main-cli"
   },
   "dependencies": {
     "@casl/ability": "^6.5.0",
