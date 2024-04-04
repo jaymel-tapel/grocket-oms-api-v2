@@ -41,6 +41,7 @@ import { resolve } from 'path';
 import { format } from 'date-fns';
 import { TasksService } from '@modules/my-tasks/services/tasks.service';
 import { isEmpty } from 'lodash';
+import { OrderReviewsService } from './order-reviews.service';
 
 @Injectable()
 export class OrdersService {
@@ -50,6 +51,7 @@ export class OrdersService {
     private readonly clientService: ClientsService,
     private readonly companiesService: CompaniesService,
     private readonly orderLogsService: OrderLogsService,
+    private readonly orderReviewsService: OrderReviewsService,
     private readonly invoicesService: InvoicesService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly mailerService: MailerService,
@@ -324,8 +326,17 @@ export class OrdersService {
       Prisma.OrderFindManyArgs
     >(database.order, findManyQuery, offsetPageArgsDto);
 
-    paginatedOrders.data = paginatedOrders.data.map(
-      (order) => new OrderEntity(order),
+    paginatedOrders.data = await Promise.all(
+      paginatedOrders.data.map(async (order) => {
+        const orderReviews =
+          await this.orderReviewsService.findManyReviewsByOrderId(order.id);
+
+        const orderLogs = await this.orderLogsService.findManyByOrderId(
+          order.id,
+        );
+
+        return new OrderEntity({ ...order, orderReviews, orderLogs });
+      }),
     );
 
     return paginatedOrders;

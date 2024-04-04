@@ -3,7 +3,6 @@ import { FilterOrderDto, FilterOrderEnum } from '../dto/filter-order.dto';
 import { dateRange } from '@src/common/helpers/date-range';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { OrderReviewStatus, PaymentStatusEnum, Prisma } from '@prisma/client';
-import { orderIncludeHelper } from './order-include.helper';
 
 async function baseFindManyQuery(
   findManyArgs: FilterOrderDto,
@@ -13,7 +12,13 @@ async function baseFindManyQuery(
   const { from, to, code, showDeleted } = findManyArgs;
 
   let findManyQuery: Prisma.OrderFindManyArgs = {
-    include: orderIncludeHelper(),
+    include: {
+      client: {
+        include: { clientInfo: true, companies: true },
+      },
+      seller: true,
+      company: true,
+    },
     orderBy: {
       createdAt: 'desc',
     },
