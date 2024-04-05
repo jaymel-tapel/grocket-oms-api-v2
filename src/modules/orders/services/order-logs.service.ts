@@ -24,4 +24,11 @@ export class OrderLogsService {
       },
     });
   }
+
+  async findManyByOrderId(orderId: number) {
+    const database = await this.database.softDelete();
+    return await database.orderLog.findMany({
+      where: { orderId },
+    });
+  }
 }

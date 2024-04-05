@@ -1,5 +1,4 @@
 import { ClientEntity } from '@modules/clients/entities/client.entity';
-import { Client } from '@prisma/client';
 
 class ClientEvent {
   constructor(public readonly client: ClientEntity) {}

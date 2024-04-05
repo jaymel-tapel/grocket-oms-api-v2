@@ -109,4 +109,11 @@ export class OrderReviewsService {
       where: { id: { in: reviewIds } },
     });
   }
+
+  async findManyReviewsByOrderId(orderId: number) {
+    const database = await this.database.softDelete();
+    return await database.orderReview.findMany({
+      where: { orderId },
+    });
+  }
 }
