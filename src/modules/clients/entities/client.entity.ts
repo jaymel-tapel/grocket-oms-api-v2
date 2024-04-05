@@ -50,3 +50,57 @@ export class ClientEntity implements Client {
   @ApiProperty({ type: ClientInfoEntity })
   clientInfo?: ClientInfoEntity;
 }
+
+export class ClientWithoutRelationsEntity implements Client {
+  constructor(data?: Partial<ClientWithoutRelationsEntity>) {
+    Object.assign(this, data);
+  }
+
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  forgot_password_code: string;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiProperty()
+  deletedAt: Date;
+
+  @Exclude()
+  password: string;
+
+  @Exclude()
+  sellerId: number;
+}
+
+export class GeneratePasswordEntity {
+  constructor(data?: Partial<GeneratePasswordEntity>) {
+    Object.assign(this, data);
+
+    if (data.client) {
+      this.client = new ClientWithoutRelationsEntity(data.client);
+    }
+  }
+
+  @ApiProperty()
+  client: ClientWithoutRelationsEntity;
+
+  @ApiProperty()
+  password_text: string;
+}
+
+export class SendGeneratedPasswordEntity {
+  @ApiProperty({ example: 'Email sent successfully!' })
+  message: string;
+}

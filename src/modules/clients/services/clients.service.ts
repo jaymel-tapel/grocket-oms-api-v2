@@ -19,6 +19,8 @@ import { createPaginator } from 'prisma-pagination';
 import { FindClientsBySellerDto } from '../dto/find-clients-by-seller.dto';
 import { clientIncludeHelper } from '../helpers/client-include.helper';
 import { EventsService } from '@modules/events/services/events.services';
+import { SendGeneratedPasswordDto } from '../dto/generate-password.dto';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class ClientsService {
@@ -27,6 +29,7 @@ export class ClientsService {
     private readonly hashService: HashService,
     private readonly usersService: UsersService,
     private readonly eventsService: EventsService,
+    private readonly mailerService: MailerService,
   ) {}
 
   async create(authUser: UserEntity, createClientDto: CreateClientDto) {
@@ -142,6 +145,17 @@ export class ClientsService {
   ) {
     const database = await this.database.softDelete();
     return await database.client.findFirst({
+      where: { ...data },
+      ...args,
+    });
+  }
+
+  async findOneOrThrow(
+    data: Prisma.ClientWhereInput,
+    args?: Prisma.ClientFindFirstOrThrowArgs,
+  ) {
+    const database = await this.database.softDelete();
+    return await database.client.findFirstOrThrow({
       where: { ...data },
       ...args,
     });
@@ -274,5 +288,52 @@ export class ClientsService {
     );
 
     return clients.filter(Boolean);
+  }
+
+  async generatePassword(client: ClientEntity) {
+    const { hash, text } = await this.hashService.generateAndHashPassword();
+
+    const password = hash;
+
+    client = await this.database.client.update({
+      where: { id: client.id },
+      data: { password },
+    });
+
+    return {
+      client,
+      password_text: text,
+    };
+  }
+
+  async sendEmail({ clientId, password }: SendGeneratedPasswordDto) {
+    const client = await this.findOneOrThrow({ id: clientId });
+
+    const comparePassword = await this.hashService.comparePassword(
+      password,
+      client.password,
+    );
+
+    if (!comparePassword) {
+      throw new HttpException(`The provided password is incorrect`, 400);
+    }
+
+    const link = process.env.FE_ROUTE;
+    const email = client.email;
+
+    const data = {
+      link,
+      password,
+      email,
+    };
+
+    await this.mailerService.sendMail({
+      to: email,
+      subject: `Reset Password`,
+      template: 'forgot-password',
+      context: data,
+    });
+
+    return { message: `Email sent successfully!` };
   }
 }

@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Query,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import { ClientsService } from './services/clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
@@ -20,7 +21,11 @@ import {
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { ClientEntity } from './entities/client.entity';
+import {
+  ClientEntity,
+  GeneratePasswordEntity,
+  SendGeneratedPasswordEntity,
+} from './entities/client.entity';
 import { TransferClientsDto } from './dto/transfer-client.dto';
 import { FilterClientsDto } from './dto/filter-client.dto';
 import { JwtGuard } from '@modules/auth/guard';
@@ -37,6 +42,7 @@ import { FindClientsBySellerDto } from './dto/find-clients-by-seller.dto';
 import { ClientReportDateRangeDto } from './dto/get-client-report.dto';
 import { ClientReportsService } from './services/client-reports.service';
 import { ClientReportEntity } from './entities/client-report.entity';
+import { SendGeneratedPasswordDto } from './dto/generate-password.dto';
 
 @UseGuards(JwtGuard)
 @ApiTags('clients')
@@ -158,6 +164,23 @@ export class ClientsController {
       transferClientsDto,
     );
     return clients.map((client) => new ClientEntity(client));
+  }
+
+  @Put('generate-password/:id')
+  @ApiOkResponse({ type: GeneratePasswordEntity })
+  async generatePassword(@Param('id', ParseIntPipe) id: number) {
+    const client = await this.clientsService.findOneOrThrow({ id });
+    return new GeneratePasswordEntity(
+      await this.clientsService.generatePassword(client),
+    );
+  }
+
+  @Post('send-email')
+  @ApiOkResponse({ type: SendGeneratedPasswordEntity })
+  async sendEmailGeneratedPassword(
+    @Body() sendGeneratedPasswordDto: SendGeneratedPasswordDto,
+  ) {
+    return await this.clientsService.sendEmail(sendGeneratedPasswordDto);
   }
 
   @Delete(':id')
