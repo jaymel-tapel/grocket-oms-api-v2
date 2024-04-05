@@ -59,6 +59,15 @@ export class CompaniesService {
   async remove(id: number) {
     const database = await this.database.softDelete();
     return await database.$transaction(async (tx) => {
+      await tx.company.update({
+        where: { id },
+        data: {
+          orders: {
+            deleteMany: {},
+          },
+        },
+      });
+
       return await tx.company.delete({
         where: { id },
       });
@@ -71,6 +80,12 @@ export class CompaniesService {
         where: { id, deletedAt: { not: null } },
         data: {
           deletedAt: null,
+          orders: {
+            updateMany: {
+              where: { deletedAt: { not: null } },
+              data: { deletedAt: null },
+            },
+          },
         },
       });
     });
