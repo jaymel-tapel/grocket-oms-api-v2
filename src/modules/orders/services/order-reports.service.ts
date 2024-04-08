@@ -24,28 +24,6 @@ export class OrderReportsService {
       },
     });
 
-    // console.log(baseReport.startRange, baseReport.endRange);
-
-    // const utcStartDate = new Date(
-    //   baseReport.startRange.getUTCFullYear(),
-    //   baseReport.startRange.getUTCMonth(),
-    //   baseReport.startRange.getUTCDate(),
-    // );
-
-    // const utcEndDate = new Date(
-    //   baseReport.endRange.getUTCFullYear(),
-    //   baseReport.endRange.getUTCMonth(),
-    //   baseReport.endRange.getUTCDate(),
-    // );
-
-    // utcStartDate.setUTCHours(0, 0, 0, 0);
-    // utcEndDate.setUTCHours(23, 59, 59, 999);
-
-    // const datesArray = eachDayOfInterval({
-    //   start: utcStartDate,
-    //   end: utcEndDate,
-    // });
-
     const datesArray: Date[] = [];
     let tempStartDate: Date = baseReport.startRange;
 
@@ -54,8 +32,6 @@ export class OrderReportsService {
       tempStartDate = addDays(tempStartDate, 1);
     }
 
-    console.log(datesArray);
-
     const ordersObj: { [key: string]: number } = {};
     const paidOrdersObj = { ...ordersObj };
 
@@ -63,8 +39,6 @@ export class OrderReportsService {
       ordersObj[date.toISOString()] = 0;
       paidOrdersObj[date.toISOString()] = 0;
     });
-
-    console.log(ordersObj);
 
     for (const order of foundOrders) {
       order.createdAt.setUTCHours(0, 0, 0, 0);
@@ -237,9 +211,6 @@ export class OrderReportsService {
       ? this.database
       : await this.database.softDelete();
 
-    // endRange = addDays(endRange, 1);
-
-    console.log(`In Find All Orders Query: `, startRange, endRange);
     return await database.order.findMany({
       ...orderQuery,
       where: {
