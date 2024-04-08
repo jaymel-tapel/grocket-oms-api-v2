@@ -335,7 +335,18 @@ export class OrdersService {
           order.id,
         );
 
-        return new OrderEntity({ ...order, orderReviews, orderLogs });
+        const client = order.client;
+
+        const companies = await this.companiesService.findAll({
+          clientId: client.id,
+        });
+
+        return new OrderEntity({
+          ...order,
+          orderReviews,
+          orderLogs,
+          client: { ...client, clientInfo: client.clientInfo, companies },
+        });
       }),
     );
 

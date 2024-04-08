@@ -14,7 +14,7 @@ async function baseFindManyQuery(
   let findManyQuery: Prisma.OrderFindManyArgs = {
     include: {
       client: {
-        include: { clientInfo: true, companies: true },
+        include: { clientInfo: true },
       },
       seller: true,
       company: true,
@@ -195,8 +195,6 @@ export const findManyOrdersQueryForSeller = async (
     database,
     seller,
   );
-
-  console.log(findManyQuery);
 
   if (keyword) {
     switch (filter) {
