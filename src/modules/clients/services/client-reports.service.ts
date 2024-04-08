@@ -2,7 +2,7 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { Injectable } from '@nestjs/common';
 import { ClientReportDateRangeDto } from '../dto/get-client-report.dto';
 import { Prisma } from '@prisma/client';
-import { addDays, eachDayOfInterval, subDays } from 'date-fns';
+import { addDays, subDays } from 'date-fns';
 import { dateRange } from '@src/common/helpers/date-range';
 import { IClientReport } from '../interfaces/client-report.interface';
 import { merge } from 'lodash';
@@ -52,16 +52,18 @@ export class ClientReportsService {
       true,
     );
 
-    const datesArray = eachDayOfInterval({
-      start: baseReport.startRange,
-      end: baseReport.endRange,
-    });
+    const datesArray: Date[] = [];
+    let tempStartDate: Date = baseReport.startRange;
+
+    while (tempStartDate <= baseReport.endRange) {
+      datesArray.push(tempStartDate);
+      tempStartDate = addDays(tempStartDate, 1);
+    }
 
     const newClientsObj: { [key: string]: number } = {};
     const inactiveClientsObj = { ...newClientsObj };
 
     datesArray.forEach((date) => {
-      date = addDays(date.setUTCHours(0, 0, 0, 0), 1);
       newClientsObj[date.toISOString()] = 0;
       inactiveClientsObj[date.toISOString()] = 0;
     });
@@ -131,8 +133,8 @@ export class ClientReportsService {
 
     // ? Last 30 Days
     if (!startRange && !endRange) {
-      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
-      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date(), 30);
+      endRange = new Date();
     } else {
       const dateRangeHelper = await dateRange(
         { from: startRange, to: endRange },
@@ -142,6 +144,9 @@ export class ClientReportsService {
       startRange = dateRangeHelper.startDate;
       endRange = dateRangeHelper.endDate;
     }
+
+    startRange.setUTCHours(0, 0, 0, 0);
+    endRange.setUTCHours(23, 59, 59, 999);
 
     if (sellerId) {
       clientQuery = {
