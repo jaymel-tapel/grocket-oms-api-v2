@@ -1,8 +1,9 @@
 import { UserEntity } from '@modules/users/entities/user.entity';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Client } from '@prisma/client';
 import { Exclude } from 'class-transformer';
 import { ClientInfoEntity } from './client-info.entity';
+import { CompanyEntity } from '@modules/companies/entities/company.entity';
 
 export class ClientEntity implements Client {
   constructor({ seller, clientInfo, ...data }: Partial<ClientEntity>) {
@@ -49,7 +50,15 @@ export class ClientEntity implements Client {
 
   @ApiProperty({ type: ClientInfoEntity })
   clientInfo?: ClientInfoEntity;
+
+  @ApiProperty({ type: [CompanyEntity] })
+  companies?: CompanyEntity[] | null;
 }
+
+export class ClientEntityWithoutSeller extends OmitType(ClientEntity, [
+  'seller',
+  'sellerId',
+]) {}
 
 export class ClientWithoutRelationsEntity implements Client {
   constructor(data?: Partial<ClientWithoutRelationsEntity>) {
