@@ -457,16 +457,16 @@ export class OrdersService {
     const htmlPDF = new PuppeteerHTMLPDF();
     htmlPDF.setOptions({ format: 'A4' });
 
-    // const templatePath = 'src/templates/pdf/invoice-pdf.hbs';
-    const templatePath = resolve(
-      __dirname,
-      '..',
-      '..',
-      '..',
-      'templates',
-      'pdf',
-      'invoice-pdf.hbs',
-    );
+    const templatePath = 'src/templates/pdf/invoice-pdf.hbs';
+    // const templatePath = resolve(
+    //   __dirname,
+    //   '..',
+    //   '..',
+    //   '..',
+    //   'templates',
+    //   'pdf',
+    //   'invoice-pdf.hbs',
+    // );
 
     const templateContent = await htmlPDF.readFile(templatePath, 'utf-8');
     const compiledTemplate = handlebars.compile(templateContent);
