@@ -7,11 +7,13 @@ export class DatabaseService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
-  // constructor() {
-  //   super({
-  //     log: ['query'],
-  //   });
-  // }
+  constructor() {
+    super({
+      transactionOptions: {
+        timeout: 1000 * 20,
+      },
+    });
+  }
 
   async softDelete() {
     return this.$extends(

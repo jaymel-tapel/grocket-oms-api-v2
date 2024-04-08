@@ -136,10 +136,10 @@ export class ScraperService {
 
   async estimate(estimateDto: ScraperEstimateDto) {
     const { limit, no_of_cities } = estimateDto;
-    const AVG_TIME_SEARCH = 15.52;
+    const AVG_TIME_SEARCH = 19.54;
     const AVG_TIME_SEARCH_MAX = 137.464; // 137.464 - 1000 limit;
-    const AVG_TIME_WEB = 13.6;
-    const AVG_TIME_EMAIL = 1.97;
+    const AVG_TIME_WEB = 13.6 / 4;
+    const AVG_TIME_EMAIL = 3.08 / 4;
 
     const total_estimated_prospects = limit * no_of_cities;
     let search_qty: number, search_in_seconds: number;
@@ -151,11 +151,9 @@ export class ScraperService {
       let total_estimated_search: number;
 
       if (total_estimated_prospects <= 20) {
-        total_estimated_search = search_qty;
-      } else if (search_qty > 1 && search_qty <= 19) {
+        total_estimated_search = 0;
+      } else if (search_qty >= 2 && search_qty <= 24) {
         total_estimated_search = half_search_qty * 8.5;
-      } else if (search_qty >= 20 && search_qty <= 24) {
-        total_estimated_search = half_search_qty * 10;
       } else if (search_qty >= 25 && search_qty <= 29) {
         total_estimated_search = half_search_qty * 8.25;
       } else {
@@ -195,7 +193,7 @@ export class ScraperService {
     const remainingSecondsAfterHours = remainingSecondsAfterDays % 3600;
     const minutes = Math.floor(remainingSecondsAfterHours / 60);
     const remainingSeconds = Number(
-      (remainingSecondsAfterHours % 60).toFixed(2),
+      (remainingSecondsAfterHours % 60).toFixed(1),
     );
 
     const timeParts = [];

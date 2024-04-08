@@ -41,6 +41,6 @@ export class CompanyEntity implements Company {
   @ApiProperty({ default: false })
   latest_check: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ type: () => ClientEntity })
   client?: ClientEntity;
 }
