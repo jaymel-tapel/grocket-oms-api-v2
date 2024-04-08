@@ -37,7 +37,6 @@ import { InvoicesService } from '@modules/invoices/services/invoices.service';
 import PuppeteerHTMLPDF from 'puppeteer-html-pdf';
 import handlebars from 'handlebars';
 import * as fs from 'fs/promises';
-import { resolve } from 'path';
 import { format } from 'date-fns';
 import { TasksService } from '@modules/my-tasks/services/tasks.service';
 import { isEmpty } from 'lodash';
@@ -593,6 +592,15 @@ export class OrdersService {
       where: { orderId: id, deletedAt: null },
     });
 
+    const tasks = await this.tasksService.findAllByCondition({
+      where: { orderId: id },
+      select: { id: true },
+    });
+
+    const taskIds = tasks.map((task) => task.id);
+
+    await this.tasksService.removeMany(taskIds);
+
     // ? Create a Log for the Order
     await this.orderLogsService.createLog(id, authUser, {
       action: 'order deleted',
@@ -601,6 +609,37 @@ export class OrdersService {
     return await database.order.delete({
       where: { id },
     });
+  }
+
+  async restore(id: number, authUser: UserEntity) {
+    const order = await this.database.order.update({
+      where: { id, deletedAt: { not: null } },
+      data: {
+        deletedAt: null,
+        orderReviews: {
+          updateMany: {
+            where: { orderId: id },
+            data: { deletedAt: null },
+          },
+        },
+      },
+    });
+
+    const tasks = await this.database.task.findMany({
+      where: { orderId: id, deletedAt: { not: null } },
+      select: { id: true },
+    });
+
+    const taskIds = tasks.map(({ id }) => id);
+
+    await this.tasksService.restoreMany(taskIds);
+
+    // ? Create a Log for the Order
+    await this.orderLogsService.createLog(id, authUser, {
+      action: 'order restored',
+    });
+
+    return order;
   }
 
   async uploadPhoto(

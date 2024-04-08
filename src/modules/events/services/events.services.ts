@@ -6,6 +6,7 @@ import {
 } from '../clients/clients.event';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Client } from '@prisma/client';
+import { UserEntity } from '@modules/users/entities/user.entity';
 
 @Injectable()
 export class EventsService {
@@ -18,17 +19,19 @@ export class EventsService {
     );
   }
 
-  emitDeleteClientEvent(client: Client): void {
+  emitDeleteClientEvent(client: Client, authUser: UserEntity): void {
     this.eventEmitter.emit(
       DeleteClientEvent.name,
       new DeleteClientEvent(client),
+      authUser,
     );
   }
 
-  emitRestoreClientEvent(client: Client): void {
+  emitRestoreClientEvent(client: Client, authUser: UserEntity): void {
     this.eventEmitter.emit(
       RestoreClientEvent.name,
       new RestoreClientEvent(client),
+      authUser,
     );
   }
 }

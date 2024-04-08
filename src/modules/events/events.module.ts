@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { EventsService } from './services/events.services';
 import { Subscribers } from './subscribers';
+import { OrdersModule } from '@modules/orders/orders.module';
 
 @Module({
+  imports: [OrdersModule],
   providers: [EventsService, ...Subscribers],
   exports: [EventsService, ...Subscribers],
 })

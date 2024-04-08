@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { OrdersService } from './services/orders.service';
 import { OrdersController } from './orders.controller';
 import { ClientsModule } from '@modules/clients/clients.module';
@@ -14,7 +14,7 @@ import { TasksModule } from '@modules/my-tasks/tasks.module';
 
 @Module({
   imports: [
-    ClientsModule,
+    forwardRef(() => ClientsModule),
     UsersModule,
     CompaniesModule,
     CloudinaryModule,

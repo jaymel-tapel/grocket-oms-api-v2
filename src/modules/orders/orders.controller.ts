@@ -178,6 +178,15 @@ export class OrdersController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     await this.ordersService.remove(id, user);
-    return { message: 'Successfully Deleted Order Review' };
+    return { message: 'Successfully Deleted Order' };
+  }
+
+  @Patch('restore/:id')
+  async restore(
+    @AuthUser() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    const order = await this.ordersService.restore(id, user);
+    return new OrderEntity(order);
   }
 }

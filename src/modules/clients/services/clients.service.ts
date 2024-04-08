@@ -67,7 +67,7 @@ export class ClientsService {
     if (clientInfoObj?.status === StatusEnum.BLOCKED) {
       throw new HttpException('Client is blocked', 400);
     } else if (clientInfoObj?.status === StatusEnum.DELETED) {
-      return await this.restore(foundClient.id);
+      return await this.restore(foundClient.id, authUser);
     } else if (clientInfoObj) {
       throw new HttpException('Client already exists', 409);
     }
@@ -202,47 +202,43 @@ export class ClientsService {
     return updatedClient;
   }
 
-  async remove(id: number) {
+  async remove(id: number, authUser: UserEntity) {
     const database = await this.database.softDelete();
 
     const client = await database.client.findUniqueOrThrow({ where: { id } });
 
-    await database.clientInfo.delete({
-      where: { clientId: id },
+    await database.client.update({
+      where: { id },
+      data: {
+        clientInfo: {
+          update: { data: { status: 'DELETED' } },
+          delete: {},
+        },
+      },
     });
 
-    await database.client.delete({
-      where: { id: id },
+    this.eventsService.emitDeleteClientEvent(client, authUser);
+
+    return await database.client.delete({
+      where: { id },
     });
-
-    await database.clientInfo.update({
-      where: { clientId: id },
-      data: { status: 'DELETED' },
-    });
-
-    this.eventsService.emitDeleteClientEvent(client);
-
-    return client;
   }
 
-  async restore(id: number) {
-    const database = await this.database.softDelete();
-    const foundClient = await this.findUniqueWithDeleted(id);
-
-    const client = await database.client.update({
-      where: { id: foundClient.id },
+  async restore(id: number, authUser: UserEntity) {
+    const client = await this.database.client.update({
+      where: { id },
       data: {
         deletedAt: null,
         clientInfo: {
           update: {
-            where: { clientId: foundClient.id },
+            where: { clientId: id },
             data: { status: 'ACTIVE', deletedAt: null },
           },
         },
       },
     });
 
-    this.eventsService.emitRestoreClientEvent(client);
+    this.eventsService.emitRestoreClientEvent(client, authUser);
 
     return client;
   }

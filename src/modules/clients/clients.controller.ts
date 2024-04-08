@@ -185,13 +185,19 @@ export class ClientsController {
 
   @Delete(':id')
   @ApiOkResponse({ type: ClientEntity })
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return new ClientEntity(await this.clientsService.remove(id));
+  async remove(
+    @AuthUser() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return new ClientEntity(await this.clientsService.remove(id, user));
   }
 
   @Patch('restore/:id')
   @ApiOkResponse({ type: ClientEntity })
-  async restore(@Param('id', ParseIntPipe) id: number) {
-    return new ClientEntity(await this.clientsService.restore(id));
+  async restore(
+    @AuthUser() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return new ClientEntity(await this.clientsService.restore(id, user));
   }
 }
