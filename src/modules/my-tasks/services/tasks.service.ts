@@ -45,6 +45,13 @@ export class TasksService {
       client = await this.database.client.findFirstOrThrow({
         where: { email: { equals: client_email, mode: 'insensitive' } },
       });
+    } else if (orderId) {
+      const order = await this.database.order.findFirst({
+        where: { id: orderId },
+      });
+      client = await this.database.client.findFirst({
+        where: { id: order.clientId },
+      });
     }
 
     let createdBy: CreatedByEnum;
@@ -63,8 +70,8 @@ export class TasksService {
         user: { connect: { id: authUser.id } },
         createdBy,
         ...(taskType && { taskType }),
-        ...(orderId && { order: { connect: { id: orderId }}}),
-        ...(client_email && {
+        ...(orderId && { order: { connect: { id: orderId } } }),
+        ...((client_email || orderId) && {
           client: {
             connect: {
               id: client.id,
@@ -85,7 +92,11 @@ export class TasksService {
     return newTask;
   }
 
-  private async updateOrCreateTaskAccountantAndSeller(task: TaskEntity, taskDto: CreateTaskDto | UpdateTaskDto, authUser: UserEntity) {
+  private async updateOrCreateTaskAccountantAndSeller(
+    task: TaskEntity,
+    taskDto: CreateTaskDto | UpdateTaskDto,
+    authUser: UserEntity,
+  ) {
     const {
       note,
       client_email,
@@ -93,31 +104,37 @@ export class TasksService {
       orderId,
       ...data
     } = taskDto;
-    
+
     const tx = await this.database.softDelete();
 
-    let upsertQuery: Prisma.TaskSellerUpsertArgs | Prisma.TaskAccountantUpsertArgs = {
+    let upsertQuery:
+      | Prisma.TaskSellerUpsertArgs
+      | Prisma.TaskAccountantUpsertArgs = {
       where: { taskId: task.id },
       update: data,
       create: {
         taskId: task.id,
-        ...data as CreateTaskDto,
+        ...(data as CreateTaskDto),
       },
     };
-  
+
     if (task.createdBy === 'AUTO') {
       upsertQuery = {
         ...upsertQuery,
         update: {
           ...upsertQuery.update,
-          status: 'ACTIVE'
-        }
+          status: 'ACTIVE',
+        },
       };
 
-      await tx.taskAccountant.upsert(upsertQuery as Prisma.TaskAccountantUpsertArgs);
+      await tx.taskAccountant.upsert(
+        upsertQuery as Prisma.TaskAccountantUpsertArgs,
+      );
       await tx.taskSeller.upsert(upsertQuery as Prisma.TaskSellerUpsertArgs);
     } else if (authUser.role === RoleEnum.ACCOUNTANT) {
-      await tx.taskAccountant.upsert(upsertQuery as Prisma.TaskAccountantUpsertArgs);
+      await tx.taskAccountant.upsert(
+        upsertQuery as Prisma.TaskAccountantUpsertArgs,
+      );
     } else {
       await tx.taskSeller.upsert(upsertQuery as Prisma.TaskSellerUpsertArgs);
     }
@@ -161,7 +178,8 @@ export class TasksService {
   }
 
   async update(authUser: UserEntity, id: number, updateTaskDTo: UpdateTaskDto) {
-    const { note, client_email, createdBy, orderId, taskType, ...data } = updateTaskDTo;
+    const { note, client_email, createdBy, orderId, taskType, ...data } =
+      updateTaskDTo;
     let client: ClientEntity;
 
     if (!taskType) {
@@ -175,12 +193,19 @@ export class TasksService {
       client = await this.database.client.findFirstOrThrow({
         where: { email: { equals: client_email, mode: 'insensitive' } },
       });
+    } else if (orderId) {
+      const order = await this.database.order.findFirst({
+        where: { id: orderId },
+      });
+      client = await this.database.client.findFirst({
+        where: { id: order.clientId },
+      });
     }
 
     const updatedTask = await this.database.task.update({
       where: { id },
       data: {
-        ...(client_email && {
+        ...((client_email || orderId) && {
           client: { connect: { id: client.id } },
         }),
         ...(taskType && { taskType }),
@@ -197,7 +222,11 @@ export class TasksService {
       include: taskIncludeHelper(authUser, { includeTaskNotes: true }),
     });
 
-    await this.updateOrCreateTaskAccountantAndSeller(updatedTask, data, authUser);
+    await this.updateOrCreateTaskAccountantAndSeller(
+      updatedTask,
+      data,
+      authUser,
+    );
 
     return updatedTask;
   }
@@ -247,32 +276,60 @@ export class TasksService {
 
     ForbiddenError.from(ability).throwUnlessCan(Action.Update, foundTask);
 
-    return await database.$transaction(async (tx) => {
-      if (authUser.role === RoleEnum.ACCOUNTANT) {
-        await tx.taskAccountant.delete({
-          where: { taskId: id },
-        });
+    if (authUser.role === RoleEnum.ACCOUNTANT) {
+      await this.deleteTaskAccountant(id);
+    } else {
+      await this.deleteTaskSeller(id);
+    }
 
-        await tx.taskAccountant.update({
-          where: { taskId: id },
-          data: { status: 'DELETED' },
-        });
-      } else {
-        await tx.taskSeller.delete({
-          where: { taskId: id },
-        });
+    return await database.task.delete({
+      where: { id },
+    });
+  }
 
-        await tx.taskAccountant.update({
-          where: { taskId: id },
-          data: { status: 'DELETED' },
-        });
-      }
+  async removeMany(ids: number[]) {
+    const database = await this.database.softDelete();
 
-      const deletedTask = await tx.task.delete({
-        where: { id },
-      });
+    await this.database.taskAccountant.updateMany({
+      where: { taskId: { in: ids } },
+      data: {
+        deletedAt: new Date(),
+        status: 'DELETED',
+      },
+    });
 
-      return deletedTask;
+    await this.database.taskSeller.updateMany({
+      where: { taskId: { in: ids } },
+      data: {
+        deletedAt: new Date(),
+        status: 'DELETED',
+      },
+    });
+
+    return await database.task.deleteMany({
+      where: { id: { in: ids } },
+    });
+  }
+
+  private async deleteTaskAccountant(taskId: number) {
+    const database = await this.database.softDelete();
+
+    await database.taskAccountant.update({
+      where: { taskId },
+      data: { status: 'DELETED' },
+    });
+  }
+
+  private async deleteTaskSeller(taskId: number) {
+    const database = await this.database.softDelete();
+
+    await database.taskSeller.delete({
+      where: { taskId },
+    });
+
+    await database.taskSeller.update({
+      where: { taskId },
+      data: { status: 'DELETED' },
     });
   }
 
@@ -282,38 +339,63 @@ export class TasksService {
 
     ForbiddenError.from(ability).throwUnlessCan(Action.Update, foundTask);
 
-    return await this.database.$transaction(async (tx) => {
-      await tx.task.findUniqueOrThrow({ where: { id } });
+    if (authUser.role === RoleEnum.ACCOUNTANT) {
+      await this.restoreTaskAccountant(id);
+    } else {
+      await this.restoreTaskSeller(id);
+    }
 
-      return await tx.task.update({
-        where: { id },
-        data: {
-          deletedAt: null,
-          ...(authUser.role === RoleEnum.ACCOUNTANT && {
-            taskAccountant: {
-              update: {
-                where: { taskId: id },
-                data: {
-                  status: 'ACTIVE',
-                  deletedAt: null,
-                },
-              },
-            },
-          }),
-          ...(authUser.role === RoleEnum.SELLER && {
-            taskSeller: {
-              update: {
-                where: { taskId: id },
-                data: {
-                  status: 'ACTIVE',
-                  deletedAt: null,
-                },
-              },
-            },
-          }),
-        },
-        include: taskIncludeHelper(authUser),
-      });
+    return await this.database.task.update({
+      where: { id },
+      data: {
+        deletedAt: null,
+      },
+      include: taskIncludeHelper(authUser),
+    });
+  }
+
+  async restoreMany(ids: number[]) {
+    await this.database.taskAccountant.updateMany({
+      where: { taskId: { in: ids } },
+      data: {
+        deletedAt: null,
+        status: 'ACTIVE',
+      },
+    });
+
+    await this.database.taskSeller.updateMany({
+      where: { taskId: { in: ids } },
+      data: {
+        deletedAt: null,
+        status: 'ACTIVE',
+      },
+    });
+
+    return await this.database.task.updateMany({
+      where: { id: { in: ids } },
+      data: {
+        deletedAt: null,
+      },
+    });
+  }
+
+  private async restoreTaskAccountant(taskId: number) {
+    return await this.database.taskAccountant.update({
+      where: { taskId },
+      data: {
+        status: 'ACTIVE',
+        deletedAt: null,
+      },
+    });
+  }
+
+  private async restoreTaskSeller(taskId: number) {
+    return await this.database.taskSeller.update({
+      where: { taskId },
+      data: {
+        status: 'ACTIVE',
+        deletedAt: null,
+      },
     });
   }
 }
