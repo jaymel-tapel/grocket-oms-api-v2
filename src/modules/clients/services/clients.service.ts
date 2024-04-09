@@ -18,7 +18,7 @@ import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { createPaginator } from 'prisma-pagination';
 import { FindClientsBySellerDto } from '../dto/find-clients-by-seller.dto';
 import { clientIncludeHelper } from '../helpers/client-include.helper';
-import { EventsService } from '@modules/events/services/events.services';
+import { EventsService } from '@modules/events/services/events.service';
 import { SendGeneratedPasswordDto } from '../dto/generate-password.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 
