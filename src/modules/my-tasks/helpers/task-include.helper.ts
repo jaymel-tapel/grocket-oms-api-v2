@@ -6,8 +6,6 @@ type IOptions = {
 };
 
 export const taskIncludeHelper = (authUser: UserEntity, options?: IOptions) => {
-  const { includeTaskNotes } = options;
-
   let include: Prisma.TaskInclude = {
     ...(authUser.role === RoleEnum.ACCOUNTANT && {
       taskAccountant: true,
@@ -17,7 +15,7 @@ export const taskIncludeHelper = (authUser: UserEntity, options?: IOptions) => {
     }),
   };
 
-  if (includeTaskNotes) {
+  if (options?.includeTaskNotes) {
     include = {
       ...include,
       taskNotes: {
