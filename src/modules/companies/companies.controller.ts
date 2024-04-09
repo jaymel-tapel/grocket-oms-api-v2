@@ -22,6 +22,8 @@ import { CompanyEntity } from './entities/company.entity';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { CompanyArgsDto } from './dto/company-args.dto';
 import { JwtGuard } from '@modules/auth/guard';
+import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
+import { UserEntity } from '@modules/users/entities/user.entity';
 @UseGuards(JwtGuard)
 @ApiTags('companies')
 @Controller('companies')
@@ -57,13 +59,19 @@ export class CompaniesController {
 
   @Delete(':id')
   @ApiOkResponse({ type: CompanyEntity })
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return new CompanyEntity(await this.companiesService.remove(id));
+  async remove(
+    @AuthUser() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return new CompanyEntity(await this.companiesService.remove(id, user));
   }
 
   @Patch('restore/:id')
   @ApiOkResponse({ type: CompanyEntity })
-  async restore(@Param('id', ParseIntPipe) id: number) {
-    return new CompanyEntity(await this.companiesService.restore(id));
+  async restore(
+    @AuthUser() user: UserEntity,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return new CompanyEntity(await this.companiesService.restore(id, user));
   }
 }
