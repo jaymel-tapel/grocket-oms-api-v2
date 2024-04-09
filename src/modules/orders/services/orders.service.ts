@@ -613,7 +613,7 @@ export class OrdersService {
 
   async restore(id: number, authUser: UserEntity) {
     const order = await this.database.order.update({
-      where: { id, deletedAt: { not: null } },
+      where: { id, deletedAt: { not: null }, company: { deletedAt: null } },
       data: {
         deletedAt: null,
         orderReviews: {
