@@ -4,10 +4,15 @@ import { CreateCompanyDto } from '../dto/create-company.dto';
 import { UpdateCompanyDto } from '../dto/update-company.dto';
 import { CompanyArgsDto } from '../dto/company-args.dto';
 import { Prisma } from '@prisma/client';
+import { UserEntity } from '@modules/users/entities/user.entity';
+import { EventsService } from '@modules/events/services/events.service';
 
 @Injectable()
 export class CompaniesService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly eventsService: EventsService,
+  ) {}
 
   async create(createCompanyDto: CreateCompanyDto) {
     const { clientId, ...data } = createCompanyDto;
@@ -56,38 +61,27 @@ export class CompaniesService {
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number, authUser: UserEntity) {
     const database = await this.database.softDelete();
-    return await database.$transaction(async (tx) => {
-      await tx.company.update({
-        where: { id },
-        data: {
-          orders: {
-            deleteMany: {},
-          },
-        },
-      });
+    const company = await database.company.findUniqueOrThrow({ where: { id } });
 
-      return await tx.company.delete({
-        where: { id },
-      });
+    this.eventsService.emitDeleteCompanyEvent(company, authUser);
+
+    return await database.company.delete({
+      where: { id },
     });
   }
 
-  async restore(id: number) {
-    return await this.database.$transaction(async (tx) => {
-      return await tx.company.update({
-        where: { id, deletedAt: { not: null } },
-        data: {
-          deletedAt: null,
-          orders: {
-            updateMany: {
-              where: { deletedAt: { not: null } },
-              data: { deletedAt: null },
-            },
-          },
-        },
-      });
+  async restore(id: number, authUser: UserEntity) {
+    const company = await this.database.company.update({
+      where: { id, deletedAt: { not: null } },
+      data: {
+        deletedAt: null,
+      },
     });
+
+    this.eventsService.emitRestoreCompanyEvent(company, authUser);
+
+    return company;
   }
 }
