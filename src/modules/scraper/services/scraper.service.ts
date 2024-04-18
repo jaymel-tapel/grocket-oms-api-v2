@@ -24,6 +24,8 @@ export class ScraperService {
   ) {}
 
   async search(authUser: UserEntity, scraperSearchDto: ScraperSearchDto) {
+    console.log(scraperSearchDto);
+
     const session = new ProspectSessionEntity(
       await this.prospectSessionService.findOne({
         where: {
@@ -39,6 +41,8 @@ export class ScraperService {
       process.env.SCRAPER_SEARCH,
       scraperSearchDto,
     );
+
+    console.log(response.data);
 
     const data: ScraperSearchEntity = response.data;
 
