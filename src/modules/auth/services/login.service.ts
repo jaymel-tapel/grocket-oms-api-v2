@@ -4,6 +4,7 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { HashService } from './hash.service';
 import { JwtService } from '@nestjs/jwt';
 import { instanceToPlain } from 'class-transformer';
+import { ChatsGateway } from '@modules/websocket-gateways/chats.gateway';
 
 @Injectable()
 export class LoginService {
@@ -11,6 +12,7 @@ export class LoginService {
     private readonly database: DatabaseService,
     private readonly hashService: HashService,
     private readonly jwt: JwtService,
+    private readonly chatsGateway: ChatsGateway,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -46,6 +48,10 @@ export class LoginService {
 
   async login(credential: ValidateUserDto) {
     delete credential.password;
+    delete credential.forgot_password_code;
+
+    this.chatsGateway.setOnline(credential);
+
     return {
       ...credential,
       access_token: this.jwt.sign(credential),
