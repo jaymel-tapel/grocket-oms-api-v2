@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { ParticipantsService } from '../../participants/services/participants.service';
 import { ConversationsService } from '@modules/conversations/services/conversations.service';
-import { CreateChatDto } from '../../websocket-gateways/dto/create-chat.dto';
+import { CreateChatDto } from '../dto/create-chat.dto';
 import { DatabaseService } from '@modules/database/services/database.service';
 import { MessagesService } from '../../messages/services/messages.service';
-import { CreateMessageDto } from '@modules/messages/dto/create-message.dto';
-import { SenderDto } from '@modules/websocket-gateways/dto/sender.dto';
+import { SenderDto } from '@modules/chats/dto/sender.dto';
 import { CreateParticipantDto } from '@modules/participants/dto/create-participant.dto';
 
 @Injectable()
@@ -21,66 +20,23 @@ export class ChatsService {
     const { senderDto, createConversationDto } = createChatDto;
     const { receivers } = createConversationDto;
 
+    const newReceiversArr = [...receivers];
+
+    newReceiversArr.push({ user_email: senderDto.email });
+
+    await this.validateParticpants(newReceiversArr);
+
     // ? Create Conversation first
     const newConversation = await this.conversationsService.create(
       createConversationDto,
     );
 
-    const newParticipants = await this.createParticipants(senderDto, receivers);
-
-    const participantIds = newParticipants.map(
-      (newParticipant) => newParticipant.id,
-    );
-
-    // ? Assign participants to the conversation
-    await this.assignParticipantConversation(
+    const newParticipants = await this.participantsService.createParticipants(
       newConversation.id,
-      participantIds,
+      newReceiversArr,
     );
 
     return { newConversation, newParticipants };
-  }
-
-  private async createParticipants(
-    senderDto: SenderDto,
-    participants: CreateParticipantDto[],
-  ) {
-    let emailKey: 'client_email' | 'user_email';
-    emailKey = senderDto.appType === 'OMS' ? 'user_email' : 'client_email';
-
-    participants.push({ [emailKey]: senderDto.email });
-
-    // ? Next is to create participants
-    const newParticipants = await Promise.all(
-      participants.map((participant) =>
-        this.participantsService.create(participant),
-      ),
-    );
-
-    return newParticipants;
-  }
-
-  async createMessage(createMessageDto: Partial<CreateMessageDto>) {
-    return await this.messagesService.create(
-      createMessageDto as CreateMessageDto,
-    );
-  }
-
-  async assignParticipantConversation(
-    conversationId: number,
-    participantIds: number[],
-  ) {
-    return await Promise.all(
-      participantIds.map((participantId) =>
-        this.database.participantConversation.create({
-          data: {
-            conversationId,
-            participantId,
-            participantCount: participantIds.length,
-          },
-        }),
-      ),
-    );
   }
 
   async findCommonConversation(
@@ -92,11 +48,30 @@ export class ChatsService {
       senderDto,
     );
 
-    const commonConversation =
-      await this.participantsService.findCommonConversationBetweenParticipants(
-        participants,
-      );
+    return await this.conversationsService.findCommonConversation(participants);
+  }
 
-    return commonConversation;
+  private async validateParticpants(participants: CreateParticipantDto[]) {
+    const database = await this.database.softDelete();
+
+    const promises = participants.map((participant) => {
+      if ('user_email' in participant) {
+        return database.user.findFirst({
+          where: { email: participant.user_email },
+        });
+      } else {
+        return database.client.findFirst({
+          where: { email: participant.client_email },
+        });
+      }
+    });
+
+    const allParticipantsAreValid = (await Promise.all(promises)).every(
+      Boolean,
+    );
+
+    if (!allParticipantsAreValid) {
+      throw new HttpException('Some of Receivers are not valid', 400);
+    }
   }
 }
