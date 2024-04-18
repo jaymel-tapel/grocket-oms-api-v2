@@ -66,7 +66,7 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     } else if (exception instanceof ForbiddenError) {
       statusCode = 403;
       message = exception.message;
-      stack = exception.stack.replace(/\n/g, '');
+      stack = exception.stack?.replace(/\n/g, '');
     } else if (exception instanceof AxiosError) {
       message = exception.response?.data?.message;
       statusCode = exception.response?.status ?? 500;
@@ -78,7 +78,7 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
     }
 
     message =
-      typeof message === 'object' ? message : message.replace(/\n/g, '');
+      typeof message === 'object' ? message : message?.replace(/\n/g, '');
 
     response.status(statusCode).json({
       statusCode,
