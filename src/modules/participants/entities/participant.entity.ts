@@ -1,5 +1,5 @@
 import { ClientEntity } from '@modules/clients/entities/client.entity';
-import { ParticipantConversationEntity } from '@modules/participant-conversations/participant-conversation.entity';
+import { ConversationEntity } from '@modules/conversations/entities/conversation.entity';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Participant } from '@prisma/client';
@@ -32,6 +32,9 @@ export class ParticipantEntity implements Participant {
   @ApiProperty()
   deletedAt: Date;
 
+  @ApiProperty()
+  conversationId: number;
+
   @ApiPropertyOptional({ nullable: true })
   userId: number;
 
@@ -45,8 +48,8 @@ export class ParticipantEntity implements Participant {
   client?: Partial<ClientEntity> | null;
 
   @ApiPropertyOptional({
-    type: ParticipantConversationEntity,
+    type: ConversationEntity,
     nullable: true,
   })
-  conversations?: ParticipantConversationEntity[];
+  conversation?: ConversationEntity;
 }
