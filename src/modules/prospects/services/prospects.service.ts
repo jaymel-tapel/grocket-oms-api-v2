@@ -22,9 +22,8 @@ export class ProspectsService {
     const templateId = data?.templateId;
 
     if (templateId) {
-      // * Increment other prospects' position by 1
-      await this.adjustPositions(templateId);
-      data.position = 1;
+      const foundLastPos = await this.findLastPosition(templateId);
+      data.position = foundLastPos ? foundLastPos + 1 : 1;
     }
 
     const updatedProspect = await this.database.prospect.update({
@@ -74,26 +73,13 @@ export class ProspectsService {
     return updatedProspect;
   }
 
-  // * Increment other prospects' position by 1
-  async adjustPositions(templateId: number, lastPosition?: number) {
-    const prospectObjs = await this.database.prospect.findMany({
-      where: { templateId },
-      select: { id: true, position: true },
-      orderBy: { position: 'asc' },
-    });
-
-    if (prospectObjs.length > 0) {
-      let pos = lastPosition ?? 2;
-
-      return await Promise.all(
-        prospectObjs.map((existingProspect) =>
-          this.database.prospect.update({
-            where: { id: existingProspect.id },
-            data: { position: pos++ },
-          }),
-        ),
-      );
-    }
+  async findLastPosition(templateId: number) {
+    return (
+      await this.findOne({
+        where: { templateId },
+        orderBy: { position: 'desc' },
+      })
+    )?.position;
   }
 
   async findAll(
@@ -108,7 +94,7 @@ export class ProspectsService {
         ...(sessionId && { sessionId }),
         ...args?.where,
       },
-      orderBy: { position: 'asc' },
+      orderBy: { position: 'desc' },
     });
   }
 
@@ -129,6 +115,6 @@ export class ProspectsService {
 
   async remove(id: number) {
     const database = await this.database.softDelete();
-    return await database.prospect.delete({ where: { id } })
+    return await database.prospect.delete({ where: { id } });
   }
 }

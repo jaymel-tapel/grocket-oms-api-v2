@@ -116,7 +116,7 @@ export class ProspectTemplatesService {
       ...args,
       include: {
         ...args?.include,
-        prospects: { orderBy: { position: 'asc' } },
+        prospects: { orderBy: { position: 'desc' } },
       },
       orderBy: {
         id: 'asc',

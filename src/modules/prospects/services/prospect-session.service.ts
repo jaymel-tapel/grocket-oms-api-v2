@@ -27,15 +27,13 @@ export class ProspectSessionService {
     const { prospects, ...data } = createProspectSessionDto;
 
     const templateId = 1;
-    let position = 1;
+    let position =
+      (await this.prospectsService.findLastPosition(templateId)) ?? 0;
 
     const newProspectsMap = prospects.map((session) => ({
       ...session,
-      position: position++,
+      position: ++position,
     }));
-
-    // * Increment other prospects' positions by 1 based on the last position in the new session
-    await this.prospectsService.adjustPositions(templateId, position);
 
     const newSession = await this.database.prospectSession.create({
       data: {
@@ -68,15 +66,12 @@ export class ProspectSessionService {
     let newProspectsMap = [];
 
     if (prospects?.length > 0) {
-      let position = 1;
+      let position = await this.prospectsService.findLastPosition(1);
 
       newProspectsMap = prospects.map((prospect) => ({
         ...prospect,
-        position: position++,
+        position: ++position,
       }));
-
-      // * Increment other prospects' position by 1, starting from the value of position
-      await this.prospectsService.adjustPositions(1, position);
     }
 
     const updatedSession = await this.database.prospectSession.update({
@@ -89,7 +84,7 @@ export class ProspectSessionService {
           },
         }),
       },
-      include: { prospects: { orderBy: { position: 'asc' } } },
+      include: { prospects: { orderBy: { position: 'desc' } } },
     });
 
     const sessionEntity = new ProspectSessionEntity(updatedSession);
@@ -100,12 +95,13 @@ export class ProspectSessionService {
         sessionId: sessionEntity.id,
       });
 
-      // ? Select only the prospects that found in the prospects payload (New Prospects)
-      const newProspects = foundProspects.filter((existingPros) =>
-        prospects.find(
-          (newPros) =>
-            existingPros.name.toLowerCase() === newPros.name.toLowerCase(),
-        ),
+      const prospectsDto = new Set(
+        prospects.map((prospect) => prospect.name.toLowerCase()),
+      );
+
+      // ? Filter out all the existing prospects and get only the non existing prospects in Session
+      const newProspects = foundProspects.filter((foundProspect) =>
+        prospectsDto.has(foundProspect.name.toLowerCase()),
       );
 
       await Promise.all(

@@ -24,8 +24,6 @@ export class ScraperService {
   ) {}
 
   async search(authUser: UserEntity, scraperSearchDto: ScraperSearchDto) {
-    console.log(scraperSearchDto);
-
     const session = new ProspectSessionEntity(
       await this.prospectSessionService.findOne({
         where: {
@@ -41,8 +39,6 @@ export class ScraperService {
       process.env.SCRAPER_SEARCH,
       scraperSearchDto,
     );
-
-    console.log(response.data);
 
     const data: ScraperSearchEntity = response.data;
 
@@ -72,13 +68,14 @@ export class ScraperService {
       return await this.prospectSessionService.create(createSession, authUser);
     } else {
       // * Insert prospects in Session that doesn't yet exist
+
+      const existingProspectSet = new Set(
+        session.prospects.map((prospect) => prospect.name.toLowerCase()),
+      );
+
       // ? Filter out all the existing prospects and get only the non existing prospects in Session
       const newProspects = prospects.filter(
-        (newPros) =>
-          !session.prospects.find(
-            (existingPros) =>
-              existingPros.name.toLowerCase() === newPros.name.toLowerCase(),
-          ),
+        (newPros) => !existingProspectSet.has(newPros.name.toLowerCase()),
       );
 
       if (newProspects.length === 0) {
