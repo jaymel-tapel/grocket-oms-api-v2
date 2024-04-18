@@ -1,5 +1,5 @@
 import { MessageEntity } from '@modules/messages/entities/message.entity';
-import { ParticipantConversationEntity } from '@modules/participant-conversations/participant-conversation.entity';
+import { ParticipantEntity } from '@modules/participants/entities/participant.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Conversation } from '@prisma/client';
 
@@ -9,7 +9,7 @@ export class ConversationEntity implements Conversation {
 
     if (data?.participants) {
       this.participants = data.participants.map(
-        (p) => new ParticipantConversationEntity(p),
+        (p) => new ParticipantEntity(p),
       );
     }
 
@@ -38,11 +38,11 @@ export class ConversationEntity implements Conversation {
   @ApiProperty({ nullable: true })
   name: string | null;
 
-  // @ApiProperty({ nullable: true })
-  // receiver?:
+  @ApiProperty()
+  participantCount: number;
 
-  @ApiProperty({ type: [ParticipantConversationEntity] })
-  participants?: ParticipantConversationEntity[];
+  @ApiProperty({ type: [ParticipantEntity] })
+  participants?: ParticipantEntity[];
 
   @ApiProperty({ type: [MessageEntity] })
   messages?: MessageEntity[];

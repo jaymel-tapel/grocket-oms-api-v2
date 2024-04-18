@@ -1,3 +1,3 @@
-import { SenderDto } from '@modules/websocket-gateways/dto/sender.dto';
+import { SenderDto } from '@modules/chats/dto/sender.dto';
 
 export class GetAllConversationsDto extends SenderDto {}
