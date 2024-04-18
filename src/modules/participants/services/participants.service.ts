@@ -1,24 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import { CreateParticipantDto } from '../dto/create-participant.dto';
-import { UpdateParticipantDto } from '../dto/update-participant.dto';
 import { DatabaseService } from '@modules/database/services/database.service';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { ClientEntity } from '@modules/clients/entities/client.entity';
-import { Participant, PrismaClient } from '@prisma/client';
-import { SenderDto } from '@modules/websocket-gateways/dto/sender.dto';
-import _ from 'lodash';
-import { ParticipantConversationEntity } from '../../participant-conversations/participant-conversation.entity';
-import { determineEmailKey } from '@src/common/helpers/participants';
+import { Client, Participant, User } from '@prisma/client';
+import { UpdateParticipantDto } from '../dto/update-participant.dto';
+import { SenderDto } from '@modules/chats/dto/sender.dto';
 
 @Injectable()
 export class ParticipantsService {
   constructor(private readonly database: DatabaseService) {}
 
-  async create(createParticipantDto: CreateParticipantDto) {
+  async createParticipants(
+    conversationId: number,
+    participants: CreateParticipantDto[],
+  ) {
+    // ? Next is to create participants
+    const newParticipants = await Promise.all(
+      participants.map((participant) =>
+        this.create(conversationId, participant),
+      ),
+    );
+
+    await this.database.conversation.update({
+      where: { id: conversationId },
+      data: { participantCount: newParticipants.length },
+    });
+
+    return newParticipants;
+  }
+
+  private async create(
+    conversationId: number,
+    createParticipantDto: CreateParticipantDto,
+  ): Promise<Participant> {
     const { client_email, user_email } = createParticipantDto;
 
-    let client: ClientEntity;
-    let user: UserEntity;
+    let client: Client;
+    let user: User;
 
     if (client_email) {
       client = await this.database.client.findFirst({
@@ -34,50 +53,30 @@ export class ParticipantsService {
 
     if (client_email) {
       newParticipant = await this.database.participant.create({
-        data: { clientId: client.id },
+        data: { clientId: client.id, conversationId },
       });
     } else {
       newParticipant = await this.database.participant.create({
-        data: { userId: user.id },
+        data: { userId: user.id, conversationId },
       });
     }
 
     return newParticipant;
   }
 
-  async findSenderParticipant(senderDto: SenderDto) {
-    const { appType, email } = senderDto;
-
-    let senderIdKey: 'clientId' | 'userId';
-    senderIdKey = appType === 'OMS' ? 'userId' : 'clientId';
-
-    const modelName = appType === 'OMS' ? 'user' : 'client';
-    const modelType: PrismaClient[typeof modelName] = this.database[modelName];
-
-    const userOrClient = await (modelType as any).findFirst({
-      where: { email: { equals: email, mode: 'insensitive' } },
-    });
-
-    return await this.database.participant.findFirst({
-      where: {
-        [senderIdKey]: userOrClient.id,
-      },
-    });
-  }
-
   async findParticipantsByEmail(
     receivers: UpdateParticipantDto[],
     senderDto: SenderDto,
   ) {
-    const { appType, email } = senderDto;
+    const { email } = senderDto;
 
-    let emailKey = determineEmailKey(appType);
+    const newReceiversArr = [...receivers];
 
-    receivers.push({ [emailKey]: email });
+    newReceiversArr.push({ user_email: email });
 
     const participantsArr: (ClientEntity | UserEntity)[] = [];
 
-    for (const participant of receivers) {
+    for (const participant of newReceiversArr) {
       if ('client_email' in participant) {
         const client = await this.database.client.findFirst({
           where: {
@@ -86,9 +85,7 @@ export class ParticipantsService {
           include: {
             participants: {
               include: {
-                conversations: {
-                  where: { participantCount: 2 },
-                },
+                conversation: true,
               },
             },
           },
@@ -98,14 +95,12 @@ export class ParticipantsService {
       } else {
         const user = await this.database.user.findFirst({
           where: {
-            email: { equals: participant.user_email, mode: 'insensitive' },
+            email: { equals: participant?.user_email, mode: 'insensitive' },
           },
           include: {
             participants: {
               include: {
-                conversations: {
-                  where: { participantCount: 2 },
-                },
+                conversation: true,
               },
             },
           },
@@ -116,20 +111,5 @@ export class ParticipantsService {
     }
 
     return participantsArr;
-  }
-
-  async findCommonConversationBetweenParticipants(
-    participantsArr: (ClientEntity | UserEntity)[],
-  ) {
-    const participant1 = participantsArr[0];
-    const participant2 = participantsArr[1];
-
-    const commonConversation: ParticipantConversationEntity = _.intersectionBy(
-      _.flatMap(participant1.participants, 'conversations'),
-      _.flatMap(participant2.participants, 'conversations'),
-      'conversationId',
-    )[0];
-
-    return commonConversation;
   }
 }
