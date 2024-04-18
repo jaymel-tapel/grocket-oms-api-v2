@@ -3,13 +3,23 @@ import { Injectable } from '@nestjs/common';
 import { CreateMessageDto } from '../dto/create-message.dto';
 import { MessageEntity } from '../entities/message.entity';
 import { Prisma } from '@prisma/client';
+import { ChatsGateway } from '@modules/websocket-gateways/chats.gateway';
 
 @Injectable()
 export class MessagesService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly chatsGateway: ChatsGateway,
+  ) {}
 
   async create(createMessageDto: CreateMessageDto) {
     const { senderId, conversationId, content } = createMessageDto;
+
+    await this.database.participant.findFirstOrThrow({
+      where: { id: senderId, conversationId },
+      select: { id: true },
+    });
+
     const newMessage = await this.database.message.create({
       data: {
         sender: { connect: { id: senderId } },
@@ -19,6 +29,8 @@ export class MessagesService {
     });
 
     const newMessageEntity = new MessageEntity(newMessage);
+
+    this.chatsGateway.sendMessage(newMessageEntity);
 
     return newMessageEntity;
   }

@@ -14,5 +14,6 @@ export class CreateMessageDto {
 
   @IsNumber()
   @ApiProperty()
+  @DoesExist({ tableName: 'participant', column: 'id' })
   senderId: number;
 }
