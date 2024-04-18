@@ -1,4 +1,4 @@
-import { AppEnum } from '@modules/websocket-gateways/dto/sender.dto';
+import { AppEnum } from '@modules/chats/dto/sender.dto';
 
 export const determineEmailKey = (
   appType: AppEnum,
