@@ -109,6 +109,7 @@ model User {
   orders               Order[]
   tasks                Task[]
   taskNotes            TaskNote[]
+  participants         Participant[]
 }
 
 model AlternateEmail {
@@ -137,20 +138,21 @@ model Brand {
 }
 
 model Client {
-  id                   Int         @id @default(autoincrement())
+  id                   Int           @id @default(autoincrement())
   name                 String?
   email                String?
   password             String
   forgot_password_code String?
-  seller               User        @relation(fields: [sellerId], references: [id])
+  seller               User          @relation(fields: [sellerId], references: [id])
   sellerId             Int
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
   deletedAt            DateTime?
   clientInfo           ClientInfo?
   tasks                Task[]
   companies            Company[]
   orders               Order[]
+  participants         Participant[]
 }
 
 model ClientInfo {
@@ -441,4 +443,51 @@ model ProspectLog {
   template   String
   by         String
   action     String
+}
+
+model Conversation {
+  id           Int                       @id @default(autoincrement())
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  deletedAt    DateTime?
+  name         String?
+  participants ParticipantConversation[]
+  messages     Message[]
+}
+
+model Participant {
+  id            Int                       @id @default(autoincrement())
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  deletedAt     DateTime?
+  userId        Int?
+  clientId      Int?
+  user          User?                     @relation(fields: [userId], references: [id])
+  client        Client?                   @relation(fields: [clientId], references: [id])
+  conversations ParticipantConversation[]
+  sent_messages Message[]
+}
+
+model ParticipantConversation {
+  participant      Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  participantId    Int
+  conversationId   Int
+  participantCount Int
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@id([participantId, conversationId])
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  content        String
+  senderId       Int
+  conversationId Int
+  sender         Participant  @relation(fields: [senderId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
 }

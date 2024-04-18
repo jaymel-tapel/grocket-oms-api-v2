@@ -27,6 +27,12 @@ import { ProspectsModule } from './modules/prospects/prospects.module';
 import { ScraperModule } from './modules/scraper/scraper.module';
 import { CronModule } from './common/cron/cron.module';
 import { configDotenv } from 'dotenv';
+import { WebsocketModule } from './modules/websocket-gateways/websocket.module';
+import { MessagesModule } from './modules/messages/messages.module';
+import { ConversationsModule } from './modules/conversations/conversations.module';
+import { ParticipantsModule } from './modules/participants/participants.module';
+import { ChatsModule } from './modules/chats/chats.module';
+import { ConversationsController } from './modules/conversations/conversations.controller';
 
 configDotenv({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -74,7 +80,13 @@ configDotenv({ path: `.env.${process.env.NODE_ENV}` });
     ProspectsModule,
     ScraperModule,
     CronModule,
+    WebsocketModule,
+    MessagesModule,
+    ConversationsModule,
+    ParticipantsModule,
+    ChatsModule,
   ],
   providers: [...ValidatorConstraints, ...Commands],
+  controllers: [ConversationsController],
 })
 export class AppModule {}
