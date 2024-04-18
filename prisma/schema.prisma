@@ -446,38 +446,28 @@ model ProspectLog {
 }
 
 model Conversation {
-  id           Int                       @id @default(autoincrement())
-  createdAt    DateTime                  @default(now())
-  updatedAt    DateTime                  @updatedAt
-  deletedAt    DateTime?
-  name         String?
-  participants ParticipantConversation[]
-  messages     Message[]
+  id               Int           @id @default(autoincrement())
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
+  name             String?
+  participantCount Int?
+  participants     Participant[]
+  messages         Message[]
 }
 
 model Participant {
-  id            Int                       @id @default(autoincrement())
-  createdAt     DateTime                  @default(now())
-  updatedAt     DateTime                  @updatedAt
-  deletedAt     DateTime?
-  userId        Int?
-  clientId      Int?
-  user          User?                     @relation(fields: [userId], references: [id])
-  client        Client?                   @relation(fields: [clientId], references: [id])
-  conversations ParticipantConversation[]
-  sent_messages Message[]
-}
-
-model ParticipantConversation {
-  participant      Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  conversation     Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  participantId    Int
-  conversationId   Int
-  participantCount Int
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-
-  @@id([participantId, conversationId])
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  deletedAt      DateTime?
+  conversationId Int
+  userId         Int?
+  clientId       Int?
+  user           User?        @relation(fields: [userId], references: [id])
+  client         Client?      @relation(fields: [clientId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sent_messages  Message[]
 }
 
 model Message {
