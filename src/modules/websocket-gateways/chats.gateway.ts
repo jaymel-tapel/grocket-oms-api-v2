@@ -1,5 +1,10 @@
-import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import {
+  ConnectedSocket,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 import {
   OnModuleInit,
   UseFilters,
@@ -31,8 +36,9 @@ export class ChatsGateway implements OnModuleInit {
     });
   }
 
-  setOnline(user: UserEntity) {
-    this.server.emit('getOnlineUsers', user);
+  @SubscribeMessage('getOnlineUsers')
+  setOnline(@ConnectedSocket() socket: Socket) {
+    // this.server.emit('getOnlineUsers', user);
   }
 
   sendMessage(message: MessageEntity) {
