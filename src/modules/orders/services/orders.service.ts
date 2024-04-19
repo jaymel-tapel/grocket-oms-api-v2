@@ -89,11 +89,6 @@ export class OrdersService {
       throw new HttpException('The seller does not own this client', 400);
     } else if (
       clientEntity &&
-      alterAccount &&
-      clientEntity.sellerId !== alterAccount?.userId
-    ) {
-    } else if (
-      clientEntity &&
       !sellerEntity &&
       alterAccount?.userId !== clientEntity.sellerId
     ) {
@@ -113,6 +108,7 @@ export class OrdersService {
         });
       }
     } else {
+      // ? If the authenticated User is a Seller
       sellerEntity = authUser;
     }
 
