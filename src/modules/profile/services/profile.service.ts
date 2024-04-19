@@ -35,7 +35,7 @@ export class ProfileService {
         where: { userId: user.id },
       });
 
-    await this.usersService.update(user.id, { ...data });
+    await this.usersService.update(user.id, data);
 
     if (alternateEmails) {
       alternateResult = await this.alternateEmailService.upsert(
