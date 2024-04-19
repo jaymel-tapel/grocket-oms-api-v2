@@ -8,6 +8,11 @@ import { UpdateConversationDto } from '../dto/update-conversation.dto';
 import { ParticipantsService } from '../../participants/services/participants.service';
 import { ClientEntity } from '@modules/clients/entities/client.entity';
 import { UserEntity } from '@modules/users/entities/user.entity';
+import { FilterConversationDto } from '../dto/filter-conversation.dto';
+import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
+import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
+import { PageEntity } from '@modules/page/page.entity';
+import { findManyConvos } from '../helpers/find-many-convos.helper';
 
 @Injectable()
 export class ConversationsService {
@@ -47,6 +52,42 @@ export class ConversationsService {
         ...args.orderBy,
       },
     });
+  }
+
+  async findAllWithPagination(
+    authUser: UserEntity,
+    findManyArgs: FilterConversationDto,
+    connectionArgsDto: ConnectionArgsDto,
+  ) {
+    const database = await this.database.softDelete();
+
+    let findManyQuery: Prisma.ConversationFindManyArgs = {};
+
+    findManyQuery = await findManyConvos(findManyArgs, authUser);
+
+    const page = await findManyCursorConnection(
+      // 👇 args contain take, skip and cursor
+      async (args) => {
+        const { cursor, ...data } = args;
+
+        const findManyArgs = {
+          ...data,
+          ...(cursor ? { cursor: { id: parseInt(cursor.id, 10) } } : {}), // Convert id to number if cursor is defined
+          ...findManyQuery,
+        };
+
+        return await this.findAll(findManyArgs);
+      },
+      () => database.conversation.count({ where: { ...findManyQuery.where } }),
+      connectionArgsDto,
+      {
+        recordToEdge: (record) => ({
+          node: new ConversationEntity(record),
+        }),
+      },
+    );
+
+    return new PageEntity<ConversationEntity>(page);
   }
 
   async findConversationsByEmail(email: string) {
