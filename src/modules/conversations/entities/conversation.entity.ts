@@ -13,9 +13,6 @@ export class ConversationEntity implements Conversation {
       );
     }
 
-    if (data?.participants.length === 2) {
-    }
-
     if (data?.messages?.length >= 1) {
       this.messages = data.messages.map(
         (message) => new MessageEntity(message),
@@ -41,7 +38,7 @@ export class ConversationEntity implements Conversation {
   @ApiProperty()
   participantCount: number;
 
-  @ApiProperty({ type: [ParticipantEntity] })
+  @ApiProperty({ type: () => [ParticipantEntity] })
   participants?: ParticipantEntity[];
 
   @ApiProperty({ type: [MessageEntity] })

@@ -48,7 +48,7 @@ export class ParticipantEntity implements Participant {
   client?: Partial<ClientEntity> | null;
 
   @ApiPropertyOptional({
-    type: ConversationEntity,
+    type: () => ConversationEntity,
     nullable: true,
   })
   conversation?: ConversationEntity;
