@@ -112,4 +112,19 @@ export class ParticipantsService {
 
     return participantsArr;
   }
+
+  async findOneByEmail(email: string, conversationId: number) {
+    const database = await this.database.softDelete();
+
+    const user = await database.user.findFirst({
+      where: { email },
+      include: {
+        participants: {
+          where: { conversationId },
+        },
+      },
+    });
+
+    return user.participants[0];
+  }
 }
