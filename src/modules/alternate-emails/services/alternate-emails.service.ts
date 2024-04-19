@@ -64,6 +64,7 @@ export class AlternateEmailsService {
         ...query,
         email: {
           contains: query.email,
+          mode: 'insensitive',
         },
       },
       include: { user: true },
