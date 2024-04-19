@@ -8,13 +8,14 @@ import {
   PickType,
 } from '@nestjs/swagger';
 import { SenderDto } from './sender.dto';
+import { CreateChatMessageDto } from '@modules/messages/dto/create-message.dto';
 
 export class CreateChatDto {
   @ApiProperty({ type: SenderDto })
   senderDto: SenderDto;
 
-  @ApiPropertyOptional({ type: UpdateMessageDto })
-  createMessageDto?: UpdateMessageDto;
+  @ApiPropertyOptional({ type: CreateChatMessageDto })
+  createMessageDto?: CreateChatMessageDto;
 
   @ApiPropertyOptional({ type: CreateConversationDto })
   createConversationDto?: CreateConversationDto;
@@ -23,5 +24,5 @@ export class CreateChatDto {
 export class CombinedCreateChatDto extends IntersectionType(
   OmitType(CreateConversationDto, ['name']),
   SenderDto,
-  PickType(UpdateMessageDto, ['content']),
+  CreateChatMessageDto,
 ) {}

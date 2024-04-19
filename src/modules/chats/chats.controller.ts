@@ -11,8 +11,7 @@ import { ChatsService } from './services/chats.service';
 import { CombinedCreateChatDto } from '@modules/chats/dto/create-chat.dto';
 import { SenderDto } from '@modules/chats/dto/sender.dto';
 import { CreateConversationDto } from '@modules/conversations/dto/create-conversation.dto';
-import { UpdateMessageDto } from '@modules/messages/dto/update-message.dto';
-import { CreateMessageDto } from '@modules/messages/dto/create-message.dto';
+import { CreateChatMessageDto } from '@modules/messages/dto/create-message.dto';
 import { isEmpty } from 'lodash';
 
 @UseGuards(JwtGuard)
@@ -27,11 +26,9 @@ export class ChatsController {
   async create(
     @Body() senderDto: SenderDto,
     @Body() createConversationDto: CreateConversationDto,
-    @Body() createMessageDto: UpdateMessageDto,
+    @Body() createMessageDto: CreateChatMessageDto,
   ) {
     const { receivers } = createConversationDto;
-
-    const newCreateMessageDto = createMessageDto as CreateMessageDto;
 
     if (receivers.length <= 1) {
       const commonConversation = await this.chatsService.findCommonConversation(
@@ -51,11 +48,10 @@ export class ChatsController {
     }
 
     // ? Create a new Conversation and assign Participants
-    const result = await this.chatsService.create({
+    return await this.chatsService.create({
       senderDto,
       createConversationDto,
+      createMessageDto,
     });
-
-    return result;
   }
 }

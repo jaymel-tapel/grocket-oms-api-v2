@@ -17,10 +17,14 @@ export class ChatsService {
   ) {}
 
   async create(createChatDto: CreateChatDto) {
-    const { senderDto, createConversationDto } = createChatDto;
+    const { senderDto, createConversationDto, createMessageDto } =
+      createChatDto;
     const { receivers } = createConversationDto;
+    const { content } = createMessageDto;
 
     const newReceiversArr = [...receivers];
+
+    let result: object;
 
     newReceiversArr.push({ user_email: senderDto.email });
 
@@ -36,7 +40,25 @@ export class ChatsService {
       newReceiversArr,
     );
 
-    return { newConversation, newParticipants };
+    result = { newConversation, newParticipants };
+
+    if (createMessageDto.content) {
+      const sender = await this.participantsService.findOneByEmail(
+        senderDto.email,
+        newConversation.id,
+      );
+
+      // ? Create a new message for the conversation
+      const newMessage = await this.messagesService.create({
+        conversationId: newConversation.id,
+        senderId: sender.id,
+        content,
+      });
+
+      result = { ...result, newMessage };
+    }
+
+    return result;
   }
 
   async findCommonConversation(
@@ -57,11 +79,11 @@ export class ChatsService {
     const promises = participants.map((participant) => {
       if ('user_email' in participant) {
         return database.user.findFirst({
-          where: { email: participant.user_email },
+          where: { email: { equals: participant.user_email, mode: 'insensitive'} },
         });
       } else {
         return database.client.findFirst({
-          where: { email: participant.client_email },
+          where: { email: { equals: participant.client_email, mode: 'insensitive'} },
         });
       }
     });
