@@ -4,6 +4,7 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { HashService } from './hash.service';
 import { JwtService } from '@nestjs/jwt';
 import { instanceToPlain } from 'class-transformer';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class LoginService {
@@ -14,9 +15,23 @@ export class LoginService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    const user = await this.database.user.findFirst({
+    const database = await this.database.softDelete();
+
+    const alternateEmail = await database.alternateEmail.findFirst({
       where: { email: { equals: email, mode: 'insensitive' } },
     });
+
+    let user: User;
+
+    if (alternateEmail) {
+      user = await database.user.findFirst({
+        where: { id: alternateEmail.userId },
+      });
+    } else {
+      user = await database.user.findFirst({
+        where: { email: { equals: email, mode: 'insensitive' } },
+      });
+    }
 
     if (
       user &&

@@ -4,7 +4,6 @@ import { Prisma } from '@prisma/client';
 import { UsersService } from 'src/modules/users/services/users.service';
 import { FindAlternateDto } from '../dto/find-alternate-email.dto';
 import { UserEntity } from 'src/modules/users/entities/user.entity';
-import { AlternateEmailDto } from '../dto/alternate-email.dto';
 import { AlternateEmailEntity } from '../entities/alternate-email.entity';
 
 @Injectable()
@@ -14,7 +13,7 @@ export class AlternateEmailsService {
     private readonly userService: UsersService,
   ) {}
 
-  async upsert(user: UserEntity, alterEmailDto: AlternateEmailDto[]) {
+  async upsert(user: UserEntity, alterEmails: string[]) {
     const emails: AlternateEmailEntity[] = [];
 
     // ? Force Delete All alternate emails that connects to the user
@@ -24,13 +23,13 @@ export class AlternateEmailsService {
       },
     });
 
-    if (alterEmailDto.length === 0) {
+    if (alterEmails.length === 0) {
       return [];
     }
 
-    for (const dto of alterEmailDto) {
+    for (const email of alterEmails) {
       const checkUser = await this.userService.findAllByCondition({
-        where: { email: { equals: dto.email, mode: 'insensitive' } },
+        where: { email: { equals: email, mode: 'insensitive' } },
       });
 
       const foundAlternateEmail = await this.findByCondition({
@@ -38,7 +37,7 @@ export class AlternateEmailsService {
           userId: {
             not: user.id,
           },
-          email: { equals: dto.email, mode: 'insensitive' },
+          email: { equals: email, mode: 'insensitive' },
         },
       });
 
@@ -47,7 +46,7 @@ export class AlternateEmailsService {
         const newAlternateEmail = await this.database.alternateEmail.create({
           data: {
             userId: user.id,
-            email: dto.email,
+            email,
           },
         });
         emails.push(newAlternateEmail);
@@ -64,6 +63,7 @@ export class AlternateEmailsService {
         ...query,
         email: {
           contains: query.email,
+          mode: 'insensitive',
         },
       },
       include: { user: true },
