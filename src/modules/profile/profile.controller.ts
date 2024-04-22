@@ -25,6 +25,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FileValidationPipe } from './pipes/file-validation.pipe';
 import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { JwtGuard } from '@modules/auth/guard';
+import { InjectUserToBody } from '@src/common/decorators/inject-user.decorator';
 
 @UseGuards(JwtGuard)
 @ApiTags('profile')
@@ -44,6 +45,7 @@ export class ProfileController {
 
   @Patch(':id')
   @ApiOkResponse({ type: UserEntity })
+  @InjectUserToBody()
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateProfileDto: UpdateProfileDto,

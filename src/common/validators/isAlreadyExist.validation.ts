@@ -8,25 +8,32 @@ import {
   registerDecorator,
 } from 'class-validator';
 import { ITable } from './interface/table.interface';
+import { ExtendedValidationArguments } from './interface/extended-validation-arguments';
 
 @Injectable()
 @ValidatorConstraint({ async: true })
 export class IsAlreadyExistConstraint implements ValidatorConstraintInterface {
   constructor(private readonly database: DatabaseService) {}
-  async validate(value: any, args?: ValidationArguments): Promise<boolean> {
-    const { tableName, column }: ITable = args.constraints[0];
+  async validate(
+    value: any,
+    args?: ExtendedValidationArguments,
+  ): Promise<boolean> {
+    const database = await this.database.softDelete();
 
-    const doesExist = await (this.database[tableName] as any).findFirst({
+    const { tableName, column }: ITable = args.constraints[0];
+    const authUser = args?.object?._requestContext?.user;
+
+    const doesExist = await (database[tableName] as any).findFirst({
       where: { [column]: value },
     });
 
-    if (doesExist) {
+    if (doesExist && (!authUser || value !== authUser[column])) {
       return false;
     }
 
     return true;
   }
-  defaultMessage?(validationArguments?: ValidationArguments): string {
+  defaultMessage?(validationArguments?: ExtendedValidationArguments): string {
     // ? It will return a custom field message
     let field: string = validationArguments.property;
 

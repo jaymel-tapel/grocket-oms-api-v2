@@ -35,11 +35,10 @@ export class ScraperService {
       }),
     );
 
-    const response = await axios.post(process.env.SCRAPER_SEARCH, {
-      userId: authUser.id,
-      location: scraperSearchDto.city,
-      ...scraperSearchDto,
-    });
+    const response = await axios.post(
+      process.env.SCRAPER_SEARCH,
+      scraperSearchDto,
+    );
 
     const data: ScraperSearchEntity = response.data;
 
@@ -69,13 +68,14 @@ export class ScraperService {
       return await this.prospectSessionService.create(createSession, authUser);
     } else {
       // * Insert prospects in Session that doesn't yet exist
+
+      const existingProspectSet = new Set(
+        session.prospects.map((prospect) => prospect.name.toLowerCase()),
+      );
+
       // ? Filter out all the existing prospects and get only the non existing prospects in Session
       const newProspects = prospects.filter(
-        (newPros) =>
-          !session.prospects.find(
-            (existingPros) =>
-              existingPros.name.toLowerCase() === newPros.name.toLowerCase(),
-          ),
+        (newPros) => !existingProspectSet.has(newPros.name.toLowerCase()),
       );
 
       if (newProspects.length === 0) {

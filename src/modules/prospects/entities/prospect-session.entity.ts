@@ -9,7 +9,7 @@ export class ProspectSessionEntity implements ProspectSession {
     if (data?.prospects?.length > 0) {
       this.prospects = data.prospects
         .map((prospect) => new ProspectEntity(prospect))
-        .sort((a, b) => a.id - b.id);
+        .sort((a, b) => b.position - a.position);
     }
   }
 

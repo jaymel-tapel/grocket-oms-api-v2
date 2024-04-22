@@ -1,7 +1,7 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { UserEntity } from '@modules/users/entities/user.entity';
+import { ApiHideProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsAlreadyExist } from '@src/common/validators/isAlreadyExist.validation';
-import { IsArray, IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
-import { AlternateEmailDto } from 'src/modules/alternate-emails/dto/alternate-email.dto';
+import { IsEmail, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class UpdateProfileDto {
   @IsOptional()
@@ -25,8 +25,12 @@ export class UpdateProfileDto {
   @ApiPropertyOptional()
   contact_url?: string;
 
+  @IsEmail({}, { each: true })
+  @ApiPropertyOptional({ isArray: true, example: ['user@example.com'] })
+  alternateEmails?: string[];
+
+  // This property won't be validated but can be accessed for custom logic
   @IsOptional()
-  @IsArray()
-  @ApiPropertyOptional()
-  alternateEmails?: AlternateEmailDto[];
+  @ApiHideProperty()
+  _requestContext?: UserEntity;
 }
