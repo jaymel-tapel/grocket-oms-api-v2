@@ -6,12 +6,14 @@ import { ProspectTemplateCommand } from './seeders/prospect-template-seed';
 import { ProspectsDummyDataCommand } from './seeders/prospect-session-dummy-data';
 import { CheckOrderCommand } from './commands/check-orders.command';
 import { CheckPaymentCommand } from './commands/check-payments.command';
+import { UserPasswordCommand } from './commands/user-password.command';
 
 export const Commands = [
   Logger,
   ClientSourceCommand,
   ClientIndustryCommand,
   ClientPasswordCommand,
+  UserPasswordCommand,
   ProspectTemplateCommand,
   ProspectsDummyDataCommand,
   CheckOrderCommand,
