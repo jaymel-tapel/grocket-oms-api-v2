@@ -2,7 +2,8 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DashboardDateRangeDto } from '../dto/date-range.dto';
 import { addDays, eachDayOfInterval, subDays } from 'date-fns';
-import { OrderReviewStatus, PaymentStatusEnum } from '@prisma/client';
+import { OrderReviewStatus, PaymentStatusEnum, RoleEnum } from '@prisma/client';
+import { UserEntity } from '@modules/users/entities/user.entity';
 
 @Injectable()
 export class DashboardService {
@@ -103,14 +104,14 @@ export class DashboardService {
     return { receivedAmount, unpaidAmount, paidReviews, unpaidReviews };
   }
 
-  async seller(range?: DashboardDateRangeDto) {
+  async seller(authUser: UserEntity, range?: DashboardDateRangeDto) {
     if (Object.entries(range).length === 0) {
       return {
-        newOrdersCount: (await this.getOrders()).length,
-        newClientsCount: (await this.getActiveClients()).length,
-        ...(await this.getCommission()),
-        ordersOverview: await this.getOrderInfo(),
-        clientsOverview: await this.clientDashboardInfo(),
+        newOrdersCount: (await this.getOrders(null, authUser)).length,
+        newClientsCount: (await this.getActiveClients(null, authUser)).length,
+        ...(await this.getCommission(null, authUser)),
+        ordersOverview: await this.getOrderInfo(null, authUser),
+        clientsOverview: await this.clientDashboardInfo(null, authUser),
       };
     }
 
@@ -121,15 +122,15 @@ export class DashboardService {
     }
 
     return {
-      newOrdersCount: (await this.getOrders(range)).length,
-      newClientsCount: (await this.getActiveClients(range)).length,
-      ...(await this.getCommission(range)),
-      ordersOverview: await this.getOrderInfo(range),
-      clientsOverview: await this.clientDashboardInfo(range),
+      newOrdersCount: (await this.getOrders(range, authUser)).length,
+      newClientsCount: (await this.getActiveClients(range, authUser)).length,
+      ...(await this.getCommission(range, authUser)),
+      ordersOverview: await this.getOrderInfo(range, authUser),
+      clientsOverview: await this.clientDashboardInfo(range, authUser),
     };
   }
 
-  private async getOrders(range?: DashboardDateRangeDto) {
+  private async getOrders(range?: DashboardDateRangeDto, seller?: UserEntity) {
     if (!range) {
       let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
       let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
@@ -143,11 +144,13 @@ export class DashboardService {
     return await this.database.order.findMany({
       where: {
         createdAt: { gte: range.startRange, lte: range.endRange },
+        ...(seller &&
+          seller.role === RoleEnum.SELLER && { sellerId: seller.id }),
       },
     });
   }
 
-  async sellerGraph(range?: DashboardDateRangeDto) {
+  async sellerGraph(authUser: UserEntity, range?: DashboardDateRangeDto) {
     if (Object.entries(range).length === 0) {
       let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
       let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
@@ -168,6 +171,7 @@ export class DashboardService {
       where: {
         createdAt: { gte: range.startRange, lte: range.endRange },
         payment_status: PaymentStatusEnum.NEW,
+        sellerId: authUser.id,
       },
     });
 
@@ -258,6 +262,7 @@ export class DashboardService {
 
   private async getActiveClients(
     range?: DashboardDateRangeDto,
+    seller?: UserEntity,
     getAll?: boolean,
   ) {
     if (!range) {
@@ -274,7 +279,11 @@ export class DashboardService {
       where: {
         ...(!getAll && {
           createdAt: { gte: range.startRange, lte: range.endRange },
+          ...(seller &&
+            seller.role === RoleEnum.SELLER && { sellerId: seller.id }),
         }),
+        ...(seller &&
+          seller.role === RoleEnum.SELLER && { sellerId: seller.id }),
         deletedAt: null,
       },
       include: {
@@ -285,8 +294,11 @@ export class DashboardService {
     });
   }
 
-  private async clientDashboardInfo(range?: DashboardDateRangeDto) {
-    const clients = await this.getActiveClients(range);
+  private async clientDashboardInfo(
+    range?: DashboardDateRangeDto,
+    seller?: UserEntity,
+  ) {
+    const clients = await this.getActiveClients(range, seller);
 
     const clientInfo = clients.map((client) => {
       const name = client.name;
@@ -333,7 +345,10 @@ export class DashboardService {
     return revenue;
   }
 
-  private async getOrderInfo(range?: DashboardDateRangeDto) {
+  private async getOrderInfo(
+    range?: DashboardDateRangeDto,
+    seller?: UserEntity,
+  ) {
     if (!range) {
       let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
       let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
@@ -345,7 +360,11 @@ export class DashboardService {
     range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
-      where: { createdAt: { gte: range.startRange, lte: range.endRange } },
+      where: {
+        createdAt: { gte: range.startRange, lte: range.endRange },
+        ...(seller &&
+          seller.role === RoleEnum.SELLER && { sellerId: seller.id }),
+      },
       include: { client: true, orderReviews: true },
       orderBy: { createdAt: 'desc' },
       take: 5,
@@ -372,7 +391,10 @@ export class DashboardService {
     return orderInfos;
   }
 
-  private async getCommission(range?: DashboardDateRangeDto) {
+  private async getCommission(
+    range?: DashboardDateRangeDto,
+    seller?: UserEntity,
+  ) {
     if (!range) {
       let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
       let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
@@ -384,7 +406,11 @@ export class DashboardService {
     range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
-      where: { createdAt: { gte: range.startRange, lte: range.endRange } },
+      where: {
+        createdAt: { gte: range.startRange, lte: range.endRange },
+        ...(seller &&
+          seller.role === RoleEnum.SELLER && { sellerId: seller.id }),
+      },
       include: { client: true, orderReviews: true },
     });
 
