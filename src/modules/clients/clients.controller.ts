@@ -43,6 +43,7 @@ import { ClientReportDateRangeDto } from './dto/get-client-report.dto';
 import { ClientReportsService } from './services/client-reports.service';
 import { ClientReportEntity } from './entities/client-report.entity';
 import { SendGeneratedPasswordDto } from './dto/generate-password.dto';
+import { RoleEnum } from '@prisma/client';
 
 @UseGuards(JwtGuard)
 @ApiTags('clients')
@@ -113,7 +114,9 @@ export class ClientsController {
     @AuthUser() user: UserEntity,
     @Query() reportDto: ClientReportDateRangeDto,
   ) {
-    reportDto.sellerId = user.id;
+    if (user.role === RoleEnum.SELLER) {
+      reportDto.sellerId = user.id;
+    }
 
     return new ClientReportEntity(
       await this.clientReportsService.report(reportDto),
