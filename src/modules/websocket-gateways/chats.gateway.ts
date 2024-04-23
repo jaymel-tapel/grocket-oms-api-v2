@@ -31,7 +31,7 @@ export class ChatsGateway implements OnModuleInit {
   @WebSocketServer() server: Server<any, IServerToClientEvents>;
 
   onModuleInit() {
-    this.server.on('connect', (socket) => {
+    this.server?.on('connect', (socket) => {
       console.log(`Connected: ${socket.id}`);
     });
   }
