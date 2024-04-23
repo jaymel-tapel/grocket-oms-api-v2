@@ -305,7 +305,7 @@ export class DashboardService {
     range?: DashboardDateRangeDto,
     seller?: UserEntity,
   ) {
-    const clients = await this.getActiveClients(range, seller, false, true);
+    const clients = await this.getActiveClients(range, seller, true, true);
 
     const clientInfo = clients.map((client) => {
       const name = client.name;
