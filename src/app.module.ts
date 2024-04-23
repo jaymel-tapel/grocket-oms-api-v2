@@ -33,8 +33,9 @@ import { ConversationsModule } from './modules/conversations/conversations.modul
 import { ParticipantsModule } from './modules/participants/participants.module';
 import { ChatsModule } from './modules/chats/chats.module';
 import { ConversationsController } from './modules/conversations/conversations.controller';
+import { expand } from 'dotenv-expand';
 
-configDotenv({ path: `.env.${process.env.NODE_ENV}` });
+expand(configDotenv({ path: `.env.${process.env.NODE_ENV}` }));
 
 @Module({
   imports: [
