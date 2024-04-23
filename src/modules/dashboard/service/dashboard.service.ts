@@ -108,7 +108,8 @@ export class DashboardService {
     if (Object.entries(range).length === 0) {
       return {
         newOrdersCount: (await this.getOrders(null, authUser)).length,
-        newClientsCount: (await this.getActiveClients(null, authUser)).length,
+        newClientsCount: (await this.getActiveClients(null, authUser, true))
+          .length,
         ...(await this.getCommission(null, authUser)),
         ordersOverview: await this.getOrderInfo(null, authUser),
         clientsOverview: await this.clientDashboardInfo(null, authUser),
@@ -123,7 +124,8 @@ export class DashboardService {
 
     return {
       newOrdersCount: (await this.getOrders(range, authUser)).length,
-      newClientsCount: (await this.getActiveClients(range, authUser)).length,
+      newClientsCount: (await this.getActiveClients(range, authUser, true))
+        .length,
       ...(await this.getCommission(range, authUser)),
       ordersOverview: await this.getOrderInfo(range, authUser),
       clientsOverview: await this.clientDashboardInfo(range, authUser),
