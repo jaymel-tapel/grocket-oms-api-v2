@@ -1,3 +1,4 @@
+import { ParticipantEntity } from '@modules/participants/entities/participant.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { $Enums, User } from '@prisma/client';
 import { Exclude } from 'class-transformer';
@@ -45,4 +46,7 @@ export class UserEntity implements User {
 
   @ApiPropertyOptional({ nullable: true, default: null })
   deletedAt: Date | null;
+
+  @ApiProperty({ type: [ParticipantEntity] })
+  participants?: ParticipantEntity[];
 }

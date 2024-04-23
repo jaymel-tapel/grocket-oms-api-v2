@@ -1,9 +1,10 @@
 import { applyDecorators, Type } from '@nestjs/common';
-import { ApiOkResponse, getSchemaPath } from '@nestjs/swagger';
+import { ApiExtraModels, ApiOkResponse, getSchemaPath } from '@nestjs/swagger';
 import { PageEntity } from './page.entity';
 
 export const ApiPageResponse = <TModel extends Type<any>>(model: TModel) => {
   return applyDecorators(
+    ApiExtraModels(PageEntity),
     ApiOkResponse({
       schema: {
         title: `PageResponseOf${model.name}`, // 👈 add title to the schema
