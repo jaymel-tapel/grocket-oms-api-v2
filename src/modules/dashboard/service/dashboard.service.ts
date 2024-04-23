@@ -275,17 +275,23 @@ export class DashboardService {
     range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
     range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
+    const whereClause: any = {
+      deletedAt: null,
+    };
+
+    if (!getAll) {
+      whereClause.createdAt = {
+        gte: range.startRange,
+        lte: range.endRange,
+      };
+    }
+
+    if (seller && seller.role === RoleEnum.SELLER) {
+      whereClause.sellerId = seller.id;
+    }
+
     return await this.database.client.findMany({
-      where: {
-        ...(!getAll && {
-          createdAt: { gte: range.startRange, lte: range.endRange },
-          ...(seller &&
-            seller.role === RoleEnum.SELLER && { sellerId: seller.id }),
-        }),
-        ...(seller &&
-          seller.role === RoleEnum.SELLER && { sellerId: seller.id }),
-        deletedAt: null,
-      },
+      where: whereClause,
       include: {
         clientInfo: { include: { industry: true } },
         orders: { orderBy: { createdAt: 'desc' } },
