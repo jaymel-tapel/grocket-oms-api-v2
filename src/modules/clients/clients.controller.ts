@@ -109,7 +109,12 @@ export class ClientsController {
 
   @Get('report')
   @ApiOkResponse({ type: ClientReportEntity })
-  async getClientReport(@Query() reportDto: ClientReportDateRangeDto) {
+  async getClientReport(
+    @AuthUser() user: UserEntity,
+    @Query() reportDto: ClientReportDateRangeDto,
+  ) {
+    reportDto.sellerId = user.id;
+
     return new ClientReportEntity(
       await this.clientReportsService.report(reportDto),
     );
