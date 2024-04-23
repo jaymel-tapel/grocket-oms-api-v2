@@ -42,12 +42,21 @@ export class UserPasswordCommand extends CommandRunner {
 
       // ? It will send the text password to the user
       if (user.email.includes('@')) {
+        const link = process.env.FE_OMS_ROUTE;
+        const password = text;
+        const email = user.email;
+
+        const data = {
+          link,
+          password,
+          email,
+        };
+
         await this.mailerService.sendMail({
-          to: user.email,
-          subject: 'Password Reset!',
-          html: `<p>Hi <strong>${user.name}</strong>,</p>
-          <p>We migrated to the New Order Management System and reset all our users' passwords</p>
-          <p>Here is your new password: <strong>${text}</strong></p>`,
+          to: email,
+          subject: `Reset Password`,
+          template: 'forgot-password',
+          context: data,
         });
 
         await delay(5 * 1000);

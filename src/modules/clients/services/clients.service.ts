@@ -314,7 +314,7 @@ export class ClientsService {
       throw new HttpException(`The provided password is incorrect`, 400);
     }
 
-    const link = process.env.FE_ROUTE;
+    const link = process.env.FE_OCP_ROUTE;
     const email = client.email;
 
     const data = {
