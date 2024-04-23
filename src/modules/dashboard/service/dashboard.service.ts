@@ -125,8 +125,8 @@ export class DashboardService {
       newOrdersCount: (await this.getOrders(range, authUser)).length,
       newClientsCount: (await this.getActiveClients(range, authUser)).length,
       ...(await this.getCommission(range, authUser)),
-      ordersOverview: await this.getOrderInfo(range, authUser),
-      clientsOverview: await this.clientDashboardInfo(range, authUser),
+      ordersOverview: await this.getOrderInfo(null, authUser),
+      clientsOverview: await this.clientDashboardInfo(null, authUser),
     };
   }
 
