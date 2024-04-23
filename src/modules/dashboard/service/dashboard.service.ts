@@ -108,8 +108,7 @@ export class DashboardService {
     if (Object.entries(range).length === 0) {
       return {
         newOrdersCount: (await this.getOrders(null, authUser)).length,
-        newClientsCount: (await this.getActiveClients(null, authUser, true))
-          .length,
+        newClientsCount: (await this.getActiveClients(null, authUser)).length,
         ...(await this.getCommission(null, authUser)),
         ordersOverview: await this.getOrderInfo(null, authUser),
         clientsOverview: await this.clientDashboardInfo(null, authUser),
@@ -124,8 +123,7 @@ export class DashboardService {
 
     return {
       newOrdersCount: (await this.getOrders(range, authUser)).length,
-      newClientsCount: (await this.getActiveClients(range, authUser, true))
-        .length,
+      newClientsCount: (await this.getActiveClients(range, authUser)).length,
       ...(await this.getCommission(range, authUser)),
       ordersOverview: await this.getOrderInfo(range, authUser),
       clientsOverview: await this.clientDashboardInfo(range, authUser),
@@ -266,6 +264,7 @@ export class DashboardService {
     range?: DashboardDateRangeDto,
     seller?: UserEntity,
     getAll?: boolean,
+    limit?: boolean,
   ) {
     if (!range) {
       let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
@@ -298,7 +297,7 @@ export class DashboardService {
         clientInfo: { include: { industry: true } },
         orders: { orderBy: { createdAt: 'desc' } },
       },
-      ...(!getAll && { take: 5 }),
+      ...(limit && { take: 5 }),
     });
   }
 
@@ -306,7 +305,7 @@ export class DashboardService {
     range?: DashboardDateRangeDto,
     seller?: UserEntity,
   ) {
-    const clients = await this.getActiveClients(range, seller);
+    const clients = await this.getActiveClients(range, seller, false, true);
 
     const clientInfo = clients.map((client) => {
       const name = client.name;
