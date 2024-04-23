@@ -186,8 +186,8 @@ export class DashboardService {
     });
 
     orders.forEach((order) => {
-      order.order_date.setUTCHours(0, 0, 0, 0);
-      const date = order.order_date.toISOString();
+      order.order_date?.setUTCHours(0, 0, 0, 0);
+      const date = order.order_date?.toISOString();
       if (date in newOrders) newOrders[date]++;
     });
 
