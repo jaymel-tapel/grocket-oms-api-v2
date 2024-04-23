@@ -2,6 +2,7 @@ import { HashService } from '@modules/auth/services/hash.service';
 import { DatabaseService } from '@modules/database/services/database.service';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Logger } from '@nestjs/common';
+import { delay } from '@src/common/helpers/delay';
 import { Command, CommandRunner } from 'nest-commander';
 
 @Command({
@@ -23,34 +24,40 @@ export class ClientPasswordCommand extends CommandRunner {
   ): Promise<void> {
     const clients = await this.database.client.findMany();
 
-    await Promise.all(
-      clients.map(async (client) => {
-        const { hash, text } = await this.hashService.generateAndHashPassword();
+    for (const client of clients) {
+      const { hash, text } = await this.hashService.generateAndHashPassword();
 
-        client.password = hash;
+      client.password = hash;
 
-        this.logger.debug(`Updating Client ID: ${client.id}`);
-        this.logger.debug(`Updating Client Name: ${client.name}`);
+      this.logger.debug(`Updating Client ID: ${client.id}`);
+      this.logger.debug(`Updating Client Name: ${client.name}`);
 
-        const updatedClient = await this.database.$transaction(async (tx) => {
-          return await tx.client.update({
-            where: { id: client.id },
-            data: { password: client.password },
-          });
+      await this.database.$transaction(async (tx) => {
+        return await tx.client.update({
+          where: { id: client.id },
+          data: { password: client.password },
         });
+      });
 
-        // ? It will send the text password to the client
-        // await this.mailerService.sendMail({
-        //   to: client.email,
-        //   subject: `Password Reset`,
-        //   html: `<p>Hi ${client.name},</p>
-        //   <p>We migrated to the New Customer Portal and reset all our customers' passwords</p>
-        //   <p>Here is your new password: ${text}</p>`,
-        // });
+      const link = process.env.FE_OCP_ROUTE;
+      const password = text;
+      const email = client.email;
 
-        return updatedClient;
-      }),
-    );
+      const data = {
+        link,
+        password,
+        email,
+      };
+
+      await this.mailerService.sendMail({
+        to: email,
+        subject: `Reset Password`,
+        template: 'forgot-password',
+        context: data,
+      });
+
+      await delay(5 * 1000);
+    }
 
     this.logger.debug('Success!');
   }
