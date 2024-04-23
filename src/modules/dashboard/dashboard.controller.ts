@@ -11,6 +11,8 @@ import {
 } from '@nestjs/swagger';
 import { AdminDashboardEntity } from './entity/admin-dashboard.entity';
 import { AdminGraphEntity } from './entity/admin-graph.entity';
+import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
+import { UserEntity } from '@modules/users/entities/user.entity';
 
 @UseGuards(JwtGuard)
 @Controller('dashboard')
@@ -35,13 +37,19 @@ export class DashboardController {
 
   @Get('seller')
   @ApiQuery({ type: DashboardDateRangeDto, required: false })
-  async seller(@Query() range?: DashboardDateRangeDto) {
-    return await this.dashboardService.seller(range);
+  async seller(
+    @AuthUser() authUser: UserEntity,
+    @Query() range?: DashboardDateRangeDto,
+  ) {
+    return await this.dashboardService.seller(authUser, range);
   }
 
   @Get('seller/graph')
   @ApiQuery({ type: DashboardDateRangeDto, required: false })
-  async sellerGraph(@Query() range?: DashboardDateRangeDto) {
-    return await this.dashboardService.sellerGraph(range);
+  async sellerGraph(
+    @AuthUser() authUser: UserEntity,
+    @Query() range?: DashboardDateRangeDto,
+  ) {
+    return await this.dashboardService.sellerGraph(authUser, range);
   }
 }
