@@ -94,17 +94,23 @@ export class OrdersController {
 
   @Get('report')
   @ApiOkResponse({ type: OrderReportEntity })
-  async getOrderReport(@Query() orderReportDto: OrderReportDateRangeDto) {
+  async getOrderReport(
+    @AuthUser() user: UserEntity,
+    @Query() orderReportDto: OrderReportDateRangeDto,
+  ) {
     return new OrderReportEntity(
-      await this.orderReportsService.orderReport(orderReportDto),
+      await this.orderReportsService.orderReport(orderReportDto, user),
     );
   }
 
   @Get('graph')
   @ApiOkResponse({ type: OrderGraphEntity })
-  async getOrderGraphReport(@Query() orderReportDto: OrderReportDateRangeDto) {
+  async getOrderGraphReport(
+    @AuthUser() user: UserEntity,
+    @Query() orderReportDto: OrderReportDateRangeDto,
+  ) {
     return new OrderGraphEntity(
-      await this.orderReportsService.orderGraphReport(orderReportDto),
+      await this.orderReportsService.orderGraphReport(orderReportDto, user),
     );
   }
 

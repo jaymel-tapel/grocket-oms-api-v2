@@ -1,18 +1,31 @@
 import { DatabaseService } from '@modules/database/services/database.service';
 import { Injectable } from '@nestjs/common';
 import { OrderReportDateRangeDto } from '../dto/get-order-report.dto';
-import { OrderReviewStatus, PaymentStatusEnum, Prisma } from '@prisma/client';
-import { addDays, eachDayOfInterval, startOfDay, subDays } from 'date-fns';
+import {
+  OrderReviewStatus,
+  PaymentStatusEnum,
+  Prisma,
+  RoleEnum,
+} from '@prisma/client';
+import { addDays, subDays } from 'date-fns';
 import { dateRange } from '@src/common/helpers/date-range';
 import * as _ from 'lodash';
 import { IOrderReport } from '../interfaces/order-report.interface';
+import { UserEntity } from '@modules/users/entities/user.entity';
 
 @Injectable()
 export class OrderReportsService {
   constructor(private readonly database: DatabaseService) {}
 
   // * Order and Paid Orders Count Reports
-  async orderReport(dateRangeDto: OrderReportDateRangeDto) {
+  async orderReport(
+    dateRangeDto: OrderReportDateRangeDto,
+    authUser: UserEntity,
+  ) {
+    if (authUser.role === RoleEnum.SELLER) {
+      dateRangeDto.sellerId = authUser.id;
+    }
+
     const baseReport = await this.baseReport(dateRangeDto);
 
     const foundOrders = await this.findAllOrdersByRange(baseReport);
@@ -85,7 +98,14 @@ export class OrderReportsService {
   }
 
   // * Order Bar and Pie Graph Reports
-  async orderGraphReport(dateRangeDto: OrderReportDateRangeDto) {
+  async orderGraphReport(
+    dateRangeDto: OrderReportDateRangeDto,
+    authUser: UserEntity,
+  ) {
+    if (authUser.role === RoleEnum.SELLER) {
+      dateRangeDto.sellerId = authUser.id;
+    }
+
     const baseReport = await this.baseReport(dateRangeDto);
     const orders = await this.findAllOrdersByRange(baseReport);
 
