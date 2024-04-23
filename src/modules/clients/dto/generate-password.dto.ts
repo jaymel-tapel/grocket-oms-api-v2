@@ -5,6 +5,7 @@ import { IsNumber, IsString, MinLength } from 'class-validator';
 export class SendGeneratedPasswordDto {
   @IsNumber()
   @DoesExist({ tableName: 'client', column: 'id' })
+  @ApiProperty()
   clientId: number;
 
   @IsString()
