@@ -4,17 +4,18 @@ import { Client } from '@prisma/client';
 import { Exclude } from 'class-transformer';
 import { ClientInfoEntity } from './client-info.entity';
 import { CompanyEntity } from '@modules/companies/entities/company.entity';
+import { ParticipantEntity } from '@modules/participants/entities/participant.entity';
 
 export class ClientEntity implements Client {
-  constructor({ seller, clientInfo, ...data }: Partial<ClientEntity>) {
+  constructor(data?: Partial<ClientEntity>) {
     Object.assign(this, data);
 
-    if (seller) {
-      this.seller = new UserEntity(seller);
+    if (data?.seller) {
+      this.seller = new UserEntity(data?.seller);
     }
 
-    if (clientInfo) {
-      this.clientInfo = new ClientInfoEntity(clientInfo);
+    if (data?.clientInfo) {
+      this.clientInfo = new ClientInfoEntity(data?.clientInfo);
     }
   }
 
@@ -45,7 +46,7 @@ export class ClientEntity implements Client {
   @ApiPropertyOptional({ nullable: true })
   sellerId: number | null;
 
-  @ApiPropertyOptional({ type: UserEntity })
+  @ApiPropertyOptional({ type: () => UserEntity })
   seller?: UserEntity | null;
 
   @ApiProperty({ type: ClientInfoEntity })
@@ -53,6 +54,9 @@ export class ClientEntity implements Client {
 
   @ApiProperty({ type: [CompanyEntity] })
   companies?: CompanyEntity[] | null;
+
+  @ApiProperty({ type: [ParticipantEntity] })
+  participants?: ParticipantEntity[];
 }
 
 export class ClientEntityWithoutSeller extends OmitType(ClientEntity, [

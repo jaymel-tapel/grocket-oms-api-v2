@@ -10,6 +10,7 @@ import { LocalStrategy } from './strategy/local.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { LocalClientStrategy } from './strategy/clients/local-client.strategy';
 import { JwtClientStrategy } from './strategy/clients/jwt-client.strategy';
+import { WebsocketModule } from '@modules/websocket-gateways/websocket.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { JwtClientStrategy } from './strategy/clients/jwt-client.strategy';
         secret: process.env.JWT_SECRET,
       }),
     }),
+    WebsocketModule,
   ],
   controllers: [AuthController],
   providers: [

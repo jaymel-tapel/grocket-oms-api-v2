@@ -29,13 +29,13 @@ export class ProfileService {
 
   async updateProfile(id: number, updateProfileDto: UpdateProfileDto) {
     const { alternateEmails, ...data } = updateProfileDto;
-    const user = await this.usersService.findUniqueOrThrow(id);
+    let user = await this.usersService.findUniqueOrThrow(id);
     let alternateResult: AlternateEmailEntity[] =
       await this.alternateEmailService.findAllByCondition({
         where: { userId: user.id },
       });
 
-    await this.usersService.update(user.id, data);
+    user = await this.usersService.update(user.id, data);
 
     if (alternateEmails) {
       alternateResult = await this.alternateEmailService.upsert(

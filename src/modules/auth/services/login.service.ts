@@ -61,6 +61,8 @@ export class LoginService {
 
   async login(credential: ValidateUserDto) {
     delete credential.password;
+    delete credential.forgot_password_code;
+
     return {
       ...credential,
       access_token: this.jwt.sign(credential),
