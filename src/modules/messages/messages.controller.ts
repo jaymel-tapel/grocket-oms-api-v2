@@ -21,7 +21,7 @@ export class MessagesController {
   }
 
   @Get()
-  async getAllConversations(
+  async getAllMessages(
     @Query() findManyArgs: FilterMessageDto,
     @Query() connectionArgsDto: ConnectionArgsDto,
   ) {
