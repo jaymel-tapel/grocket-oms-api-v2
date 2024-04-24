@@ -1,5 +1,11 @@
-import { MessageEntity } from '@modules/messages/entities/message.entity';
-import { ParticipantEntity } from '@modules/participants/entities/participant.entity';
+import {
+  MessageEntity,
+  MessageEntityWithoutRelation,
+} from '@modules/messages/entities/message.entity';
+import {
+  PaginatedParticipantEntity,
+  ParticipantEntity,
+} from '@modules/participants/entities/participant.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Conversation } from '@prisma/client';
 
@@ -38,9 +44,9 @@ export class ConversationEntity implements Conversation {
   @ApiProperty()
   participantCount: number;
 
-  @ApiProperty({ type: () => [ParticipantEntity] })
+  @ApiProperty({ type: () => [PaginatedParticipantEntity] })
   participants?: ParticipantEntity[];
 
-  @ApiProperty({ type: [MessageEntity] })
+  @ApiProperty({ type: [MessageEntityWithoutRelation] })
   messages?: MessageEntity[];
 }
