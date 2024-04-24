@@ -1,5 +1,10 @@
 import { UserEntity } from '@modules/users/entities/user.entity';
-import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  OmitType,
+  PickType,
+} from '@nestjs/swagger';
 import { Client } from '@prisma/client';
 import { Exclude } from 'class-transformer';
 import { ClientInfoEntity } from './client-info.entity';
@@ -58,6 +63,12 @@ export class ClientEntity implements Client {
   @ApiProperty({ type: [ParticipantEntity] })
   participants?: ParticipantEntity[];
 }
+
+export class PaginatedClientEntity extends PickType(ClientEntity, [
+  'id',
+  'name',
+  'email',
+] as const) {}
 
 export class ClientEntityWithoutSeller extends OmitType(ClientEntity, [
   'seller',

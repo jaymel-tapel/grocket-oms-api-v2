@@ -1,6 +1,12 @@
-import { ClientEntity } from '@modules/clients/entities/client.entity';
+import {
+  ClientEntity,
+  PaginatedClientEntity,
+} from '@modules/clients/entities/client.entity';
 import { ConversationEntity } from '@modules/conversations/entities/conversation.entity';
-import { UserEntity } from '@modules/users/entities/user.entity';
+import {
+  PaginatedUserEntity,
+  UserEntity,
+} from '@modules/users/entities/user.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Participant } from '@prisma/client';
 
@@ -52,4 +58,33 @@ export class ParticipantEntity implements Participant {
     nullable: true,
   })
   conversation?: ConversationEntity;
+}
+
+export class PaginatedParticipantEntity implements ParticipantEntity {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
+
+  @ApiProperty()
+  deletedAt: Date;
+
+  @ApiProperty()
+  conversationId: number;
+
+  @ApiProperty()
+  userId: number;
+
+  @ApiProperty()
+  clientId: number;
+
+  @ApiProperty({ type: () => PaginatedUserEntity })
+  user?: PaginatedUserEntity;
+
+  @ApiProperty({ type: PaginatedClientEntity })
+  client?: PaginatedClientEntity;
 }

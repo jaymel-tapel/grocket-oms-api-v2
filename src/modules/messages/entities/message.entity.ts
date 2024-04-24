@@ -1,5 +1,5 @@
 import { ParticipantEntity } from '@modules/participants/entities/participant.entity';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Message } from '@prisma/client';
 
 export class MessageEntity implements Message {
@@ -35,3 +35,7 @@ export class MessageEntity implements Message {
   @ApiProperty({ type: () => ParticipantEntity })
   sender?: ParticipantEntity;
 }
+
+export class MessageEntityWithoutRelation extends OmitType(MessageEntity, [
+  'sender',
+]) {}
