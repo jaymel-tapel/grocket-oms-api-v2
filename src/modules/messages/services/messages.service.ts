@@ -4,6 +4,11 @@ import { CreateMessageDto } from '../dto/create-message.dto';
 import { MessageEntity } from '../entities/message.entity';
 import { Prisma } from '@prisma/client';
 import { ChatsGateway } from '@modules/websocket-gateways/chats.gateway';
+import { FilterMessageDto } from '../dto/filter-message.dto';
+import { ConnectionArgsDto } from '../../page/connection-args.dto';
+import { PageEntity } from '@modules/page/page.entity';
+import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
+import { findManyMessages } from '../helper/find-many-messages.helper';
 
 @Injectable()
 export class MessagesService {
@@ -54,5 +59,40 @@ export class MessagesService {
         ...args?.orderBy,
       },
     });
+  }
+
+  async findAllWithPagination(
+    findManyArgs: FilterMessageDto,
+    connectionArgsDto: ConnectionArgsDto,
+  ) {
+    const database = await this.database.softDelete();
+
+    const findManyQuery: Prisma.MessageFindManyArgs = await findManyMessages(
+      findManyArgs,
+    );
+
+    const page = await findManyCursorConnection(
+      // 👇 args contain take, skip and cursor
+      async (args) => {
+        const { cursor, ...data } = args;
+
+        const findAllArgs = {
+          ...data,
+          ...(cursor ? { cursor: { id: parseInt(cursor.id, 10) } } : {}), // Convert id to number if cursor is defined
+          ...findManyQuery,
+        };
+
+        return await database.message.findMany(findAllArgs);
+      },
+      () => database.message.count({ where: { ...findManyQuery.where } }),
+      connectionArgsDto,
+      {
+        recordToEdge: (record) => ({
+          node: new MessageEntity(record),
+        }),
+      },
+    );
+
+    return new PageEntity<MessageEntity>(page);
   }
 }
