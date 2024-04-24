@@ -18,7 +18,10 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { UserEntity } from '../users/entities/user.entity';
+import {
+  SimplifiedUserEntity,
+  UserEntity,
+} from '../users/entities/user.entity';
 import { UploadPhotoDto } from './dto/upload-photo.dto';
 import { UsersService } from '@modules/users/services/users.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -26,6 +29,7 @@ import { FileValidationPipe } from './pipes/file-validation.pipe';
 import { AuthUser } from '@modules/auth/decorator/auth-user.decorator';
 import { JwtGuard } from '@modules/auth/guard';
 import { InjectUserToBody } from '@src/common/decorators/inject-user.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @UseGuards(JwtGuard)
 @ApiTags('profile')
@@ -41,6 +45,17 @@ export class ProfileController {
   @ApiOkResponse({ type: UserEntity })
   async getProfile(@AuthUser() authUser: UserEntity) {
     return new UserEntity(await this.profileService.fetchProfile(authUser.id));
+  }
+
+  @Patch('change-password')
+  @ApiOkResponse({ type: SimplifiedUserEntity })
+  async changePass(
+    @AuthUser() authUser: UserEntity,
+    @Body() changePassDto: ChangePasswordDto,
+  ) {
+    return new UserEntity(
+      await this.profileService.changePassword(authUser, changePassDto),
+    );
   }
 
   @Patch(':id')

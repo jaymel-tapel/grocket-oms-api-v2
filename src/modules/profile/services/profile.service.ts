@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AlternateEmailsService } from 'src/modules/alternate-emails/services/alternate-emails.service';
 import { UsersService } from 'src/modules/users/services/users.service';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
@@ -8,6 +12,8 @@ import { CloudinaryService } from '@modules/cloudinary/services/cloudinary.servi
 import { extractPublicIdFromUrl } from '../helpers/upload-photo.helper';
 import { DatabaseService } from '@modules/database/services/database.service';
 import { dd } from '@src/common/helpers/debug';
+import { ChangePasswordDto } from '../dto/change-password.dto';
+import { HashService } from '../../auth/services/hash.service';
 
 @Injectable()
 export class ProfileService {
@@ -16,6 +22,7 @@ export class ProfileService {
     private readonly alternateEmailService: AlternateEmailsService,
     private readonly cloudinaryService: CloudinaryService,
     private readonly database: DatabaseService,
+    private readonly hashService: HashService,
   ) {}
 
   async fetchProfile(id: number) {
@@ -98,6 +105,31 @@ export class ProfileService {
       data: {
         profile_image: result.secure_url,
       },
+    });
+  }
+
+  async changePassword(authUser: UserEntity, changePassDto: ChangePasswordDto) {
+    const { old_password, new_password } = changePassDto;
+
+    const { password: userPassword } = await this.database.user.findFirst({
+      where: { id: authUser.id },
+      select: { password: true },
+    });
+
+    const oldPassIsValid = await this.hashService.comparePassword(
+      old_password,
+      userPassword,
+    );
+
+    if (!oldPassIsValid) {
+      throw new UnauthorizedException('Invalid old password');
+    }
+
+    const newHashedPassword = await this.hashService.hashPassword(new_password);
+
+    return await this.database.user.update({
+      where: { id: authUser.id },
+      data: { password: newHashedPassword },
     });
   }
 }
