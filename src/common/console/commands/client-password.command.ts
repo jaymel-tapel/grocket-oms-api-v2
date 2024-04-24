@@ -23,7 +23,7 @@ export class ClientPasswordCommand extends CommandRunner {
     options?: Record<string, any>,
   ): Promise<void> {
     const clients = await this.database.client.findMany({
-      where: { id: { gte: 147 } },
+      where: { id: { gte: parseInt(process.env.CLIENT_ID) } },
       orderBy: { id: 'asc' },
     });
 
@@ -60,7 +60,7 @@ export class ClientPasswordCommand extends CommandRunner {
           context: data,
         });
 
-        await delay(5 * 1000);
+        await delay(3 * 1000);
       } catch (error) {
         this.logger.error(
           `Error for ${client.id}: ${client.name}, ${client.email}`,
