@@ -82,9 +82,12 @@ export class OrderReportsService {
 
     const avg_amount_of_reviews = totalOrderReviews / foundOrders.length;
 
-    const avg_unit_cost = foundOrders.reduce(
+    const totalUnitCost = foundOrders.reduce(
       (sum, orders) => sum + Number(orders.unit_cost),
       0,
+    );
+    const avg_unit_cost = parseFloat(
+      (totalUnitCost / foundOrders.length).toFixed(2),
     );
 
     return {
