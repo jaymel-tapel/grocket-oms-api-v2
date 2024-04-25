@@ -1,7 +1,7 @@
 import { FilterMessageDto } from '../dto/filter-message.dto';
 import { Prisma } from '@prisma/client';
 
-export const findManyMessages = async (findManyArgs: FilterMessageDto) => {
+export const findManyMessagesQuery = async (findManyArgs: FilterMessageDto) => {
   const { keyword, conversationId } = findManyArgs;
 
   let findManyQuery: Prisma.MessageFindManyArgs = {
@@ -15,7 +15,7 @@ export const findManyMessages = async (findManyArgs: FilterMessageDto) => {
       },
     },
     orderBy: {
-      createdAt: 'desc',
+      createdAt: 'asc',
     },
   };
 
