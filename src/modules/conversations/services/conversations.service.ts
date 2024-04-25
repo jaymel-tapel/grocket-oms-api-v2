@@ -12,7 +12,7 @@ import { FilterConversationDto } from '../dto/filter-conversation.dto';
 import { ConnectionArgsDto } from '@modules/page/connection-args.dto';
 import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
 import { PageEntity } from '@modules/page/page.entity';
-import { findManyConvos } from '../helpers/find-many-convos.helper';
+import { findManyConvosQuery } from '../helpers/find-many-convos.helper';
 
 @Injectable()
 export class ConversationsService {
@@ -63,7 +63,7 @@ export class ConversationsService {
 
     let findManyQuery: Prisma.ConversationFindManyArgs = {};
 
-    findManyQuery = await findManyConvos(findManyArgs, authUser);
+    findManyQuery = await findManyConvosQuery(findManyArgs, authUser);
 
     const page = await findManyCursorConnection(
       // 👇 args contain take, skip and cursor
@@ -133,41 +133,4 @@ export class ConversationsService {
 
     return commonConversationId;
   }
-
-  // private async findConversationsByEmail(
-  //   email: string,
-  //   modelName?: 'user' | 'client',
-  // ) {
-  //   const database = await this.database.softDelete();
-
-  //   const userOrClient: UserEntity | ClientEntity = await (
-  //     database[modelName] as any
-  //   ).findFirst({
-  //     where: { email: { equals: email, mode: 'insensitive' } },
-  //     include: { participants: { include: { conversations: true } } },
-  //   });
-
-  //   const conversationIds = userOrClient.participants.flatMap(
-  //     (participant) => participant.conversationId,
-  //   );
-
-  //   const conversations: ConversationEntity[] =
-  //     await database.conversation.findMany({
-  //       where: { id: { in: conversationIds } },
-  //       include: {
-  //         participants: {
-  //           include: {
-  //             user: { select: { id: true, name: true, email: true } },
-  //             client: { select: { id: true, name: true, email: true } },
-  //           },
-  //         },
-  //         messages: {
-  //           take: 1,
-  //           orderBy: { createdAt: 'desc' },
-  //         },
-  //       },
-  //     });
-
-  //   return conversations;
-  // }
 }
