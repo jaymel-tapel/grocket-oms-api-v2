@@ -1,5 +1,6 @@
 import {
   ConnectedSocket,
+  MessageBody,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -13,8 +14,8 @@ import {
 } from '@nestjs/common';
 import { WsAllExceptionsFilter } from '@src/common/filters/ws-all-exception.filter';
 import { IServerToClientEvents } from './interfaces/chats.interface';
-import { UserEntity } from '@modules/users/entities/user.entity';
 import { MessageEntity } from '@modules/messages/entities/message.entity';
+import { GetChatHistoryDto } from './dto/get-chat-history.dto';
 
 @WebSocketGateway()
 @UseFilters(WsAllExceptionsFilter)
@@ -45,7 +46,10 @@ export class ChatsGateway implements OnModuleInit {
     this.server.to(`${message.conversationId}`).emit('onMessage', message);
   }
 
-  getChatHistory(conversationId: number, messages: MessageEntity[]) {
+  @SubscribeMessage('getChats')
+  getChatHistory(
+    @MessageBody() { conversationId, messages }: GetChatHistoryDto,
+  ) {
     this.server.to(String(conversationId)).emit(
       'chatHistory',
       messages.map((m) => new MessageEntity(m)),

@@ -18,34 +18,32 @@ export class OrderReviewsService {
   ) {
     const { orderId, ...data } = createOrderReviewDto;
 
-    return await this.database.$transaction(async (tx) => {
-      const newReview = await tx.orderReview.create({
-        data: {
-          orderId,
-          ...data,
-        },
-      });
-
-      const orderReviews = await tx.orderReview.findMany({
-        where: { orderId },
-        include: { order: true },
-      });
-
-      await tx.order.update({
-        where: { id: orderId },
-        data: {
-          total_price:
-            orderReviews.length * Number(orderReviews[0].order.unit_cost),
-        },
-      });
-
-      // ? Create a Log for the Order
-      await this.orderLogsService.createLog(orderId, authUser, {
-        action: 'order review created',
-      });
-
-      return newReview;
+    const newReview = await this.database.orderReview.create({
+      data: {
+        orderId,
+        ...data,
+      },
     });
+
+    const orderReviews = await this.database.orderReview.findMany({
+      where: { orderId },
+      include: { order: true },
+    });
+
+    await this.database.order.update({
+      where: { id: orderId },
+      data: {
+        total_price:
+          orderReviews.length * Number(orderReviews[0].order.unit_cost),
+      },
+    });
+
+    // ? Create a Log for the Order
+    await this.orderLogsService.createLog(orderId, authUser, {
+      action: 'order review created',
+    });
+
+    return newReview;
   }
 
   async update(
@@ -53,19 +51,17 @@ export class OrderReviewsService {
     updateOrderReviewDto: UpdateOrderReviewDto,
     authUser: UserEntity,
   ) {
-    return await this.database.$transaction(async (tx) => {
-      const updatedReview = await tx.orderReview.update({
-        where: { id },
-        data: updateOrderReviewDto,
-      });
-
-      // ? Create a Log for the Order
-      await this.orderLogsService.createLog(updatedReview.orderId, authUser, {
-        action: 'order review updated',
-      });
-
-      return updatedReview;
+    const updatedReview = await this.database.orderReview.update({
+      where: { id },
+      data: updateOrderReviewDto,
     });
+
+    // ? Create a Log for the Order
+    await this.orderLogsService.createLog(updatedReview.orderId, authUser, {
+      action: 'order review updated',
+    });
+
+    return updatedReview;
   }
 
   async remove(id: number, authUser: UserEntity) {
