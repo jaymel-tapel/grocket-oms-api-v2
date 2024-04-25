@@ -345,19 +345,21 @@ export class OrdersService {
       }),
     );
 
-    const total = paginatedOrders.data.reduce((a, b) => a + +b.total_price, 0);
+    const foundOrders = await database.order.findMany(findManyQuery);
 
-    const unpaid_invoices = paginatedOrders.data
+    const total = foundOrders.reduce((a, b) => a + +b.total_price, 0);
+
+    const unpaid_invoices = foundOrders
       .filter((order) => order.payment_status === 'UNPAID')
       .reduce((a, b) => a + +b.total_price, 0);
 
     const paid_commission =
-      paginatedOrders.data
+      foundOrders
         .filter((order) => order.payment_status === 'PAID')
         .reduce((a, b) => a + +b.total_price, 0) * 0.3;
 
     const current_commission =
-      paginatedOrders.data.reduce((a, b) => a + +b.total_price, 0) * 0.3;
+      foundOrders.reduce((a, b) => a + +b.total_price, 0) * 0.3;
 
     const order_revenue_summary = {
       total,
