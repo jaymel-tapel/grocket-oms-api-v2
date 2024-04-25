@@ -345,7 +345,33 @@ export class OrdersService {
       }),
     );
 
-    return paginatedOrders;
+    const foundOrders = await database.order.findMany(findManyQuery);
+
+    const total = foundOrders.reduce((a, b) => a + +b.total_price, 0);
+
+    const unpaid_invoices = foundOrders
+      .filter((order) => order.payment_status === 'UNPAID')
+      .reduce((a, b) => a + +b.total_price, 0);
+
+    const paid_commission =
+      foundOrders
+        .filter((order) => order.payment_status === 'PAID')
+        .reduce((a, b) => a + +b.total_price, 0) * 0.3;
+
+    const current_commission =
+      foundOrders.reduce((a, b) => a + +b.total_price, 0) * 0.3;
+
+    const order_revenue_summary = {
+      total,
+      unpaid_invoices,
+      paid_commission,
+      current_commission,
+    };
+
+    return {
+      ...paginatedOrders,
+      order_revenue_summary,
+    };
   }
 
   async findOne(id: number) {

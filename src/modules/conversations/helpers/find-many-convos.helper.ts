@@ -2,7 +2,7 @@ import { UserEntity } from '@modules/users/entities/user.entity';
 import { FilterConversationDto } from '../dto/filter-conversation.dto';
 import { Prisma } from '@prisma/client';
 
-export const findManyConvos = async (
+export const findManyConvosQuery = async (
   findManyArgs: FilterConversationDto,
   authUser: UserEntity,
 ) => {
@@ -19,8 +19,17 @@ export const findManyConvos = async (
     include: {
       participants: {
         include: {
-          user: { select: { id: true, name: true, email: true } },
-          client: { select: { id: true, name: true, email: true } },
+          user: {
+            select: { id: true, name: true, email: true, profile_image: true },
+          },
+          client: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              clientInfo: { select: { profile_url: true } },
+            },
+          },
         },
       },
       messages: {

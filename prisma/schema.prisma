@@ -479,5 +479,5 @@ model Message {
   senderId       Int
   conversationId Int
   sender         Participant  @relation(fields: [senderId], references: [id])
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 }

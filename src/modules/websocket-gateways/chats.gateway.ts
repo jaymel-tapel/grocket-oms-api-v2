@@ -1,11 +1,5 @@
-import {
-  ConnectedSocket,
-  MessageBody,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { Server } from 'socket.io';
 import {
   OnModuleInit,
   UseFilters,
@@ -15,9 +9,14 @@ import {
 import { WsAllExceptionsFilter } from '@src/common/filters/ws-all-exception.filter';
 import { IServerToClientEvents } from './interfaces/chats.interface';
 import { MessageEntity } from '@modules/messages/entities/message.entity';
-import { GetChatHistoryDto } from './dto/get-chat-history.dto';
 
-@WebSocketGateway()
+const onlineUsersMap: { [key: string]: string } = {};
+
+const getReceiverSocketId = (receiverEmail: string) => {
+  return onlineUsersMap[receiverEmail];
+};
+
+@WebSocketGateway({ transport: 'websocket' })
 @UseFilters(WsAllExceptionsFilter)
 @UsePipes(
   new ValidationPipe({
@@ -33,26 +32,26 @@ export class ChatsGateway implements OnModuleInit {
 
   onModuleInit() {
     this.server?.on('connect', (socket) => {
-      console.log(`Connected: ${socket.id}`);
+      console.log('User Connected: ', socket.id);
+
+      const email = socket.handshake.headers.email as string;
+
+      if (email !== 'undefined') {
+        onlineUsersMap[email] = socket.id;
+      }
+
+      this.server.emit('getOnlineUsers', Object.keys(onlineUsersMap));
+
+      socket.on('disconnect', () => {
+        console.log('User Disconnected: ', socket.id);
+      });
     });
   }
 
-  @SubscribeMessage('getOnlineUsers')
-  setOnline(@ConnectedSocket() socket: Socket) {
-    // this.server.emit('getOnlineUsers', user);
-  }
-
-  sendMessage(message: MessageEntity) {
-    this.server.to(`${message.conversationId}`).emit('onMessage', message);
-  }
-
-  @SubscribeMessage('getChats')
-  getChatHistory(
-    @MessageBody() { conversationId, messages }: GetChatHistoryDto,
-  ) {
-    this.server.to(String(conversationId)).emit(
-      'chatHistory',
-      messages.map((m) => new MessageEntity(m)),
-    );
+  sendMessage(_receiverEmail: string, message: MessageEntity) {
+    const receiverSocketId = getReceiverSocketId(_receiverEmail);
+    if (receiverSocketId) {
+      this.server.to(receiverSocketId).emit('onMessage', message);
+    }
   }
 }
