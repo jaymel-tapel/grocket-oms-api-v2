@@ -11,7 +11,7 @@ export const findManyConvos = async (
   let findManyQuery: Prisma.ConversationFindManyArgs = {
     where: {
       participants: {
-        every: {
+        some: {
           userId: authUser.id,
         },
       },
