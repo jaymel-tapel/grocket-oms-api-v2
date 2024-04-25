@@ -8,7 +8,8 @@ import { FilterMessageDto } from '../dto/filter-message.dto';
 import { ConnectionArgsDto } from '../../page/connection-args.dto';
 import { PageEntity } from '@modules/page/page.entity';
 import { findManyCursorConnection } from '@devoxa/prisma-relay-cursor-connection';
-import { findManyMessages } from '../helper/find-many-messages.helper';
+import { findManyMessagesQuery } from '../helper/find-many-messages.helper';
+import { ParticipantEntity } from '@modules/participants/entities/participant.entity';
 
 @Injectable()
 export class MessagesService {
@@ -35,7 +36,29 @@ export class MessagesService {
 
     const newMessageEntity = new MessageEntity(newMessage);
 
-    this.chatsGateway.sendMessage(newMessageEntity);
+    const participants = await this.database.participant.findMany({
+      where: { conversationId, id: { not: senderId } },
+      include: {
+        user: { select: { email: true } },
+        client: { select: { email: true } },
+      },
+    });
+
+    const participantsEntity = participants.map(
+      (participant) => new ParticipantEntity(participant),
+    );
+
+    participantsEntity.forEach((participant) => {
+      let receiverEmail: string;
+
+      if ('client' in participant) {
+        receiverEmail = participant.client.email;
+      } else {
+        receiverEmail = participant.user.email;
+      }
+
+      this.chatsGateway.sendMessage(receiverEmail, newMessageEntity);
+    });
 
     return newMessageEntity;
   }
@@ -67,9 +90,8 @@ export class MessagesService {
   ) {
     const database = await this.database.softDelete();
 
-    const findManyQuery: Prisma.MessageFindManyArgs = await findManyMessages(
-      findManyArgs,
-    );
+    const findManyQuery: Prisma.MessageFindManyArgs =
+      await findManyMessagesQuery(findManyArgs);
 
     const page = await findManyCursorConnection(
       // 👇 args contain take, skip and cursor
