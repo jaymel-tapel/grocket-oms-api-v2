@@ -20,7 +20,7 @@ async function baseFindManyQuery(
       company: true,
     },
     orderBy: {
-      createdAt: 'desc',
+      id: 'desc',
     },
     where: {
       brand: { code },
