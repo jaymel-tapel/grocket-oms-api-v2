@@ -324,7 +324,7 @@ export class OrdersService {
     const paginatedOrders = await paginate<
       OrderEntity,
       Prisma.OrderFindManyArgs
-    >(database.order, findManyQuery, offsetPageArgsDto);
+    >(this.database.order, findManyQuery, offsetPageArgsDto);
 
     paginatedOrders.data = await Promise.all(
       paginatedOrders.data.map(async (order) => {
@@ -416,13 +416,10 @@ export class OrdersService {
         ...(updateClientInfo as CreateOrderClientDto),
       });
     } else {
-      clientEntity = await this.clientService.update(
-        clientEntity.id,
-        {
-          ...updateClientInfo,
-          sellerId: sellerEntity.id,
-        },
-      );
+      clientEntity = await this.clientService.update(clientEntity.id, {
+        ...updateClientInfo,
+        sellerId: sellerEntity.id,
+      });
     }
 
     // ? Find Company and Update
