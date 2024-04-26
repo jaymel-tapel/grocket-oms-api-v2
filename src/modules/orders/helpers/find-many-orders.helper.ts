@@ -27,6 +27,7 @@ async function baseFindManyQuery(
       seller: { is: { deletedAt: null } },
       client: { is: { deletedAt: null } },
       company: { is: { deletedAt: null } },
+      deletedAt: null,
     },
   };
 
