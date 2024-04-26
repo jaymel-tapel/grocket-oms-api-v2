@@ -80,19 +80,20 @@ export class OrdersService {
       include: { clientInfo: true },
     });
 
+    const doesNotMatch =
+      clientEntity && sellerEntity && clientEntity.sellerId !== sellerEntity.id;
+    const doesNoMatch2 =
+      clientEntity &&
+      alterAccount &&
+      alterAccount?.userId !== clientEntity.sellerId;
+
     // ? Validate Seller and CLient
-    if (
-      clientEntity &&
-      sellerEntity &&
-      clientEntity.sellerId !== sellerEntity.id
-    ) {
-      throw new HttpException('The seller does not own this client', 400);
-    } else if (
-      clientEntity &&
-      !sellerEntity &&
-      alterAccount?.userId !== clientEntity.sellerId
-    ) {
-      throw new HttpException('The client already has a seller', 400);
+    if (doesNotMatch || doesNoMatch2) {
+      const sellerId = sellerEntity ? sellerEntity.id : alterAccount.userId;
+      // ? Update Client's Seller Id
+      clientEntity = await this.clientService.update(clientEntity.id, {
+        sellerId,
+      });
     }
 
     if (authUser.role !== RoleEnum.SELLER) {
@@ -150,6 +151,10 @@ export class OrdersService {
         email: client_email,
         default_unit_cost: orderDto.unit_cost,
         ...createOrderClientDto,
+      });
+    } else {
+      clientEntity = await this.clientService.update(clientEntity.id, {
+        sellerId: sellerEntity.id,
       });
     }
 
@@ -413,7 +418,10 @@ export class OrdersService {
     } else {
       clientEntity = await this.clientService.update(
         clientEntity.id,
-        updateClientInfo,
+        {
+          ...updateClientInfo,
+          sellerId: sellerEntity.id,
+        },
       );
     }
 
@@ -431,6 +439,7 @@ export class OrdersService {
       where: { id, clientId: clientEntity.id },
       data: {
         ...orderData,
+        sellerId: sellerEntity.id,
         brandId: clientEntity.clientInfo.brandId,
         companyId: company.id,
         clientId: clientEntity.id,

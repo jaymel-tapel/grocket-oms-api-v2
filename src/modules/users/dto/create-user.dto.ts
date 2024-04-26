@@ -10,7 +10,6 @@ import {
 
 export class CreateUserDto implements Prisma.UserCreateInput {
   @IsString()
-  @MinLength(3)
   @ApiProperty()
   name: string;
 

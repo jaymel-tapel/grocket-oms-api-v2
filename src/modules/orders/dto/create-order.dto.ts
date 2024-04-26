@@ -27,7 +27,6 @@ export class CreateOrderDto {
   seller_email: string;
 
   @IsString()
-  @MinLength(3)
   @ApiProperty()
   seller_name: string;
 
@@ -40,7 +39,7 @@ export class CreateOrderDto {
   client_name: string;
 
   @IsString()
-  @MinLength(2)
+  @MinLength(1)
   @ApiProperty()
   company_name: string;
 
