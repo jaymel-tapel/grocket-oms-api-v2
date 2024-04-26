@@ -17,7 +17,6 @@ export class CreateOrderReviewDto {
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(3)
   @ApiProperty()
   name: string;
 

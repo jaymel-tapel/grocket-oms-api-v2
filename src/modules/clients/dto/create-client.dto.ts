@@ -16,7 +16,6 @@ import {
 
 export class ClientDto {
   @IsString()
-  @MinLength(3)
   @ApiProperty({ minLength: 3 })
   name: string;
 

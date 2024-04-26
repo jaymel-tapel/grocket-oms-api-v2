@@ -16,7 +16,7 @@ export class CreateCompanyDto {
   clientId: number;
 
   @IsString()
-  @MinLength(3)
+  @MinLength(1)
   @ApiProperty()
   name: string;
 
