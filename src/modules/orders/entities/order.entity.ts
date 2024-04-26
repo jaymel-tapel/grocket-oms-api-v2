@@ -8,29 +8,23 @@ import { UserEntity } from '@modules/users/entities/user.entity';
 import { OrderLogEntity } from './order-log.entity';
 
 export class OrderEntity implements Order {
-  constructor({
-    client,
-    company,
-    orderReviews,
-    seller,
-    ...partial
-  }: Partial<OrderEntity>) {
-    Object.assign(this, partial);
+  constructor(data?: Partial<OrderEntity>) {
+    Object.assign(this, data);
 
-    if (client) {
-      this.client = new ClientEntity(client);
+    if (data?.client) {
+      this.client = new ClientEntity(data.client);
     }
 
-    if (seller) {
-      this.seller = new UserEntity(seller);
+    if (data?.seller) {
+      this.seller = new UserEntity(data.seller);
     }
 
-    if (company) {
-      this.company = new CompanyEntity(company);
+    if (data?.company) {
+      this.company = new CompanyEntity(data.company);
     }
 
-    if (orderReviews) {
-      this.orderReviews = orderReviews.map(
+    if (data?.orderReviews) {
+      this.orderReviews = data.orderReviews.map(
         (review) => new OrderReviewEntity(review),
       );
 

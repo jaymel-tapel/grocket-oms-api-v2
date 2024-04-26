@@ -24,6 +24,9 @@ async function baseFindManyQuery(
     },
     where: {
       brand: { code },
+      seller: { is: { deletedAt: null } },
+      client: { is: { deletedAt: null } },
+      company: { is: { deletedAt: null } },
     },
   };
 
