@@ -2,7 +2,12 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { DashboardDateRangeDto } from '../dto/date-range.dto';
 import { addDays, eachDayOfInterval, subDays } from 'date-fns';
-import { OrderReviewStatus, PaymentStatusEnum, RoleEnum } from '@prisma/client';
+import {
+  OrderReviewStatus,
+  PaymentStatusEnum,
+  Prisma,
+  RoleEnum,
+} from '@prisma/client';
 import { UserEntity } from '@modules/users/entities/user.entity';
 
 @Injectable()
@@ -276,7 +281,7 @@ export class DashboardService {
     range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
     range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
 
-    const whereClause: any = {
+    const whereClause: Prisma.ClientWhereInput = {
       deletedAt: null,
     };
 
@@ -298,6 +303,9 @@ export class DashboardService {
         orders: { orderBy: { createdAt: 'desc' } },
       },
       ...(limit && { take: 5 }),
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
