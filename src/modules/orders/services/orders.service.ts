@@ -433,7 +433,7 @@ export class OrdersService {
     });
 
     let updatedOrder = await this.database.order.update({
-      where: { id, clientId: clientEntity.id },
+      where: { id },
       data: {
         ...orderData,
         sellerId: sellerEntity.id,
