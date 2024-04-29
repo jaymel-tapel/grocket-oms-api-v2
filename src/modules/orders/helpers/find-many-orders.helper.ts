@@ -162,7 +162,7 @@ export const findManyOrdersQuery = async (
           where: {
             ...findManyQuery.where,
             orderReviews: {
-              every: {
+              some: {
                 name: { contains: keyword, mode: 'insensitive' },
               },
             },
