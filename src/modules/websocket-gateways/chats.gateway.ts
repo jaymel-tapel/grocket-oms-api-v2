@@ -1,4 +1,5 @@
 import {
+  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
@@ -9,7 +10,6 @@ import { Server, Socket } from 'socket.io';
 import { Inject, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { WsAllExceptionsFilter } from '@src/common/filters/ws-all-exception.filter';
 import { IServerToClientEvents } from './interfaces/chats.interface';
-import { MessageEntity } from '@modules/messages/entities/message.entity';
 import { Cache, CACHE_MANAGER } from '@nestjs/cache-manager';
 import { JwtService } from '@nestjs/jwt';
 import { UserEntity } from '@modules/users/entities/user.entity';
@@ -18,6 +18,7 @@ import { IActiveUser } from './interfaces/ActiveUser.interface';
 import { DatabaseService } from '@modules/database/services/database.service';
 import { ConversationEntity } from '@modules/conversations/entities/conversation.entity';
 import { UserOrClientType } from './types/UserOrClient.type';
+import { SendMessageDto } from './dto/send-message.dto';
 
 @WebSocketGateway({ transport: 'websocket' })
 @UseFilters(WsAllExceptionsFilter)
@@ -167,10 +168,10 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     socket.disconnect();
   }
 
-  async sendMessage(_receiverEmail: string, message: MessageEntity) {
-    const receiver = (await this.cache.get(
-      `user ${_receiverEmail}`,
-    )) as IActiveUser;
+  @SubscribeMessage('sendMessage')
+  async sendMessage(@MessageBody() { receiverEmail, message }: SendMessageDto) {
+    const receiver: IActiveUser = await this.cache.get(`user ${receiverEmail}`);
+
     if (receiver) {
       this.server.to(receiver.socketId).emit('onMessage', message);
     }
