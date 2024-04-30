@@ -57,7 +57,10 @@ export class MessagesService {
         receiverEmail = participant.user.email;
       }
 
-      this.chatsGateway.sendMessage(receiverEmail, newMessageEntity);
+      this.chatsGateway.sendMessage({
+        receiverEmail,
+        message: newMessageEntity,
+      });
     });
 
     return newMessageEntity;
