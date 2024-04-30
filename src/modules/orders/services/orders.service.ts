@@ -424,7 +424,7 @@ export class OrdersService {
 
     // ? Find Company and Update
     const company = await this.database.company.update({
-      where: { id: orderData.companyId, clientId: clientEntity.id },
+      where: { id: orderData.companyId },
       data: { clientId: clientEntity.id },
     });
 
