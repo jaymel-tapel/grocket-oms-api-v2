@@ -117,6 +117,13 @@ export const findManyOrdersQuery = async (
                 OR: [
                   { name: { contains: keyword, mode: 'insensitive' } },
                   { email: { contains: keyword, mode: 'insensitive' } },
+                  {
+                    alternateEmails: {
+                      some: {
+                        email: { contains: keyword, mode: 'insensitive' },
+                      },
+                    },
+                  },
                 ],
               },
             },
@@ -306,6 +313,13 @@ const allQuery = (keyword: string, findManyQuery: Prisma.OrderFindManyArgs) => {
                   OR: [
                     { name: { contains: keyword, mode: 'insensitive' } },
                     { email: { contains: keyword, mode: 'insensitive' } },
+                    {
+                      alternateEmails: {
+                        some: {
+                          email: { contains: keyword, mode: 'insensitive' },
+                        },
+                      },
+                    },
                   ],
                 },
                 OR: [
