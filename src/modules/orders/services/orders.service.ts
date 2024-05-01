@@ -184,6 +184,7 @@ export class OrdersService {
         client: { connect: { id: clientEntity.id } },
         brand: { connect: { id: clientEntity.clientInfo.brandId } },
         seller: { connect: { id: sellerEntity.id } },
+        seller_email,
         company: {
           connect: { id: companyEntity.id },
         },
@@ -437,6 +438,7 @@ export class OrdersService {
       data: {
         ...orderData,
         sellerId: sellerEntity.id,
+        seller_email,
         brandId: clientEntity.clientInfo.brandId,
         companyId: company.id,
         clientId: clientEntity.id,
