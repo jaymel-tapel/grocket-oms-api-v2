@@ -112,21 +112,19 @@ export const findManyOrdersQuery = async (
           ...findManyQuery,
           where: {
             ...findManyQuery.where,
-            client: {
-              seller: {
-                OR: [
-                  { name: { contains: keyword, mode: 'insensitive' } },
-                  { email: { contains: keyword, mode: 'insensitive' } },
-                  {
-                    alternateEmails: {
-                      some: {
-                        email: { contains: keyword, mode: 'insensitive' },
-                      },
-                    },
+            OR: [
+              {
+                client: {
+                  seller: {
+                    OR: [
+                      { name: { contains: keyword, mode: 'insensitive' } },
+                      { email: { contains: keyword, mode: 'insensitive' } },
+                    ],
                   },
-                ],
+                },
               },
-            },
+              { seller_email: { contains: keyword, mode: 'insensitive' } },
+            ],
           },
         };
         break;
@@ -369,6 +367,9 @@ const searchOrdersForSeller = (
           company: {
             name: { contains: keyword, mode: 'insensitive' },
           },
+        },
+        {
+          seller_email: { contains: keyword, mode: 'insensitive' },
         },
       ],
     },
