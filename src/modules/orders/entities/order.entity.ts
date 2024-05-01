@@ -45,6 +45,9 @@ export class OrderEntity implements Order {
   sellerId: number;
 
   @ApiProperty()
+  seller_email: string;
+
+  @ApiProperty()
   companyId: number;
 
   @ApiProperty()
