@@ -442,7 +442,7 @@ export class OrdersService {
         brandId: clientEntity.clientInfo.brandId,
         companyId: company.id,
         clientId: clientEntity.id,
-        ...(orderData.unit_cost && {
+        ...((orderData.unit_cost || orderData.unit_cost === 0) && {
           total_price: orderReviews.length * orderData.unit_cost,
         }),
       },
