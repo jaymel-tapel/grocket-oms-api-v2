@@ -19,6 +19,8 @@ import { DatabaseService } from '@modules/database/services/database.service';
 import { ConversationEntity } from '@modules/conversations/entities/conversation.entity';
 import { UserOrClientType } from './types/UserOrClient.type';
 import { SendMessageDto } from './dto/send-message.dto';
+import { MessageEntity } from '@modules/messages/entities/message.entity';
+import { instanceToPlain } from 'class-transformer';
 
 @WebSocketGateway({ transport: 'websocket' })
 @UseFilters(WsAllExceptionsFilter)
@@ -173,7 +175,9 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const receiver: IActiveUser = await this.cache.get(`user ${receiverEmail}`);
 
     if (receiver) {
-      this.server.to(receiver.socketId).emit('onMessage', message);
+      this.server
+        .to(receiver.socketId)
+        .emit('onMessage', new MessageEntity(instanceToPlain(message)));
     }
   }
 

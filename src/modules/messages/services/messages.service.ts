@@ -32,6 +32,14 @@ export class MessagesService {
         conversation: { connect: { id: conversationId } },
         content,
       },
+      include: {
+        sender: {
+          include: {
+            user: true,
+            client: true,
+          },
+        },
+      },
     });
 
     const newMessageEntity = new MessageEntity(newMessage);
