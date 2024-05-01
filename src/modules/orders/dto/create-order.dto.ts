@@ -20,6 +20,7 @@ import { CreateOrderReviewDto } from './create-order-review.dto';
 import { Transform, Type } from 'class-transformer';
 import { DoesExist } from '@src/common/validators/user.validation';
 import { CreateClientDto } from '@modules/clients/dto/create-client.dto';
+import { ToBoolean } from '@src/common/helpers/toBoolean';
 
 export class CreateOrderDto {
   @IsEmail()
@@ -53,6 +54,7 @@ export class CreateOrderDto {
   order_date?: Date;
 
   @IsOptional()
+  @ToBoolean()
   @IsBoolean()
   @ApiPropertyOptional()
   send_confirmation?: boolean;
