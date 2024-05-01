@@ -88,7 +88,7 @@ export class CSVService {
       for (const field of fields) {
         if (
           [
-            'seller_email',
+            // 'seller_email',
             'number_of_reviews',
             'reviewers',
             'logs',
@@ -279,9 +279,17 @@ export class CSVService {
         sellerIds.includes(data.sellerId),
     );
 
-    return await this.database.$transaction(async (tx) => {
-      return await tx.order.createMany({ data });
+    data.forEach(async (order) => {
+      console.log(`Updating Order #${order.id}`);
+      await this.database.order.update({
+        where: { id: order.id },
+        data: { seller_email: order.seller_email },
+      });
     });
+
+    // return await this.database.$transaction(async (tx) => {
+    //   return await tx.order.createMany({ data });
+    // });
   }
 
   private async createManyOrderLogs(data: any[]) {
