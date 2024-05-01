@@ -201,6 +201,7 @@ model Order {
   clientId            Int
   brandId             Int?
   sellerId            Int                 @default(1)
+  seller_email        String?
   companyId           Int
   client              Client              @relation(fields: [clientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   seller              User                @relation(fields: [sellerId], references: [id], onDelete: Cascade, onUpdate: Cascade)

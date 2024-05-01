@@ -67,7 +67,7 @@ export class ChatsService {
   ) {
     const participants = await this.participantsService.findParticipantsByEmail(
       receivers,
-      senderDto,
+      senderDto.email,
     );
 
     return await this.conversationsService.findCommonConversation(participants);

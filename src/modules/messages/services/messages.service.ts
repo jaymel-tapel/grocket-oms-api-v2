@@ -32,6 +32,14 @@ export class MessagesService {
         conversation: { connect: { id: conversationId } },
         content,
       },
+      include: {
+        sender: {
+          include: {
+            user: true,
+            client: true,
+          },
+        },
+      },
     });
 
     const newMessageEntity = new MessageEntity(newMessage);
@@ -57,7 +65,10 @@ export class MessagesService {
         receiverEmail = participant.user.email;
       }
 
-      this.chatsGateway.sendMessage(receiverEmail, newMessageEntity);
+      this.chatsGateway.sendMessage({
+        receiverEmail,
+        message: newMessageEntity,
+      });
     });
 
     return newMessageEntity;

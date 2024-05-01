@@ -14,56 +14,37 @@ import { UserEntity } from '@modules/users/entities/user.entity';
 export class DashboardService {
   constructor(private readonly database: DatabaseService) {}
 
-  async admin(range?: DashboardDateRangeDto) {
-    if (Object.entries(range).length === 0) {
-      return {
-        ordersOverview: await this.getOrderPercentage(),
-        newClientsCount: (await this.getActiveClients()).length,
-        revenue: await this.getRevenue(),
-        clientsOverview: await this.clientDashboardInfo(),
-      };
-    }
-
-    if (!(range.startRange && range.endRange)) {
-      throw new BadRequestException(
-        'startRange and endRange should both be filled',
-      );
-    }
+  async admin(dateRangeDto?: DashboardDateRangeDto) {
+    const { startRange, endRange } = dateRangeDto;
 
     return {
-      ordersOverview: await this.getOrderPercentage(range),
-      newClientsCount: (await this.getActiveClients(range)).length,
-      revenue: await this.getRevenue(range),
-      clientsOverview: await this.clientDashboardInfo(range),
+      ordersOverview: await this.getOrderPercentage(dateRangeDto),
+      newClientsCount: (await this.getActiveClients(dateRangeDto)).length,
+      revenue: await this.getRevenue(dateRangeDto),
+      clientsOverview: await this.clientDashboardInfo(dateRangeDto),
     };
   }
 
-  async adminGraph(range?: DashboardDateRangeDto) {
-    if (Object.entries(range).length === 0) {
-      let endRange = new Date();
-      let startRange = subDays(endRange, 30);
+  async adminGraph(dateRangeDto?: DashboardDateRangeDto) {
+    let { startRange, endRange, code } = dateRangeDto;
 
-      range = { startRange, endRange };
+    if (!startRange && !endRange) {
+      endRange = new Date();
+      startRange = subDays(endRange, 30);
     }
 
-    if (!(range.startRange && range.endRange)) {
-      throw new BadRequestException(
-        'startRange and endRange should both be filled',
-      );
-    }
-
-    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
-    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
+    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
+    endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
 
     const orders = await this.database.order.findMany({
-      where: { createdAt: { gte: range.startRange, lte: range.endRange } },
+      where: { createdAt: { gte: startRange, lte: endRange }, brand: { code } },
       include: { orderReviews: true },
     });
 
     const datesArray: Date[] = [];
-    let tempStartDate: Date = range.startRange;
+    let tempStartDate: Date = startRange;
 
-    while (tempStartDate <= range.endRange) {
+    while (tempStartDate <= endRange) {
       datesArray.push(tempStartDate);
       tempStartDate = addDays(tempStartDate, 1);
     }
@@ -109,81 +90,67 @@ export class DashboardService {
     return { receivedAmount, unpaidAmount, paidReviews, unpaidReviews };
   }
 
-  async seller(authUser: UserEntity, range?: DashboardDateRangeDto) {
-    if (Object.entries(range).length === 0) {
-      return {
-        newOrdersCount: (await this.getOrders(null, authUser)).length,
-        newClientsCount: (await this.getActiveClients(null, authUser)).length,
-        ...(await this.getCommission(null, authUser)),
-        ordersOverview: await this.getOrderInfo(null, authUser),
-        clientsOverview: await this.clientDashboardInfo(null, authUser),
-      };
-    }
-
-    if (!(range.startRange && range.endRange)) {
-      throw new BadRequestException(
-        'startRange and endRange should both be filled',
-      );
-    }
-
+  async seller(authUser: UserEntity, dateRangeDto?: DashboardDateRangeDto) {
     return {
-      newOrdersCount: (await this.getOrders(range, authUser)).length,
-      newClientsCount: (await this.getActiveClients(range, authUser)).length,
-      ...(await this.getCommission(range, authUser)),
-      ordersOverview: await this.getOrderInfo(null, authUser),
-      clientsOverview: await this.clientDashboardInfo(null, authUser),
+      newOrdersCount: (await this.getOrders(dateRangeDto, authUser)).length,
+      newClientsCount: (await this.getActiveClients(dateRangeDto, authUser))
+        .length,
+      ...(await this.getCommission(dateRangeDto, authUser)),
+      ordersOverview: await this.getOrderInfo(dateRangeDto, authUser),
+      clientsOverview: await this.clientDashboardInfo(dateRangeDto, authUser),
     };
   }
 
-  private async getOrders(range?: DashboardDateRangeDto, seller?: UserEntity) {
-    if (!range) {
-      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
-
-      range = { startRange, endRange };
+  private async getOrders(
+    dateRangeDto?: DashboardDateRangeDto,
+    seller?: UserEntity,
+  ) {
+    let { startRange, endRange, code } = dateRangeDto;
+    if (!startRange || !endRange) {
+      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
     }
 
-    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
-    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+    endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
+    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
 
     return await this.database.order.findMany({
       where: {
-        createdAt: { gte: range.startRange, lte: range.endRange },
+        createdAt: { gte: startRange, lte: endRange },
         ...(seller &&
           seller.role === RoleEnum.SELLER && { sellerId: seller.id }),
+        brand: { code },
       },
     });
   }
 
-  async sellerGraph(authUser: UserEntity, range?: DashboardDateRangeDto) {
-    if (Object.entries(range).length === 0) {
-      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+  async sellerGraph(
+    authUser: UserEntity,
+    dateRangeDto?: DashboardDateRangeDto,
+  ) {
+    let { startRange, endRange, code } = dateRangeDto;
 
-      range = { startRange, endRange };
+    if (!startRange || !endRange) {
+      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
     }
 
-    if (!(range.startRange && range.endRange)) {
-      throw new BadRequestException(
-        'startRange and endRange should both be filled',
-      );
-    }
-
-    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
-    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+    endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
+    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
       where: {
-        createdAt: { gte: range.startRange, lte: range.endRange },
+        createdAt: { gte: startRange, lte: endRange },
         payment_status: PaymentStatusEnum.NEW,
         sellerId: authUser.id,
+        brand: { code },
       },
     });
 
     const datesArray: Date[] = [];
-    let tempStartDate: Date = range.startRange;
+    let tempStartDate: Date = startRange;
 
-    while (tempStartDate <= range.endRange) {
+    while (tempStartDate <= endRange) {
       datesArray.push(tempStartDate);
       tempStartDate = addDays(tempStartDate, 1);
     }
@@ -208,18 +175,17 @@ export class DashboardService {
     return { newOrdersStat };
   }
 
-  private async getOrderPercentage(range?: DashboardDateRangeDto) {
-    if (!range) {
-      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
-
-      range = { startRange, endRange };
+  private async getOrderPercentage(dateRangeDto?: DashboardDateRangeDto) {
+    let { startRange, endRange } = dateRangeDto;
+    if (!startRange || !endRange) {
+      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
     }
 
-    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
-    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+    endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
+    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
 
-    const orders = await this.getOrders(range);
+    const orders = await this.getOrders(dateRangeDto);
 
     const newOrders = orders.filter(
       (order) => order.payment_status === PaymentStatusEnum.NEW,
@@ -257,38 +223,38 @@ export class DashboardService {
       invoiceOrdersCount,
       pr1Count,
       pr2Count,
-      newOrdersPercent,
-      paidOrdersPercent,
-      invoiceOrdersPercent,
-      pr1Percent,
-      pr2Percent,
+      newOrdersPercent: newOrdersPercent || 0,
+      paidOrdersPercent: paidOrdersPercent || 0,
+      invoiceOrdersPercent: invoiceOrdersPercent || 0,
+      pr1Percent: pr1Percent || 0,
+      pr2Percent: pr2Percent || 0,
     };
   }
 
   private async getActiveClients(
-    range?: DashboardDateRangeDto,
+    dateRangeDto?: DashboardDateRangeDto,
     seller?: UserEntity,
     getAll?: boolean,
     limit?: boolean,
   ) {
-    if (!range) {
-      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
-
-      range = { startRange, endRange };
+    let { startRange, endRange, code } = dateRangeDto;
+    if (!startRange || !endRange) {
+      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
     }
 
-    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
-    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+    endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
+    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
 
     const whereClause: Prisma.ClientWhereInput = {
       deletedAt: null,
+      clientInfo: { brand: { code } },
     };
 
     if (!getAll) {
       whereClause.createdAt = {
-        gte: range.startRange,
-        lte: range.endRange,
+        gte: startRange,
+        lte: endRange,
       };
     }
 
@@ -310,10 +276,15 @@ export class DashboardService {
   }
 
   private async clientDashboardInfo(
-    range?: DashboardDateRangeDto,
+    dateRangeDto?: DashboardDateRangeDto,
     seller?: UserEntity,
   ) {
-    const clients = await this.getActiveClients(range, seller, true, true);
+    const clients = await this.getActiveClients(
+      dateRangeDto,
+      seller,
+      true,
+      true,
+    );
 
     const clientInfo = clients.map((client) => {
       const name = client.name;
@@ -332,19 +303,19 @@ export class DashboardService {
     return clientInfo;
   }
 
-  private async getRevenue(range?: DashboardDateRangeDto) {
-    if (!range) {
-      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+  private async getRevenue(dateRangeDto?: DashboardDateRangeDto) {
+    let { startRange, endRange, code } = dateRangeDto;
 
-      range = { startRange, endRange };
+    if (!startRange || !endRange) {
+      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
     }
 
-    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
-    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+    endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
+    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
-      where: { createdAt: { gte: range.startRange, lte: range.endRange } },
+      where: { createdAt: { gte: startRange, lte: endRange }, brand: { code } },
       include: { orderReviews: true },
     });
 
@@ -361,24 +332,25 @@ export class DashboardService {
   }
 
   private async getOrderInfo(
-    range?: DashboardDateRangeDto,
+    dateRangeDto?: DashboardDateRangeDto,
     seller?: UserEntity,
   ) {
-    if (!range) {
-      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+    let { startRange, endRange, code } = dateRangeDto;
 
-      range = { startRange, endRange };
+    if (!startRange || !endRange) {
+      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
     }
 
-    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
-    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+    endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
+    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
       where: {
-        createdAt: { gte: range.startRange, lte: range.endRange },
+        createdAt: { gte: startRange, lte: endRange },
         ...(seller &&
           seller.role === RoleEnum.SELLER && { sellerId: seller.id }),
+        brand: { code },
       },
       include: { client: true, orderReviews: true },
       orderBy: { createdAt: 'desc' },
@@ -407,24 +379,25 @@ export class DashboardService {
   }
 
   private async getCommission(
-    range?: DashboardDateRangeDto,
+    dateRangeDto?: DashboardDateRangeDto,
     seller?: UserEntity,
   ) {
-    if (!range) {
-      let endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-      let startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+    let { startRange, endRange, code } = dateRangeDto;
 
-      range = { startRange, endRange };
+    if (!startRange || !endRange) {
+      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
     }
 
-    range.endRange = new Date(range.endRange.setUTCHours(23, 59, 59, 999));
-    range.startRange = new Date(range.startRange.setUTCHours(0, 0, 0, 0));
+    endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
+    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
       where: {
-        createdAt: { gte: range.startRange, lte: range.endRange },
+        createdAt: { gte: startRange, lte: endRange },
         ...(seller &&
           seller.role === RoleEnum.SELLER && { sellerId: seller.id }),
+        brand: { code },
       },
       include: { client: true, orderReviews: true },
     });

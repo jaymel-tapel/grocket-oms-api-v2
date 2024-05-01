@@ -5,7 +5,6 @@ import { UserEntity } from '@modules/users/entities/user.entity';
 import { ClientEntity } from '@modules/clients/entities/client.entity';
 import { Client, Participant, User } from '@prisma/client';
 import { UpdateParticipantDto } from '../dto/update-participant.dto';
-import { SenderDto } from '@modules/chats/dto/sender.dto';
 
 @Injectable()
 export class ParticipantsService {
@@ -66,10 +65,8 @@ export class ParticipantsService {
 
   async findParticipantsByEmail(
     receivers: UpdateParticipantDto[],
-    senderDto: SenderDto,
+    email: string,
   ) {
-    const { email } = senderDto;
-
     const newReceiversArr = [...receivers];
 
     newReceiversArr.push({ user_email: email });
