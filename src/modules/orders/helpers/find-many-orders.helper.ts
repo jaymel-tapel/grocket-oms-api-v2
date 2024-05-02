@@ -59,10 +59,17 @@ async function baseFindManyQuery(
   }
 
   if (showDeleted) {
+    const relationsDeletedQuery = {
+      OR: [{ deletedAt: { not: null } }, { deletedAt: null }],
+    };
+
     findManyQuery = {
       ...findManyQuery,
       where: {
         ...findManyQuery.where,
+        seller: relationsDeletedQuery,
+        client: relationsDeletedQuery,
+        company: relationsDeletedQuery,
         deletedAt: { not: null },
       },
     };
