@@ -142,8 +142,8 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(socket: Socket) {
     console.log('User Connected: ', socket.id);
 
-    const bearerToken =
-      socket.handshake.headers.authorization?.split(' ')[1] ?? null;
+    const authQuery = socket.handshake.query.auth as string;
+    const bearerToken = authQuery?.split(' ')[1] ?? null;
 
     if (!bearerToken) {
       this.handleDisconnect(socket);

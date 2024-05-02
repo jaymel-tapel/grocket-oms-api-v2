@@ -15,6 +15,7 @@ import { ProspectSessionEntity } from '@modules/prospects/entities/prospect-sess
 import { isEmpty } from 'lodash';
 import { UpdateProspectSession } from '@modules/prospects/dto/update-prospect-session.dto';
 import { ScraperEstimateDto } from '../dto/scraper-estimate.dto';
+import { FetchReviewStatsEntity } from '../entities/fetch-review-stats.entity';
 
 @Injectable()
 export class ScraperService {
@@ -184,6 +185,13 @@ export class ScraperService {
       estimated_email,
       total_estimated_time,
     };
+  }
+
+  async fetchReviewStats(url: string) {
+    const response = await axios.post(process.env.FETCH_REVIEW_STATS_API, {
+      url,
+    });
+    return new FetchReviewStatsEntity(response.data);
   }
 
   private formatTime(seconds: number): string {

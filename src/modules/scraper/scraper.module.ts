@@ -7,5 +7,6 @@ import { ProspectsModule } from '@modules/prospects/prospects.module';
   imports: [ProspectsModule],
   controllers: [ScraperController],
   providers: [ScraperService],
+  exports: [ScraperService],
 })
 export class ScraperModule {}
