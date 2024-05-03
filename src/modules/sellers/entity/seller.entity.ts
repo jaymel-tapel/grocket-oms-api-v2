@@ -1,3 +1,7 @@
+import {
+  AlternateEmailEntity,
+  AlternateEmailEntityWithoutRelation,
+} from '@modules/alternate-emails/entities/alternate-email.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { $Enums, User } from '@prisma/client';
 import { Exclude } from 'class-transformer';
@@ -5,6 +9,12 @@ import { Exclude } from 'class-transformer';
 export class SellerEntity implements User {
   constructor(partial: Partial<SellerEntity>) {
     Object.assign(this, partial);
+
+    if (partial.alternateEmails?.length > 0) {
+      this.alternateEmails = partial.alternateEmails.map(
+        (alterEmail) => new AlternateEmailEntity(alterEmail),
+      );
+    }
   }
 
   @ApiProperty()
@@ -45,4 +55,7 @@ export class SellerEntity implements User {
 
   @ApiProperty()
   status: $Enums.StatusEnum;
+
+  @ApiProperty({ type: [AlternateEmailEntityWithoutRelation] })
+  alternateEmails?: AlternateEmailEntity[];
 }

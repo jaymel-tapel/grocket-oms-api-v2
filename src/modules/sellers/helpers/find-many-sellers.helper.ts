@@ -13,6 +13,9 @@ async function baseFindManyQuery(
       createdAt: 'asc',
     },
     where: { role: RoleEnum.SELLER },
+    include: {
+      alternateEmails: true,
+    },
   };
 
   const range = await dateRange(findManyArgs, database, 'user');
@@ -59,11 +62,6 @@ async function queryFindManyForSeller(
       OR: [
         { name: { contains: keyword, mode: 'insensitive' } },
         { email: { contains: keyword, mode: 'insensitive' } },
-        {
-          alternateEmails: {
-            some: { email: { contains: keyword, mode: 'insensitive' } },
-          },
-        },
       ],
     },
     include: {

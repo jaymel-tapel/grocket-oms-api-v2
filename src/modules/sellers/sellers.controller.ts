@@ -30,11 +30,20 @@ export class SellersController {
 
   @Get()
   @ApiOffsetPageResponse(SellerEntity)
-  async findAll(
+  async findAllWithPagination(
     @Query() findManyArgs: FilterSellersDto,
     @Query() offsetPageArgsDto: OffsetPageArgsDto,
   ) {
-    return await this.sellerService.findAll(findManyArgs, offsetPageArgsDto);
+    return await this.sellerService.findAllWithPagination(
+      findManyArgs,
+      offsetPageArgsDto,
+    );
+  }
+
+  @Get('all')
+  @ApiOkResponse({ type: [SellerEntity] })
+  async findAll(@Query() findManyArgs: FilterSellersDto) {
+    return await this.sellerService.findAll(findManyArgs);
   }
 
   @Get('count')
