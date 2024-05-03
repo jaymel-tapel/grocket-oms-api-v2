@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { AlternateEmail } from '@prisma/client';
 import { UserEntity } from 'src/modules/users/entities/user.entity';
 
@@ -32,3 +32,8 @@ export class AlternateEmailEntity implements AlternateEmail {
     }
   }
 }
+
+export class AlternateEmailEntityWithoutRelation extends OmitType(
+  AlternateEmailEntity,
+  ['user'],
+) {}

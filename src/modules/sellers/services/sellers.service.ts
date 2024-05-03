@@ -8,6 +8,7 @@ import { createPaginator } from 'prisma-pagination';
 import { findManySellers } from '../helpers/find-many-sellers.helper';
 import { TransferSellerDataDto } from '../dto/transfer-seller-data.dto';
 import { AlternateEmailsService } from '@modules/alternate-emails/services/alternate-emails.service';
+import { SellerEntity } from '../entity/seller.entity';
 
 @Injectable()
 export class SellersService {
@@ -16,7 +17,7 @@ export class SellersService {
     private readonly alternateEmailService: AlternateEmailsService,
   ) {}
 
-  async findAll(
+  async findAllWithPagination(
     findManyArgs: FilterSellersDto,
     offsetPageArgsDto: OffsetPageArgsDto,
   ) {
@@ -38,6 +39,19 @@ export class SellersService {
     );
 
     return paginatedSellers;
+  }
+
+  async findAll(findManyArgs: FilterSellersDto) {
+    const database = await this.database.softDelete();
+
+    const findManyQuery: Prisma.UserFindManyArgs = await findManySellers(
+      findManyArgs,
+      this.database,
+    );
+
+    const sellers = await database.user.findMany(findManyQuery);
+
+    return sellers.map((seller) => new SellerEntity(seller));
   }
 
   async findOne(args: Prisma.UserFindFirstArgs, includeDeleted?: boolean) {
