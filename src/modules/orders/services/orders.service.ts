@@ -65,7 +65,9 @@ export class OrdersService {
       client_email,
     }: CreateOrderDto | UpdateOrderDto,
   ) {
-    let sellerEntity: UserEntity = await this.database.user.findFirst({
+    const database = await this.database.softDelete();
+
+    let sellerEntity: UserEntity = await database.user.findFirst({
       where: { email: { equals: seller_email, mode: 'insensitive' } },
     });
 
