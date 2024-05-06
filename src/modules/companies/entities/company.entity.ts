@@ -32,6 +32,9 @@ export class CompanyEntity implements Company {
   @ApiProperty()
   url: string;
 
+  @ApiProperty()
+  invalid_check_count: number;
+
   @ApiProperty({ default: false })
   valid_url: boolean;
 
