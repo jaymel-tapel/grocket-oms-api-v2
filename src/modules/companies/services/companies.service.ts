@@ -39,6 +39,9 @@ export class CompaniesService {
     const database = await this.database.softDelete();
     return await database.company.findMany({
       where: companyArgs,
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
   }
 
