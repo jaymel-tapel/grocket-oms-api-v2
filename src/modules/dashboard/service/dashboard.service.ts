@@ -15,8 +15,6 @@ export class DashboardService {
   constructor(private readonly database: DatabaseService) {}
 
   async admin(dateRangeDto?: DashboardDateRangeDto) {
-    const { startRange, endRange } = dateRangeDto;
-
     return {
       ordersOverview: await this.getOrderPercentage(dateRangeDto),
       newClientsCount: (await this.getActiveClients(dateRangeDto)).length,
@@ -28,13 +26,13 @@ export class DashboardService {
   async adminGraph(dateRangeDto?: DashboardDateRangeDto) {
     let { startRange, endRange, code } = dateRangeDto;
 
-    if (!startRange && !endRange) {
-      endRange = new Date();
-      startRange = subDays(endRange, 30);
+    if (!startRange || !endRange) {
+      endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
     }
 
-    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
     endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
+    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
 
     const orders = await this.database.order.findMany({
       where: { createdAt: { gte: startRange, lte: endRange }, brand: { code } },
