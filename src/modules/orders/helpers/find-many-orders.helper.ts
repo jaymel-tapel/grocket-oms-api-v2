@@ -59,16 +59,17 @@ async function baseFindManyQuery(
       ...findManyQuery,
       where: {
         ...findManyQuery.where,
-        AND: [
-          {
-            OR: [
-              { seller: { deletedAt: { not: null } } },
-              { client: { deletedAt: { not: null } } },
-              { company: { deletedAt: { not: null } } },
-              { deletedAt: { not: null } },
-            ],
-          },
-        ],
+        deletedAt: { not: null },
+        // AND: [
+        //   {
+        //     OR: [
+        //       { seller: { deletedAt: { not: null } } },
+        //       { client: { deletedAt: { not: null } } },
+        //       { company: { deletedAt: { not: null } } },
+        //       { deletedAt: { not: null } },
+        //     ],
+        //   },
+        // ],
       },
     };
   } else {
@@ -76,9 +77,9 @@ async function baseFindManyQuery(
       ...findManyQuery,
       where: {
         ...findManyQuery.where,
-        seller: { is: { deletedAt: null } },
-        client: { is: { deletedAt: null } },
-        company: { is: { deletedAt: null } },
+        // seller: { is: { deletedAt: null } },
+        // client: { is: { deletedAt: null } },
+        // company: { is: { deletedAt: null } },
         deletedAt: null,
       },
     };
