@@ -24,10 +24,6 @@ async function baseFindManyQuery(
     },
     where: {
       brand: { code },
-      seller: { is: { deletedAt: null } },
-      client: { is: { deletedAt: null } },
-      company: { is: { deletedAt: null } },
-      deletedAt: null,
     },
   };
 
@@ -59,18 +55,31 @@ async function baseFindManyQuery(
   }
 
   if (showDeleted) {
-    const relationsDeletedQuery = {
-      OR: [{ deletedAt: { not: null } }, { deletedAt: null }],
-    };
-
     findManyQuery = {
       ...findManyQuery,
       where: {
         ...findManyQuery.where,
-        seller: relationsDeletedQuery,
-        client: relationsDeletedQuery,
-        company: relationsDeletedQuery,
-        deletedAt: { not: null },
+        AND: [
+          {
+            OR: [
+              { seller: { deletedAt: { not: null } } },
+              { client: { deletedAt: { not: null } } },
+              { company: { deletedAt: { not: null } } },
+              { deletedAt: { not: null } },
+            ],
+          },
+        ],
+      },
+    };
+  } else {
+    findManyQuery = {
+      ...findManyQuery,
+      where: {
+        ...findManyQuery.where,
+        seller: { is: { deletedAt: null } },
+        client: { is: { deletedAt: null } },
+        company: { is: { deletedAt: null } },
+        deletedAt: null,
       },
     };
   }
