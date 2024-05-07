@@ -40,13 +40,13 @@ export class SellersReportService {
   async getChartDetail(data?: SellerReportDto) {
     let { startRange, endRange, code } = data;
 
-    if (!(startRange && endRange)) {
-      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
+    if (!startRange || !endRange) {
       endRange = new Date(new Date().setUTCHours(23, 59, 59, 999));
-    } else {
-      startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
-      endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
+      startRange = subDays(new Date().setUTCHours(0, 0, 0, 0), 30);
     }
+
+    endRange = new Date(endRange.setUTCHours(23, 59, 59, 999));
+    startRange = new Date(startRange.setUTCHours(0, 0, 0, 0));
 
     // Get the list of sellers active/inactive
     const activeSellers = await this.activeSellers(code, startRange, endRange);
@@ -66,7 +66,7 @@ export class SellersReportService {
     }
 
     const activeSellersObject: { [key: string]: number } = {};
-    const inactiveSellersObject = { ...activeSellersObject };
+    const inactiveSellersObject: { [key: string]: number } = {};
 
     datesArray.forEach((date) => {
       activeSellersObject[date.toISOString()] = 0;
