@@ -84,9 +84,9 @@ export class SellersReportService {
     });
 
     inactiveSellers.forEach((seller) => {
-      seller.deletedAt?.setUTCHours(0, 0, 0, 0);
+      seller.createdAt.setUTCHours(0, 0, 0, 0);
 
-      const date = seller.deletedAt?.toISOString();
+      const date = seller.createdAt.toISOString();
       if (date in inactiveSellersObject) {
         inactiveSellersObject[date]++;
       }
