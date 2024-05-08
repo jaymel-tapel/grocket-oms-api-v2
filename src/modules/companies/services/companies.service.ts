@@ -66,9 +66,9 @@ export class CompaniesService {
 
   async remove(id: number, authUser: UserEntity) {
     const database = await this.database.softDelete();
-    const company = await database.company.findUniqueOrThrow({ where: { id } });
 
-    this.eventsService.emitDeleteCompanyEvent(company, authUser);
+    // const company = await database.company.findUniqueOrThrow({ where: { id } });
+    // this.eventsService.emitDeleteCompanyEvent(company, authUser);
 
     return await database.company.delete({
       where: { id },

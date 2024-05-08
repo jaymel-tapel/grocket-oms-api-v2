@@ -306,10 +306,6 @@ export class OrdersService {
   ) {
     const { perPage, page } = offsetPageArgsDto;
 
-    const database = filterOrderArgs.showDeleted
-      ? this.database
-      : await this.database.softDelete();
-
     const paginate = createPaginator({ perPage, page });
 
     let findManyQuery: Prisma.OrderFindManyArgs = {};
@@ -353,7 +349,7 @@ export class OrdersService {
       }),
     );
 
-    const foundOrders = await database.order.findMany(findManyQuery);
+    const foundOrders = await this.database.order.findMany(findManyQuery);
 
     const total = foundOrders.reduce((a, b) => a + +b.total_price, 0);
 
