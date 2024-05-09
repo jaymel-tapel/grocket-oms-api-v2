@@ -23,15 +23,15 @@ async function bootstrap() {
     .build();
 
   app.setGlobalPrefix('api');
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     whitelist: true,
+  //     transform: true,
+  //     transformOptions: {
+  //       enableImplicitConversion: true,
+  //     },
+  //   }),
+  // );
 
   // * For creating a custom validation
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
