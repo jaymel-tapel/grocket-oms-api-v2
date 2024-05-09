@@ -4,7 +4,6 @@ import { DashboardService } from './service/dashboard.service';
 import { JwtGuard } from '@modules/auth/guard';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiOkResponse,
   ApiQuery,
   ApiTags,
@@ -26,14 +25,14 @@ export class DashboardController {
   @ApiOkResponse({ type: AdminDashboardEntity })
   async admin(@Query() range?: DashboardDateRangeDto) {
     console.log(range);
-    // return await this.dashboardService.admin(range);
+    return await this.dashboardService.admin(range);
   }
 
   @Get('admin/graph')
   @ApiQuery({ type: DashboardDateRangeDto, required: false })
   @ApiOkResponse({ type: AdminGraphEntity })
   async adminGraph(@Query() range?: DashboardDateRangeDto) {
-    // return await this.dashboardService.adminGraph(range);
+    return await this.dashboardService.adminGraph(range);
   }
 
   @Get('seller')
@@ -42,7 +41,7 @@ export class DashboardController {
     @AuthUser() authUser: UserEntity,
     @Query() range?: DashboardDateRangeDto,
   ) {
-    // return await this.dashboardService.seller(authUser, range);
+    return await this.dashboardService.seller(authUser, range);
   }
 
   @Get('seller/graph')
@@ -51,6 +50,6 @@ export class DashboardController {
     @AuthUser() authUser: UserEntity,
     @Query() range?: DashboardDateRangeDto,
   ) {
-    // return await this.dashboardService.sellerGraph(authUser, range);
+    return await this.dashboardService.sellerGraph(authUser, range);
   }
 }
