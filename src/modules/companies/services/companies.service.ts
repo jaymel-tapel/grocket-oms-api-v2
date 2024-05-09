@@ -59,7 +59,10 @@ export class CompaniesService {
     return await this.database.$transaction(async (tx) => {
       return await tx.company.update({
         where: { id },
-        data: updateCompanyDto,
+        data: {
+          ...updateCompanyDto,
+          ...(updateCompanyDto?.url && { invalid_check_count: 0 }),
+        },
       });
     });
   }
