@@ -8,13 +8,13 @@ export class DashboardDateRangeDto {
   // @IsDate()
   @IsString()
   @ApiPropertyOptional()
-  startRange?: string;
+  startRange?: any;
 
   @IsOptional()
   // @IsDate()
   @IsString()
   @ApiPropertyOptional()
-  endRange?: string;
+  endRange?: any;
 
   @IsNotEmpty()
   @DoesExist({ tableName: 'brand', column: 'code' })
