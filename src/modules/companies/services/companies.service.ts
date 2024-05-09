@@ -61,7 +61,7 @@ export class CompaniesService {
         where: { id },
         data: {
           ...updateCompanyDto,
-          ...(updateCompanyDto.url && { invalid_check_count: 0 }),
+          ...(updateCompanyDto?.url && { invalid_check_count: 0 }),
         },
       });
     });
