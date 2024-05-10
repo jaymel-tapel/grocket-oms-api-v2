@@ -1,7 +1,7 @@
 import { DatabaseService } from '@modules/database/services/database.service';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DashboardDateRangeDto } from '../dto/date-range.dto';
-import { addDays, eachDayOfInterval, subDays } from 'date-fns';
+import { addDays, subDays } from 'date-fns';
 import {
   OrderReviewStatus,
   PaymentStatusEnum,

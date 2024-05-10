@@ -4,7 +4,6 @@ import { DashboardService } from './service/dashboard.service';
 import { JwtGuard } from '@modules/auth/guard';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiOkResponse,
   ApiQuery,
   ApiTags,
@@ -25,6 +24,7 @@ export class DashboardController {
   @ApiQuery({ type: DashboardDateRangeDto, required: false })
   @ApiOkResponse({ type: AdminDashboardEntity })
   async admin(@Query() range?: DashboardDateRangeDto) {
+    console.log(range);
     return await this.dashboardService.admin(range);
   }
 
