@@ -9,6 +9,7 @@ import { CheckPaymentCommand } from './commands/check-payments.command';
 import { UserPasswordCommand } from './commands/user-password.command';
 import { FillGapDailyRatingsCommand } from './commands/fill-gap-daily-ratings.command';
 import { RestoreDeletedOrdersCommand } from './commands/restore-all-roders.command';
+import { ClientMassEmailCommand } from './commands/mass-email.command';
 
 export const Commands = [
   Logger,
@@ -22,4 +23,5 @@ export const Commands = [
   CheckPaymentCommand,
   FillGapDailyRatingsCommand,
   RestoreDeletedOrdersCommand,
+  ClientMassEmailCommand,
 ];
