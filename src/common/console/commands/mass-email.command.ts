@@ -21,22 +21,17 @@ export class ClientMassEmailCommand extends CommandRunner {
     options?: Record<string, any>,
   ): Promise<void> {
     const clients = await this.database.client.findMany({
-      orderBy: { id: 'asc' },
+      orderBy: { id: 'desc' },
     });
 
     this.logger.verbose(`Sending Mass Email...`);
 
-    // await this.mailerService.sendMail({
-    //   to: ['Wassim.hotait@gmail.com', 'James.czesky@g-rocket.de'],
-    //   from: `"G-Rocket" <support@g-rocket.de>`,
-    //   subject: `G-Rocket wird zu Reputationshelfer`,
-    //   template: 'mass-email-client',
-    // });
-
     for (const client of clients) {
       try {
-        this.logger.debug(`Updating Client ID: ${client.id}`);
-        this.logger.debug(`Updating Client Name: ${client.name}`);
+        this.logger.debug(`Client ID: ${client.id}`);
+        this.logger.debug(`Client Name: ${client.name}`);
+        this.logger.debug(`Client Email: ${client.email}`);
+        console.log(``);
 
         await this.mailerService.sendMail({
           to: client.email,
