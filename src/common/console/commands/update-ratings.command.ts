@@ -22,39 +22,47 @@ export class FixRatingsCommand extends CommandRunner {
       where: {
         date: {
           gte: new Date('2024-03-04'),
-          lte: new Date('2024-03-27'),
+          lte: new Date('2024-03-28'),
         },
       },
     });
 
-    for (const dr of dailyRatings) {
-      try {
-        this.logger.debug(`Updating Rating ID: ${dr?.id}`);
-        console.log(``);
+    const batchSize = 100;
 
-        const stars = dr.stars;
+    for (let i = 0; i < dailyRatings.length; i += batchSize) {
+      const batch = dailyRatings.slice(i, i + batchSize);
 
-        const weightedSum =
-          stars[0] * 5 +
-          stars[1] * 4 +
-          stars[2] * 3 +
-          stars[3] * 2 +
-          stars[4] * 1;
+      await Promise.all(
+        batch.map(async (dr) => {
+          try {
+            this.logger.debug(`Updating Rating ID: ${dr?.id}`);
+            console.log(``);
 
-        const averageRating = weightedSum / dr.reviews;
+            const stars = dr.stars;
 
-        await this.database.dailyRating.update({
-          where: { id: dr.id },
-          data: {
-            rating: round(averageRating, 1),
-          },
-        });
-      } catch (error) {
-        this.logger.error(
-          `Error Updating Daily Rating ID: ${dr?.id}: ${error}`,
-        );
-        console.log(``);
-      }
+            const weightedSum =
+              stars[0] * 5 +
+              stars[1] * 4 +
+              stars[2] * 3 +
+              stars[3] * 2 +
+              stars[4] * 1;
+
+            const averageRating = weightedSum / dr.reviews;
+
+            await this.database.dailyRating.update({
+              where: { id: dr.id },
+              data: {
+                rating: round(averageRating, 1),
+              },
+            });
+          } catch (error) {
+            this.logger.error(
+              `Error Updating Daily Rating ID: ${dr?.id}: ${error}`,
+            );
+            console.log(``);
+          }
+        }),
+      );
     }
 
     this.logger.verbose(`Success!`);
