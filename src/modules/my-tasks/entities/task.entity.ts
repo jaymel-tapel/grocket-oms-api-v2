@@ -1,9 +1,16 @@
-import { ClientEntity } from '@modules/clients/entities/client.entity';
-import { UserEntity } from '@modules/users/entities/user.entity';
+import {
+  ClientEntity,
+  SimplifiedClientEntity,
+} from '@modules/clients/entities/client.entity';
+import {
+  SimplifiedUserEntity,
+  UserEntity,
+} from '@modules/users/entities/user.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreatedByEnum, Task, TaskTypeEnum } from '@prisma/client';
 import { TaskAccountantEntity } from './task-accountant.entity';
 import { TaskSellerEntity } from './task-seller.entity';
+import { OrderEntity } from '@modules/orders/entities/order.entity';
 
 export class TaskEntity implements Task {
   constructor(data?: Partial<TaskEntity>) {
@@ -23,6 +30,10 @@ export class TaskEntity implements Task {
 
     if (data?.taskSeller) {
       this.taskSeller = new TaskSellerEntity(data?.taskSeller);
+    }
+
+    if (data?.order) {
+      this.order = new OrderEntity(data?.order);
     }
   }
 
@@ -59,9 +70,12 @@ export class TaskEntity implements Task {
   @ApiPropertyOptional({ type: TaskSellerEntity })
   taskSeller?: TaskSellerEntity;
 
-  @ApiPropertyOptional({ type: UserEntity })
+  @ApiPropertyOptional({ type: SimplifiedUserEntity })
   user?: UserEntity | null;
 
-  @ApiPropertyOptional({ type: ClientEntity })
+  @ApiPropertyOptional({ type: SimplifiedClientEntity })
   client?: ClientEntity | null;
+
+  @ApiPropertyOptional({ type: OrderEntity })
+  order?: OrderEntity | null;
 }

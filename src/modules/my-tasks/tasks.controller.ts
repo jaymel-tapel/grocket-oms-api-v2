@@ -78,14 +78,19 @@ export class TasksController {
     @Param('id', ParseIntPipe) id: number,
   ) {
     const ability = await this.abilityFactory.defineAbility(authUser);
+
     const task = await this.tasksService.findUniqueOrThrow({
       where: { id },
-      include: taskIncludeHelper(authUser, { includeTaskNotes: true }),
+      include: taskIncludeHelper(authUser, {
+        includeTaskNotes: true,
+        includeClient: true,
+        includeCompany: true,
+      }),
     });
 
     ForbiddenError.from(ability).throwUnlessCan(Action.Read, task);
 
-    return task;
+    return new TaskEntity(task);
   }
 
   @Patch(':id')
