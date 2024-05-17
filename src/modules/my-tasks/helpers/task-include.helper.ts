@@ -3,6 +3,8 @@ import { Prisma, RoleEnum } from '@prisma/client';
 
 type IOptions = {
   includeTaskNotes?: boolean;
+  includeClient?: boolean;
+  includeCompany?: boolean;
 };
 
 export const taskIncludeHelper = (authUser: UserEntity, options?: IOptions) => {
@@ -12,6 +14,10 @@ export const taskIncludeHelper = (authUser: UserEntity, options?: IOptions) => {
     }),
     ...(authUser.role === RoleEnum.SELLER && {
       taskSeller: true,
+    }),
+    ...(options?.includeClient && { client: true }),
+    ...(options?.includeCompany && {
+      order: { include: { company: { select: { name: true } } } },
     }),
   };
 

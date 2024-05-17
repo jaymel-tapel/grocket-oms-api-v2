@@ -53,6 +53,13 @@ export class TaskSellersService {
       include: {
         task: {
           include: {
+            order: {
+              select: {
+                id: true,
+                company: { select: { id: true, name: true, url: true } },
+              },
+            },
+            client: true,
             user: true,
             taskNotes: {
               where: {
