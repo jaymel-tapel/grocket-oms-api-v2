@@ -79,7 +79,7 @@ export class TasksController {
   ) {
     const ability = await this.abilityFactory.defineAbility(authUser);
     const task = await this.tasksService.findUniqueOrThrow({
-      where: { id, createdBy: authUser.role as CreatedByEnum },
+      where: { id },
       include: taskIncludeHelper(authUser, { includeTaskNotes: true }),
     });
 
