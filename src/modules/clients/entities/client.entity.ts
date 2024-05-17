@@ -75,8 +75,8 @@ export class ClientEntityWithoutSeller extends OmitType(ClientEntity, [
   'sellerId',
 ]) {}
 
-export class ClientWithoutRelationsEntity implements Client {
-  constructor(data?: Partial<ClientWithoutRelationsEntity>) {
+export class SimplifiedClientEntity implements Client {
+  constructor(data?: Partial<SimplifiedClientEntity>) {
     Object.assign(this, data);
   }
 
@@ -113,12 +113,12 @@ export class GeneratePasswordEntity {
     Object.assign(this, data);
 
     if (data.client) {
-      this.client = new ClientWithoutRelationsEntity(data.client);
+      this.client = new SimplifiedClientEntity(data.client);
     }
   }
 
   @ApiProperty()
-  client: ClientWithoutRelationsEntity;
+  client: SimplifiedClientEntity;
 
   @ApiProperty()
   password_text: string;
