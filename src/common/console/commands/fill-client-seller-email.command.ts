@@ -29,26 +29,34 @@ export class FillClientSellerEmailCommand extends CommandRunner {
       orderBy: { id: 'asc' },
     });
 
-    clients.forEach(async (client) => {
-      try {
-        this.logger.debug(`Updating Client ID: ${client.id}`);
-        this.logger.debug(`Updating Client Name: ${client.name}`);
-        console.log(``);
+    const batchSize = 200;
 
-        const order = client.orders[0];
+    for (let i = 0; i < clients.length; i += batchSize) {
+      const batch = clients.slice(i, i + batchSize);
 
-        await this.database.client.update({
-          where: { id: client.id },
-          data: {
-            seller_email: order.seller_email,
-          },
-        });
-      } catch (error) {
-        this.logger.error(
-          `Error for ${client.id}: ${client.name}, ${client.email}`,
-        );
-      }
-    });
+      await Promise.all(
+        batch.map(async (client) => {
+          try {
+            this.logger.debug(`Updating Client ID: ${client.id}`);
+            this.logger.debug(`Updating Client Name: ${client.name}`);
+            console.log(``);
+
+            const order = client.orders[0];
+
+            await this.database.client.update({
+              where: { id: client.id },
+              data: {
+                seller_email: order.seller_email,
+              },
+            });
+          } catch (error) {
+            this.logger.error(
+              `Error for ${client.id}: ${client.name}, ${client.email}`,
+            );
+          }
+        }),
+      );
+    }
 
     this.logger.verbose(`Success!`);
   }
