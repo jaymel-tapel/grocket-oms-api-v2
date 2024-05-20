@@ -38,6 +38,7 @@ export class ClientsService {
       email,
       password: passDto,
       sellerId,
+      seller_email,
       ...clientInfoDto
     } = createClientDto;
 
@@ -82,6 +83,7 @@ export class ClientsService {
         email,
         password: passwordObj.hash,
         seller: { connect: { id: sellerId } },
+        seller_email,
         clientInfo: { create: clientInfoDto },
       },
       include: { clientInfo: true },

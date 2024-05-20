@@ -37,6 +37,11 @@ export class ClientDto {
   })
   sellerId?: number;
 
+  @IsOptional()
+  @IsEmail()
+  @ApiPropertyOptional()
+  seller_email?: string;
+
   @IsNumber()
   @ApiProperty()
   brandId: number;
