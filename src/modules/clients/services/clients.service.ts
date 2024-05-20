@@ -184,7 +184,8 @@ export class ClientsService {
   }
 
   async update(id: number, updateClientDto: UpdateClientDto) {
-    const { name, email, sellerId, ...clientInfoDto } = updateClientDto;
+    const { name, email, sellerId, seller_email, ...clientInfoDto } =
+      updateClientDto;
 
     const updatedClient = await this.database.client.update({
       where: { id },
@@ -192,6 +193,7 @@ export class ClientsService {
         name,
         email,
         sellerId,
+        seller_email,
         clientInfo: {
           update: clientInfoDto,
         },
