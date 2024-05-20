@@ -51,6 +51,9 @@ export class ClientEntity implements Client {
   @ApiPropertyOptional({ nullable: true })
   sellerId: number | null;
 
+  @ApiProperty()
+  seller_email: string;
+
   @ApiPropertyOptional({ type: () => UserEntity })
   seller?: UserEntity | null;
 
@@ -106,6 +109,9 @@ export class SimplifiedClientEntity implements Client {
 
   @Exclude()
   sellerId: number;
+
+  @Exclude()
+  seller_email: string;
 }
 
 export class GeneratePasswordEntity {

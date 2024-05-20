@@ -152,11 +152,13 @@ export class OrdersService {
         name: client_name,
         email: client_email,
         default_unit_cost: orderDto.unit_cost,
+        seller_email,
         ...createOrderClientDto,
       });
     } else {
       clientEntity = await this.clientService.update(clientEntity.id, {
         sellerId: sellerEntity.id,
+        seller_email,
       });
     }
 
@@ -412,12 +414,14 @@ export class OrdersService {
         name: client_name,
         email: client_email,
         default_unit_cost: orderData.unit_cost,
+        seller_email,
         ...(updateClientInfo as CreateOrderClientDto),
       });
     } else {
       clientEntity = await this.clientService.update(clientEntity.id, {
         ...updateClientInfo,
         sellerId: sellerEntity.id,
+        seller_email,
       });
     }
 

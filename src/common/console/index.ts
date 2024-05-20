@@ -11,6 +11,7 @@ import { FillGapDailyRatingsCommand } from './commands/fill-gap-daily-ratings.co
 import { RestoreDeletedOrdersCommand } from './commands/restore-all-orders.command';
 import { ClientMassEmailCommand } from './commands/mass-email.command';
 import { FixRatingsCommand } from './commands/update-ratings.command';
+import { FillClientSellerEmailCommand } from './commands/fill-client-seller-email.command';
 
 export const Commands = [
   Logger,
@@ -26,4 +27,5 @@ export const Commands = [
   RestoreDeletedOrdersCommand,
   ClientMassEmailCommand,
   FixRatingsCommand,
+  FillClientSellerEmailCommand,
 ];

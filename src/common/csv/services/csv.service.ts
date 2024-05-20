@@ -221,6 +221,7 @@ export class CSVService {
       createdAt: data.createdAt,
       updatedAt: data.updatedAt,
       deletedAt: data.deletedAt,
+      seller_email: data.seller_email,
     }));
 
     const clientInfoData: ClientInfoEntity[] = csvData.map(

@@ -145,6 +145,7 @@ model Client {
   forgot_password_code String?
   seller               User          @relation(fields: [sellerId], references: [id])
   sellerId             Int
+  seller_email         String?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   deletedAt            DateTime?
