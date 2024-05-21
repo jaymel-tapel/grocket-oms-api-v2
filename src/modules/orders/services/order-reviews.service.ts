@@ -51,6 +51,10 @@ export class OrderReviewsService {
     updateOrderReviewDto: UpdateOrderReviewDto,
     authUser: UserEntity,
   ) {
+    const oldReview = await this.database.orderReview.findUnique({
+      where: { id },
+    });
+
     const updatedReview = await this.database.orderReview.update({
       where: { id },
       data: updateOrderReviewDto,
@@ -58,7 +62,7 @@ export class OrderReviewsService {
 
     // ? Create a Log for the Order
     await this.orderLogsService.createLog(updatedReview.orderId, authUser, {
-      action: 'order review updated',
+      action: `Reviewer: ${updatedReview.name} status has been updated from ${oldReview.status} to ${updatedReview.status}`,
     });
 
     return updatedReview;
