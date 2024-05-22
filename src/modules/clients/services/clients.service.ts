@@ -18,9 +18,9 @@ import { OffsetPageArgsDto } from '@modules/offset-page/page-args.dto';
 import { createPaginator } from 'prisma-pagination';
 import { FindClientsBySellerDto } from '../dto/find-clients-by-seller.dto';
 import { clientIncludeHelper } from '../helpers/client-include.helper';
-import { EventsService } from '@modules/events/services/events.service';
 import { SendGeneratedPasswordDto } from '../dto/generate-password.dto';
 import { MailerService } from '@nestjs-modules/mailer';
+import { ClientEventsService } from '@modules/events/services/client-events.service';
 
 @Injectable()
 export class ClientsService {
@@ -28,7 +28,7 @@ export class ClientsService {
     private readonly database: DatabaseService,
     private readonly hashService: HashService,
     private readonly usersService: UsersService,
-    private readonly eventsService: EventsService,
+    private readonly eventsService: ClientEventsService,
     private readonly mailerService: MailerService,
   ) {}
 

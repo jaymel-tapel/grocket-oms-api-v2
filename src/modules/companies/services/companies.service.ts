@@ -5,13 +5,13 @@ import { UpdateCompanyDto } from '../dto/update-company.dto';
 import { CompanyArgsDto } from '../dto/company-args.dto';
 import { Prisma } from '@prisma/client';
 import { UserEntity } from '@modules/users/entities/user.entity';
-import { EventsService } from '@modules/events/services/events.service';
+import { CompanyEventsService } from '@modules/events/services/company-events.service';
 
 @Injectable()
 export class CompaniesService {
   constructor(
     private readonly database: DatabaseService,
-    private readonly eventsService: EventsService,
+    private readonly eventsService: CompanyEventsService,
   ) {}
 
   async create(createCompanyDto: CreateCompanyDto) {

@@ -1,7 +1,6 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { OrdersService } from './services/orders.service';
 import { OrdersController } from './orders.controller';
-import { ClientsModule } from '@modules/clients/clients.module';
 import { UsersModule } from '@modules/users/users.module';
 import { CompaniesModule } from '@modules/companies/companies.module';
 import { OrderLogsService } from './services/order-logs.service';
@@ -11,10 +10,12 @@ import { OrderReviewsController } from './order-reviews.controller';
 import { OrderReportsService } from './services/order-reports.service';
 import { InvoicesModule } from '@modules/invoices/invoices.module';
 import { TasksModule } from '@modules/my-tasks/tasks.module';
+import { HashService } from '@modules/auth/services/hash.service';
+import { ClientsService } from '@modules/clients/services/clients.service';
+import { ClientEventsService } from '@modules/events/services/client-events.service';
 
 @Module({
   imports: [
-    forwardRef(() => ClientsModule),
     UsersModule,
     CompaniesModule,
     CloudinaryModule,
@@ -27,6 +28,9 @@ import { TasksModule } from '@modules/my-tasks/tasks.module';
     OrderLogsService,
     OrderReviewsService,
     OrderReportsService,
+    ClientsService,
+    ClientEventsService,
+    HashService,
   ],
   exports: [OrdersService, OrderLogsService, OrderReviewsService],
 })

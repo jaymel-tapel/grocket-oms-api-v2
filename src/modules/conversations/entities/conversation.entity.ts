@@ -6,7 +6,7 @@ import {
   PaginatedParticipantEntity,
   ParticipantEntity,
 } from '@modules/participants/entities/participant.entity';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { Conversation } from '@prisma/client';
 
 export class ConversationEntity implements Conversation {
@@ -50,3 +50,5 @@ export class ConversationEntity implements Conversation {
   @ApiProperty({ type: [MessageEntityWithoutRelation] })
   messages?: MessageEntity[];
 }
+
+export class ConversationEntityWithoutParticipant extends OmitType(ConversationEntity, ['participants'] as const) {}
