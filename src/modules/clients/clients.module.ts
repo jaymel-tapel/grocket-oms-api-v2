@@ -4,12 +4,17 @@ import { ClientsController } from './clients.controller';
 import { UsersModule } from '../users/users.module';
 import { HashService } from '../auth/services/hash.service';
 import { ClientReportsService } from './services/client-reports.service';
-import { EventsModule } from '@modules/events/events.module';
+import { ClientEventsService } from '@modules/events/services/client-events.service';
 
 @Module({
-  imports: [UsersModule, EventsModule],
+  imports: [UsersModule],
   controllers: [ClientsController],
-  providers: [ClientsService, HashService, ClientReportsService],
+  providers: [
+    ClientsService,
+    HashService,
+    ClientReportsService,
+    ClientEventsService,
+  ],
   exports: [ClientsService],
 })
 export class ClientsModule {}

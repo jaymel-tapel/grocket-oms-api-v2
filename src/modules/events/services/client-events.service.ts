@@ -7,14 +7,9 @@ import {
   RestoreClientEvent,
   UpdateClientEvent,
 } from '../clients/clients.event';
-import { CompanyEntity } from '@modules/companies/entities/company.entity';
-import {
-  DeleteCompanyEvent,
-  RestoreCompanyEvent,
-} from '../companies/companies.event';
 
 @Injectable()
-export class EventsService {
+export class ClientEventsService {
   constructor(private readonly eventEmitter: EventEmitter2) {}
 
   async emitUpdateClientEvent(client: ClientEntity) {
@@ -36,22 +31,6 @@ export class EventsService {
     this.eventEmitter.emit(
       RestoreClientEvent.name,
       new RestoreClientEvent(client),
-      authUser,
-    );
-  }
-
-  async emitDeleteCompanyEvent(company: CompanyEntity, authUser: UserEntity) {
-    this.eventEmitter.emit(
-      DeleteCompanyEvent.name,
-      new DeleteCompanyEvent(company),
-      authUser,
-    );
-  }
-
-  async emitRestoreCompanyEvent(company: CompanyEntity, authUser: UserEntity) {
-    this.eventEmitter.emit(
-      RestoreCompanyEvent.name,
-      new RestoreCompanyEvent(company),
       authUser,
     );
   }
