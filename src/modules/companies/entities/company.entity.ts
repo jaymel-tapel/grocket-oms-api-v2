@@ -1,5 +1,5 @@
-import { ClientEntity } from '@modules/clients/entities/client.entity';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ClientEntity, ClientEntityWithoutCompany } from '@modules/clients/entities/client.entity';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Company } from '@prisma/client';
 
 export class CompanyEntity implements Company {
@@ -44,6 +44,8 @@ export class CompanyEntity implements Company {
   @ApiProperty({ default: false })
   latest_check: boolean;
 
-  @ApiPropertyOptional({ type: () => ClientEntity })
-  client?: ClientEntity;
+  @ApiPropertyOptional({ type: () => ClientEntityWithoutCompany })
+  client?: ClientEntityWithoutCompany;
 }
+
+export class SimplifiedCompanyEntity extends OmitType(CompanyEntity, ['client'] as const) {}

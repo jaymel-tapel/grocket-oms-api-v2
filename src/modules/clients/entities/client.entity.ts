@@ -1,4 +1,4 @@
-import { UserEntity } from '@modules/users/entities/user.entity';
+import { SimplifiedUserEntity, UserEntity } from '@modules/users/entities/user.entity';
 import {
   ApiProperty,
   ApiPropertyOptional,
@@ -8,7 +8,7 @@ import {
 import { Client } from '@prisma/client';
 import { Exclude } from 'class-transformer';
 import { ClientInfoEntity } from './client-info.entity';
-import { CompanyEntity } from '@modules/companies/entities/company.entity';
+import { SimplifiedCompanyEntity } from '@modules/companies/entities/company.entity';
 import { ParticipantEntity } from '@modules/participants/entities/participant.entity';
 
 export class ClientEntity implements Client {
@@ -54,14 +54,14 @@ export class ClientEntity implements Client {
   @ApiProperty()
   seller_email: string;
 
-  @ApiPropertyOptional({ type: () => UserEntity })
+  @ApiPropertyOptional({ type: () => SimplifiedUserEntity })
   seller?: UserEntity | null;
 
   @ApiProperty({ type: ClientInfoEntity })
   clientInfo?: Partial<ClientInfoEntity>;
 
-  @ApiProperty({ type: [CompanyEntity] })
-  companies?: CompanyEntity[] | null;
+  @ApiProperty({ type: [SimplifiedCompanyEntity] })
+  companies?: SimplifiedCompanyEntity[] | null;
 
   @ApiProperty({ type: [ParticipantEntity] })
   participants?: ParticipantEntity[];
@@ -77,6 +77,8 @@ export class ClientEntityWithoutSeller extends OmitType(ClientEntity, [
   'seller',
   'sellerId',
 ]) {}
+
+export class ClientEntityWithoutCompany extends OmitType(ClientEntity, ['companies']) { }
 
 export class SimplifiedClientEntity implements Client {
   constructor(data?: Partial<SimplifiedClientEntity>) {

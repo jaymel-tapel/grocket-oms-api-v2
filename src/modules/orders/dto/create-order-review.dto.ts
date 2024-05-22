@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { OrderReviewStatus } from '@prisma/client';
+import { $Enums } from '@prisma/client';
 import { DoesExist } from '@src/common/validators/user.validation';
 import {
   IsEnum,
@@ -7,7 +7,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  MinLength,
 } from 'class-validator';
 
 export class CreateOrderReviewDto {
@@ -21,9 +20,9 @@ export class CreateOrderReviewDto {
   name: string;
 
   @IsNotEmpty()
-  @IsEnum(OrderReviewStatus)
+  @IsEnum($Enums.OrderReviewStatus)
   @ApiProperty()
-  status: OrderReviewStatus;
+  status: $Enums.OrderReviewStatus;
 
   @IsOptional()
   @IsString()
