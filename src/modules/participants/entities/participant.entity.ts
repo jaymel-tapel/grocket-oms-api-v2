@@ -2,7 +2,7 @@ import {
   ClientEntity,
   PaginatedClientEntity,
 } from '@modules/clients/entities/client.entity';
-import { ConversationEntity } from '@modules/conversations/entities/conversation.entity';
+import { ConversationEntity, ConversationEntityWithoutParticipant } from '@modules/conversations/entities/conversation.entity';
 import {
   PaginatedUserEntity,
   UserEntity,
@@ -54,7 +54,7 @@ export class ParticipantEntity implements Participant {
   client?: Partial<ClientEntity> | null;
 
   @ApiPropertyOptional({
-    type: () => ConversationEntity,
+    type: ConversationEntityWithoutParticipant,
     nullable: true,
   })
   conversation?: ConversationEntity;
