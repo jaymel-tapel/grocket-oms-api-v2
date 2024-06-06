@@ -389,6 +389,13 @@ export class OrdersService {
     });
   }
 
+  async findOneDeleted(id: number) {
+    return await this.database.order.findUniqueOrThrow({
+      where: { id, deletedAt: { not: null } },
+      include: orderIncludeHelper(),
+    });
+  }
+
   async update(
     id: number,
     authUser: UserEntity,
