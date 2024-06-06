@@ -146,6 +146,12 @@ export class OrdersController {
     return new OrderEntity(await this.ordersService.findOne(id));
   }
 
+  @Get('deleted/:id')
+  @ApiOkResponse({ type: OrderEntity })
+  async findOneDeleted(@Param('id', ParseIntPipe) id: number) {
+    return new OrderEntity(await this.ordersService.findOneDeleted(id));
+  }
+
   @Patch(':id')
   @ApiOkResponse({ type: OrderEntity })
   @ApiBody({ type: UpdateOrderCombinedEntity })
