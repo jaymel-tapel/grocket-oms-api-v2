@@ -99,9 +99,9 @@ export class ScraperService {
   }
 
   async getWebsite(id: number, { url }: ScrapeWebsiteDto) {
-    const prospect = await this.prospectsService.findOne({ where: { id } });
     const response = await axios.post(process.env.SCRAPER_WEBSITE, {
-      url: url ?? prospect.mapsUrl,
+      url:
+        url ?? (await this.prospectsService.findOne({ where: { id } })).mapsUrl,
     });
 
     const responseData: ScraperWebsiteEntity = response.data;
@@ -109,7 +109,7 @@ export class ScraperService {
     const { website, reviewsInfo, ...data } = responseData;
 
     // ? Update Prospect's Data
-    const updatedProspect = await this.prospectsService.update(prospect.id, {
+    const updatedProspect = await this.prospectsService.update(id, {
       url: website,
       stars: reviewsInfo,
       ...data,
@@ -119,11 +119,10 @@ export class ScraperService {
   }
 
   async getEmails(id: number, { url }: ScrapeEmailDto) {
-    const prospect = await this.prospectsService.findOneOrThrow({
-      where: { id },
-    });
     const response = await axios.post(process.env.SCRAPER_EMAIL, {
-      url: url ?? prospect.url,
+      url:
+        url ??
+        (await this.prospectsService.findOneOrThrow({ where: { id } })).url,
     });
 
     const responseData: ScraperEmailEntity = response.data;
