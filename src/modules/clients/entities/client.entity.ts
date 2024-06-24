@@ -1,4 +1,7 @@
-import { SimplifiedUserEntity, UserEntity } from '@modules/users/entities/user.entity';
+import {
+  SimplifiedUserEntity,
+  UserEntity,
+} from '@modules/users/entities/user.entity';
 import {
   ApiProperty,
   ApiPropertyOptional,
@@ -10,6 +13,7 @@ import { Exclude } from 'class-transformer';
 import { ClientInfoEntity } from './client-info.entity';
 import { SimplifiedCompanyEntity } from '@modules/companies/entities/company.entity';
 import { ParticipantEntity } from '@modules/participants/entities/participant.entity';
+import { format } from 'date-fns';
 
 export class ClientEntity implements Client {
   constructor(data?: Partial<ClientEntity>) {
@@ -22,6 +26,19 @@ export class ClientEntity implements Client {
     if (data?.clientInfo) {
       this.clientInfo = new ClientInfoEntity(data?.clientInfo);
     }
+  }
+
+  static exportToCsv(data: ClientEntity) {
+    const clientEntity = new ClientEntity(data);
+
+    delete clientEntity.password;
+    delete clientEntity.forgot_password_code;
+
+    return {
+      ...clientEntity,
+      createdAt: format(clientEntity.createdAt, 'yyyy-MM-dd HH:mm:ss'),
+      updatedAt: format(clientEntity.updatedAt, 'yyyy-MM-dd HH:mm:ss'),
+    };
   }
 
   @ApiProperty()
@@ -78,7 +95,9 @@ export class ClientEntityWithoutSeller extends OmitType(ClientEntity, [
   'sellerId',
 ]) {}
 
-export class ClientEntityWithoutCompany extends OmitType(ClientEntity, ['companies']) { }
+export class ClientEntityWithoutCompany extends OmitType(ClientEntity, [
+  'companies',
+]) {}
 
 export class SimplifiedClientEntity implements Client {
   constructor(data?: Partial<SimplifiedClientEntity>) {

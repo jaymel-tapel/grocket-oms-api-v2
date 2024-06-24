@@ -35,6 +35,7 @@ import { ChatsModule } from './modules/chats/chats.module';
 import { ConversationsController } from './modules/conversations/conversations.controller';
 import { expand } from 'dotenv-expand';
 import { RatingsModule } from './modules/ratings/ratings.module';
+import { CsvModule } from './modules/csv/csv.module';
 
 expand(configDotenv({ path: `.env.${process.env.NODE_ENV}` }));
 
@@ -88,6 +89,7 @@ expand(configDotenv({ path: `.env.${process.env.NODE_ENV}` }));
     ParticipantsModule,
     ChatsModule,
     RatingsModule,
+    CsvModule,
   ],
   providers: [...ValidatorConstraints, ...Commands],
   controllers: [ConversationsController],
