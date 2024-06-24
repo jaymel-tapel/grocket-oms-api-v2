@@ -8,7 +8,7 @@ import {
   FileTypeValidator,
   Body,
 } from '@nestjs/common';
-import { CSVService } from './services/csv.service';
+import { DeprecatedCSVService } from './services/csv.service';
 import { JwtGuard } from '@modules/auth/guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateCSVDto } from './dto/create-csv.dto';
@@ -18,8 +18,8 @@ import { ApiExcludeController } from '@nestjs/swagger';
 @UseGuards(JwtGuard)
 @Controller('csv-private')
 @ApiExcludeController()
-export class CSVController {
-  constructor(private readonly csvService: CSVService) {}
+export class DeprecatedCSVController {
+  constructor(private readonly csvService: DeprecatedCSVService) {}
 
   @Post('import')
   @UseInterceptors(FileInterceptor('file'))

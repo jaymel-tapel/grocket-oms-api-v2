@@ -19,7 +19,7 @@ import {
   TaskStatusEnum,
   TaskTypeEnum,
 } from '@prisma/client';
-import { CreateCSVDto, TableNameTypes } from '../dto/create-csv.dto';
+import { CreateCSVDto } from '../dto/create-csv.dto';
 import { UserEntity } from '@modules/users/entities/user.entity';
 import { HashService } from '@modules/auth/services/hash.service';
 import { AlternateEmailEntity } from '@modules/alternate-emails/entities/alternate-email.entity';
@@ -27,15 +27,14 @@ import { BrandEntity } from '@modules/brands/entities/brand.entity';
 import { ClientEntity } from '@modules/clients/entities/client.entity';
 import { ClientInfoEntity } from '@modules/clients/entities/client-info.entity';
 import { CompanyEntity } from '@modules/companies/entities/company.entity';
-import { dd } from '@src/common/helpers/debug';
-import { OrderEntity } from '@modules/orders/entities/order.entity';
 import { OrderReviewEntity } from '@modules/orders/entities/order-review.entity';
 import { TaskEntity } from '@modules/my-tasks/entities/task.entity';
 import { TaskAccountantEntity } from '@modules/my-tasks/entities/task-accountant.entity';
 import { TaskSellerEntity } from '@modules/my-tasks/entities/task-seller.entity';
+import { TableNameTypes } from '@src/common/types/prisma-table.types';
 
 @Injectable()
-export class CSVService {
+export class DeprecatedCSVService {
   constructor(
     private readonly database: DatabaseService,
     private readonly hashService: HashService,
