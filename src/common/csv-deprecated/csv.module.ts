@@ -13,4 +13,4 @@ import { HashService } from '@modules/auth/services/hash.service';
   controllers: [CSVController],
   providers: [CSVService, HashService],
 })
-export class CSVModule {}
+export class DeprecatedCSVModule {}

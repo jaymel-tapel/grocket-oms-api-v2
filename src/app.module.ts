@@ -22,7 +22,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { SellersModule } from './modules/sellers/sellers.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { InvoicesModule } from './modules/invoices/invoices.module';
-import { CSVModule } from './common/csv/csv.module';
+import { DeprecatedCSVModule } from './common/csv-deprecated/csv.module';
 import { ProspectsModule } from './modules/prospects/prospects.module';
 import { ScraperModule } from './modules/scraper/scraper.module';
 import { CronModule } from './common/cron/cron.module';
@@ -78,7 +78,7 @@ expand(configDotenv({ path: `.env.${process.env.NODE_ENV}` }));
     EmailModule,
     DashboardModule,
     InvoicesModule,
-    CSVModule,
+    DeprecatedCSVModule,
     ProspectsModule,
     ScraperModule,
     CronModule,
