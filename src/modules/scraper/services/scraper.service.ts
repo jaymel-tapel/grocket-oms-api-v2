@@ -131,8 +131,8 @@ export class ScraperService {
     const { limit, no_of_cities } = estimateDto;
     const AVG_TIME_SEARCH = 19.54;
     const AVG_TIME_SEARCH_MAX = 137.464; // 137.464 - 1000 limit;
-    const AVG_TIME_WEB = 13.6 / 4;
-    const AVG_TIME_EMAIL = 3.08 / 4;
+    const AVG_TIME_WEB = 13.6;
+    const AVG_TIME_EMAIL = 3.08;
 
     const total_estimated_prospects = limit * no_of_cities;
     let search_qty: number, search_in_seconds: number;
@@ -159,11 +159,13 @@ export class ScraperService {
     } else {
       search_qty = Math.ceil(total_estimated_prospects / 1000);
       search_in_seconds = Number((AVG_TIME_SEARCH_MAX * search_qty).toFixed(2));
+      search_in_seconds = search_in_seconds / 12;
     }
 
-    const web_in_seconds = AVG_TIME_WEB * total_estimated_prospects;
-    const email_in_seconds = AVG_TIME_EMAIL * total_estimated_prospects;
+    const web_in_seconds = (AVG_TIME_WEB * total_estimated_prospects) / 12;
+    const email_in_seconds = (AVG_TIME_EMAIL * total_estimated_prospects) / 12;
 
+    // * Format the time into words. Ex: "total_estimated_time": "2 hours 23 minutes 34.9 seconds"
     const estimated_search = this.formatTime(search_in_seconds);
     const estimated_web = this.formatTime(web_in_seconds);
     const estimated_email = this.formatTime(email_in_seconds);
