@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { CSVService } from './services/csv.service';
-import { CSVController } from './csv.controller';
+import { DeprecatedCSVService } from './services/csv.service';
+import { DeprecatedCSVController } from './csv.controller';
 import { MulterModule } from '@nestjs/platform-express';
 import { HashService } from '@modules/auth/services/hash.service';
 
@@ -10,7 +10,7 @@ import { HashService } from '@modules/auth/services/hash.service';
       dest: './public/uploads',
     }),
   ],
-  controllers: [CSVController],
-  providers: [CSVService, HashService],
+  controllers: [DeprecatedCSVController],
+  providers: [DeprecatedCSVService, HashService],
 })
-export class CSVModule {}
+export class DeprecatedCSVModule {}

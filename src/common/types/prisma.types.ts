@@ -11,7 +11,8 @@ export type PrismaDynamicClient = DynamicClientExtensionThis<
       model: {};
       query: {};
       client: {};
-    }
+    },
+    Prisma.PrismaClientOptions
   >,
   Prisma.TypeMapCb,
   {
@@ -19,5 +20,6 @@ export type PrismaDynamicClient = DynamicClientExtensionThis<
     model: {};
     query: {};
     client: {};
-  }
+  },
+  Prisma.PrismaClientOptions
 >;

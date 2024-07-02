@@ -1,9 +1,7 @@
-import { Prisma } from '@prisma/client';
+import { TableNameTypes } from '@src/common/types/prisma-table.types';
 import { IsValidPrismaTable } from '@src/common/validators/prismaTables.validation';
 import { IsNotEmpty, IsOptional } from 'class-validator';
 import _ from 'lodash';
-
-export type TableNameTypes = Prisma.TypeMap['meta']['modelProps'];
 
 export class CreateCSVDto {
   @IsOptional()

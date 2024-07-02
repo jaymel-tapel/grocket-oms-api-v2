@@ -6,7 +6,7 @@ import {
   ValidatorConstraintInterface,
   registerDecorator,
 } from 'class-validator';
-import { TableNameTypes } from '../csv/dto/create-csv.dto';
+import { TableNameTypes } from '../types/prisma-table.types';
 import { Prisma } from '@prisma/client';
 import _ from 'lodash';
 
